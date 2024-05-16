@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>iobio charts</title>
+
+    <style>
+      #root {
+      }
+
+      #container {
+      }
+    </style>
+
+    <link rel='stylesheet' href='./site.css'>
+    <link rel='stylesheet' href='./lib/iobio.viz/src/css/base.css'>
+    <link rel='stylesheet' href='./lib/iobio.viz/src/css/pie.css'>
+  </head>
+
+  <body>
+    <div id='root'>
+      <div id='percents'>
+      </div>
+    </div>
+
+    <script src="./lib/d3.js"></script>
+
+    <script type='module'>
+
+      import PercentChartBox from './percent_chart_box.js';
+
+      //PercentChartBox();
+
+      const el = document.getElementById('percents');
+      el.appendChild(PercentChartBox());
+      el.appendChild(PercentChartBox());
+
+    </script>
+  </body>
+
+</html>
