@@ -25,17 +25,31 @@
       </div>
     </div>
 
-    <script src="./lib/d3.js"></script>
+    <!--
+    <percent-chart-ce id='perc-chart'></percent-chart-ce>
+    -->
+
+    <!--
+    <script src="./bundle.js"></script>
+    -->
 
     <script type='module'>
 
       import PercentChartBox from './percent_chart_box.js';
-
-      //PercentChartBox();
+      //import PercentChartBox from './bundle.js';
 
       const el = document.getElementById('percents');
       el.appendChild(PercentChartBox());
-      el.appendChild(PercentChartBox());
+
+
+
+
+
+      //const pc = document.querySelector('#perc-chart');
+      //pc.customFunc();
+
+      //const pc2 = document.createElement('percent-chart-ce');
+      //el.appendChild(pc2);
 
     </script>
   </body>
