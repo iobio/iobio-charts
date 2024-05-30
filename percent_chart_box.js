@@ -1,5 +1,5 @@
 import iobio from './lib/iobio.viz/iobio.viz.esm.js';
-import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
+//import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 
 
 async function loadScript(src) {
@@ -25,6 +25,7 @@ function PercentChartBox() {
   (async () => {
 
     const d3Pie = d3.pie()
+    //const d3Pie = d3.layout.pie()
       .sort(null);
 
     const chart = iobio.viz.pie()
