@@ -7,50 +7,32 @@
     <title>iobio charts</title>
 
     <style>
-      #root {
-      }
-
-      #container {
+      :root {
+        //--iobio-background-color: blue;
       }
     </style>
 
-    <link rel='stylesheet' href='./site.css'>
-    <link rel='stylesheet' href='./lib/iobio.viz/src/css/base.css'>
-    <link rel='stylesheet' href='./lib/iobio.viz/src/css/pie.css'>
   </head>
 
   <body>
-    <div id='root'>
-      <div id='percents'>
-      </div>
-    </div>
 
-    <!--
-    <percent-chart-ce id='perc-chart'></percent-chart-ce>
-    -->
-
-    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
-    <!--
-    <script src="https://cdn.jsdelivr.net/npm/d3@3"></script>
-    -->
+    <percent-chart-box></percent-chart-box>
 
     <script type='module'>
 
-      import PercentChartBox from './percent_chart_box.js';
-      //import PercentChartBox from './bundle.js';
+      //import PercentChartBox from './percent_chart_box.js';
+      import { PercentChartBox } from './index.js';
 
-      const el = document.getElementById('percents');
-      el.appendChild(PercentChartBox());
+      //import './index.js'
+      //import "https://cdn.jsdelivr.net/npm/iobio-charts@0.1.2/+esm";
+      //import "https://esm.run/iobio-charts";
 
+      const pbox = PercentChartBox()
+      document.body.appendChild(pbox.el);
+      pbox.update([1,2]);
 
-
-
-
-      //const pc = document.querySelector('#perc-chart');
-      //pc.customFunc();
-
-      //const pc2 = document.createElement('percent-chart-ce');
-      //el.appendChild(pc2);
+      const pbox2 = document.querySelector('percent-chart-box');
+      pbox2.update([3,4]);
 
     </script>
   </body>

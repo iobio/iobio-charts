@@ -1,68 +1,81 @@
-import iobio from './lib/iobio.viz/iobio.viz.esm.js';
-//import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
-
-
-async function loadScript(src) {
-  return new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.setAttribute('src', src);
-    script.addEventListener('load', resolve);
-    script.addEventListener('error', reject);
-    document.body.appendChild(script);
-  });
-}
+import { commonStyleSheet, applyCommonGlobalCSS, applyGlobalCSS } from './common.js';
+import iobio from './lib/iobio.viz.esm.js';
+import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
+//import * as d3 from "d3";
 
 function PercentChartBox() {
 
-  const el = document.createElement('div');
-  el.classList.add('percent');
-  el.classList.add('panel');
-  //const el = document.getElementById('container');
+  applyCommonGlobalCSS();
 
-  const donutEl = document.createElement('div');
-  el.appendChild(donutEl);
+  const pbox = core();
 
-  (async () => {
+  applyGlobalCSS(pbox.getStyles(), 'percent-chart-box');
 
-    const d3Pie = d3.pie()
-    //const d3Pie = d3.layout.pie()
-      .sort(null);
-
-    const chart = iobio.viz.pie()
-      .radius(61)
-      .innerRadius(50)
-      .color( function(d,i) { if (i==0) return '#2d8fc1'; else return 'rgba(45,143,193,0.2)'; });
-
-    const data = [1, 3];
-
-    const selection = d3.select(donutEl)
-      .datum(d3Pie(data));
-
-    setTimeout(() => {
-      chart(selection);
-    }, 500);
-
-  })();
-
-  return el;
+  return pbox;
 }
 
-class PercentChartCE extends HTMLElement {
+class PercentChartBoxCustomElement extends HTMLElement {
   constructor() {
     super();
   }
 
   connectedCallback() {
-    const dom = PercentChartBox();
-    this.appendChild(dom);
+    this._pbox = core();
+
+    const root = this.attachShadow({ mode: 'open' });
+
+    const sheet = new CSSStyleSheet();
+    const styles = this._pbox.getStyles()
+    sheet.replaceSync(styles);
+
+    root.adoptedStyleSheets = [commonStyleSheet, sheet];
+
+    root.appendChild(this._pbox.el);
   }
 
-  customFunc() {
-    console.log("WAT");
+  update(data) {
+    return this._pbox.update(data);
   }
 }
 
-customElements.define('percent-chart-ce', PercentChartCE);
+function core() {
+  const el = document.createElement('div');
+  el.classList.add('iobio-percent');
+  el.classList.add('iobio-panel');
+  //const el = document.getElementById('container');
+
+  const donutEl = document.createElement('div');
+  el.appendChild(donutEl);
+
+  const d3Pie = d3.pie()
+  //const d3Pie = d3.layout.pie()
+    .sort(null);
+
+  const chart = iobio.viz.pie()
+    .radius(61)
+    .innerRadius(50)
+    .color( function(d,i) { if (i==0) return '#2d8fc1'; else return 'rgba(45,143,193,0.2)'; });
+
+  const data = [1, 3];
+
+  const selection = d3.select(donutEl)
+    .datum(d3Pie(data));
+
+  function update(data) {
+    selection.datum(d3Pie(data));
+    chart(selection);
+  }
+
+  function getStyles() {
+    return chart.getStyles();
+  }
+
+  return { el, update, getStyles };
+}
+
+customElements.define('percent-chart-box', PercentChartBoxCustomElement);
 
 
-export default PercentChartBox;
+export {
+  PercentChartBox,
+};

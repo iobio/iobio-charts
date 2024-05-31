@@ -1,0 +1,17 @@
+{
+  "dependencies": {
+  },
+  "name": "iobio-charts",
+  "version": "0.1.3",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
