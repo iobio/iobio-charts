@@ -1,0 +1,3 @@
+[submodule "lib/iobio.viz"]
+	path = lib/iobio.viz
+	url = https://github.com/iobio/iobio.viz
