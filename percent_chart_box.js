@@ -34,7 +34,9 @@ class PercentChartBoxCustomElement extends HTMLElement {
   }
 
   update(data) {
-    return this._pbox.update(data);
+    if (this._pbox) {
+      return this._pbox.update(data);
+    }
   }
 }
 
