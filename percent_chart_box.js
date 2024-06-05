@@ -1,7 +1,6 @@
 import { commonStyleSheet, applyCommonGlobalCSS, applyGlobalCSS } from './common.js';
-import iobio from './lib/iobio.viz.esm.js';
-import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
-//import * as d3 from "d3";
+import iobioviz from './lib/iobio.viz/index.js';
+import * as d3 from "d3";
 
 function PercentChartBox() {
 
@@ -53,7 +52,7 @@ function core() {
   //const d3Pie = d3.layout.pie()
     .sort(null);
 
-  const chart = iobio.viz.pie()
+  const chart = iobioviz.pie()
     .radius(61)
     .innerRadius(50)
     .color( function(d,i) { if (i==0) return '#2d8fc1'; else return 'rgba(45,143,193,0.2)'; });
@@ -78,6 +77,4 @@ function core() {
 customElements.define('percent-chart-box', PercentChartBoxCustomElement);
 
 
-export {
-  PercentChartBox,
-};
+export default PercentChartBox;

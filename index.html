@@ -18,21 +18,39 @@
 
     <percent-chart-box></percent-chart-box>
 
+    <script type=importmap>
+      {
+        "imports": {
+          "d3": "https://cdn.jsdelivr.net/npm/d3@7/+esm"
+        }
+      }
+    </script>
+
     <script type='module'>
 
-      //import PercentChartBox from './percent_chart_box.js';
-      import { PercentChartBox } from './index.js';
+      import iobio from './index.js';
 
-      //import './index.js'
-      //import "https://cdn.jsdelivr.net/npm/iobio-charts@0.1.2/+esm";
-      //import "https://esm.run/iobio-charts";
-
-      const pbox = PercentChartBox()
+      const pbox = iobio.PercentChartBox();
       document.body.appendChild(pbox.el);
       pbox.update([1,2]);
 
       const pbox2 = document.querySelector('percent-chart-box');
       pbox2.update([3,4]);
+
+      const pbox3 = document.createElement('percent-chart-box');
+      document.body.appendChild(pbox3);
+      pbox3.update([5,6]);
+
+      const numHisto = 128;
+      const histoData = [];
+      for (let i = 0; i < numHisto; i++) {
+        const val = Math.random()*100;
+        histoData.push([i,val]);
+      }
+
+      const histo = iobio.StackedHistogram();
+      document.body.appendChild(histo.el);
+      histo.update(histoData);
 
     </script>
   </body>
