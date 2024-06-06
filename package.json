@@ -1,8 +1,9 @@
 {
   "dependencies": {
+    "d3": "^7.9.0"
   },
   "name": "iobio-charts",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "main": "index.js",
   "directories": {
     "lib": "lib"
