@@ -66,7 +66,7 @@ async function getDataFromAttr(el) {
     return JSON.parse(document.getElementById(dataScriptId).textContent);
   }
   else if (dataScriptUrl) {
-      return fetch(dataScriptUrl).then(res => res.json());
+    return fetch(dataScriptUrl).then(res => res.json());
   }
 }
 
