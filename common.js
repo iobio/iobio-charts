@@ -53,8 +53,26 @@ function insertStyleElement(el) {
   }
 }
 
+async function getDataFromAttr(el) {
+  const dataAttr = el.getAttribute('data');
+  const dataScriptId = el.getAttribute('data-script-id');
+  const dataScriptUrl = el.getAttribute('data-url');
+
+  let data;
+  if (dataAttr) {
+    return JSON.parse(dataAttr);
+  }
+  else if (dataScriptId) {
+    return JSON.parse(document.getElementById(dataScriptId).textContent);
+  }
+  else if (dataScriptUrl) {
+      return fetch(dataScriptUrl).then(res => res.json());
+  }
+}
+
 export {
   commonStyleSheet,
   applyCommonGlobalCSS,
   applyGlobalCSS,
+  getDataFromAttr,
 };

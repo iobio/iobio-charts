@@ -1,4 +1,4 @@
-import { commonStyleSheet, applyCommonGlobalCSS, applyGlobalCSS } from './common.js';
+import { commonStyleSheet, applyCommonGlobalCSS, applyGlobalCSS, getDataFromAttr } from './common.js';
 import iobioviz from './lib/iobio.viz/index.js';
 import * as d3 from "d3";
 
@@ -31,25 +31,12 @@ class PercentChartBoxCustomElement extends HTMLElement {
 
     root.appendChild(this._pbox.el);
 
-    const dataAttr = this.getAttribute('data');
-    const dataScriptId = this.getAttribute('data-script-id');
-    const dataScriptUrl = this.getAttribute('data-url');
-
-    if (dataAttr) {
-      const data = JSON.parse(dataAttr);
-      this._pbox.update(data);
-    }
-    else if (dataScriptId) {
-      const data = JSON.parse(document.getElementById(dataScriptId).textContent);
-      this._pbox.update(data);
-    }
-    else if (dataScriptUrl) {
-      (async () => {
-        const res = await fetch(dataScriptUrl)
-        const data = await res.json();
+    (async () => {
+      const data = await getDataFromAttr(this);
+      if (data) {
         this._pbox.update(data);
-      })();
-    }
+      }
+    })();
   }
 
   update(data) {
