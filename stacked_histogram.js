@@ -10,7 +10,6 @@ class StackedHistogram extends HTMLElement {
   }
 
   connectedCallback() {
-    console.log("here");
 
     const el = document.createElement('div');
 
