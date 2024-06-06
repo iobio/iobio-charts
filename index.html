@@ -16,7 +16,10 @@
 
   <body>
 
-    <percent-chart-box></percent-chart-box>
+    <script id='data' type='application/json'>
+      [1,1]
+    </script>
+    <percent-chart-box data-script-id="data"></percent-chart-box>
 
     <script type=importmap>
       {
@@ -33,9 +36,6 @@
       const pbox = iobio.PercentChartBox();
       document.body.appendChild(pbox.el);
       pbox.update([1,2]);
-
-      const pbox2 = document.querySelector('percent-chart-box');
-      pbox2.update([3,4]);
 
       const pbox3 = document.createElement('percent-chart-box');
       document.body.appendChild(pbox3);

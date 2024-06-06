@@ -30,6 +30,26 @@ class PercentChartBoxCustomElement extends HTMLElement {
     root.adoptedStyleSheets = [commonStyleSheet, sheet];
 
     root.appendChild(this._pbox.el);
+
+    const dataAttr = this.getAttribute('data');
+    const dataScriptId = this.getAttribute('data-script-id');
+    const dataScriptUrl = this.getAttribute('data-url');
+
+    if (dataAttr) {
+      const data = JSON.parse(dataAttr);
+      this._pbox.update(data);
+    }
+    else if (dataScriptId) {
+      const data = JSON.parse(document.getElementById(dataScriptId).textContent);
+      this._pbox.update(data);
+    }
+    else if (dataScriptUrl) {
+      (async () => {
+        const res = await fetch(dataScriptUrl)
+        const data = await res.json();
+        this._pbox.update(data);
+      })();
+    }
   }
 
   update(data) {
