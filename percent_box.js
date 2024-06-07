@@ -2,34 +2,23 @@ import { commonStyleSheet, applyCommonGlobalCSS, applyGlobalCSS, getDataFromAttr
 import iobioviz from './lib/iobio.viz/index.js';
 import * as d3 from "d3";
 
-function PercentChartBox() {
 
-  applyCommonGlobalCSS();
-
-  const pbox = core();
-
-  applyGlobalCSS(pbox.getStyles(), 'percent-chart-box');
-
-  return pbox;
-}
-
-class PercentChartBoxCustomElement extends HTMLElement {
+class PercentBoxElement extends HTMLElement {
   constructor() {
     super();
+    this.attachShadow({ mode: 'open' });
   }
 
   connectedCallback() {
     this._pbox = core();
 
-    const root = this.attachShadow({ mode: 'open' });
-
     const sheet = new CSSStyleSheet();
     const styles = this._pbox.getStyles()
     sheet.replaceSync(styles);
 
-    root.adoptedStyleSheets = [commonStyleSheet, sheet];
+    this.shadowRoot.adoptedStyleSheets = [commonStyleSheet, sheet];
 
-    root.appendChild(this._pbox.el);
+    this.shadowRoot.appendChild(this._pbox.el);
 
     (async () => {
       const data = await getDataFromAttr(this);
@@ -44,6 +33,17 @@ class PercentChartBoxCustomElement extends HTMLElement {
       return this._pbox.update(data);
     }
   }
+}
+
+function createPercentBox() {
+
+  applyCommonGlobalCSS();
+
+  const pbox = core();
+
+  applyGlobalCSS(pbox.getStyles(), 'percent-box');
+
+  return pbox;
 }
 
 function core() {
@@ -81,7 +81,10 @@ function core() {
   return { el, update, getStyles };
 }
 
-customElements.define('percent-chart-box', PercentChartBoxCustomElement);
+customElements.define('iobio-percent-box', PercentBoxElement);
 
 
-export default PercentChartBox;
+export {
+  PercentBoxElement,
+  createPercentBox,
+};

@@ -1,12 +1,10 @@
-import PercentChartBox from './percent_chart_box.js';
-import StackedHistogram from './stacked_histogram.js';
+import { PercentBoxElement, createPercentBox } from './percent_box.js';
+import { HistogramElement, createHistogram } from './histogram.js';
 
-export {
-  PercentChartBox,
-  StackedHistogram,
-};
 
 export default {
-  PercentChartBox,
-  StackedHistogram,
+  PercentBoxElement,
+  createPercentBox,
+  HistogramElement,
+  createHistogram,
 };
