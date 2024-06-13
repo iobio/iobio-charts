@@ -1,7 +1,7 @@
 import iobioviz from './lib/iobio.viz/index.js';
 import { applyCommonGlobalCSS, getDataFromAttr, getBrokerEl } from './common.js';
 import * as d3 from "d3";
-// TODO: currently data_broker has to be import first, otherwise it's methods
+// TODO: currently data_broker has to be imported first, otherwise it's methods
 // are not defined when other custom elements try to call them
 import './data_broker.js';
 
