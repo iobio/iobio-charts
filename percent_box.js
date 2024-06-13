@@ -21,9 +21,30 @@ class PercentBoxElement extends HTMLElement {
     this.shadowRoot.appendChild(this._pbox.el);
 
     (async () => {
-      const data = await getDataFromAttr(this);
-      if (data) {
+
+      const dataBrokerId = this.getAttribute('broker-id');
+
+      if (dataBrokerId) {
+        const broker = document.getElementById(dataBrokerId);
+
+        let data = [1,1];
         this._pbox.update(data);
+        broker.addEventListener(this.getAttribute('percent-key'), (evt) => {
+          //console.log("update percent-key", evt.detail);
+          data = [ evt.detail, data[1] - evt.detail];
+          this._pbox.update(data);
+        });
+        broker.addEventListener(this.getAttribute('total-key'), (evt) => {
+          //console.log("update total-key", evt.detail);
+          data = [ data[0], evt.detail - data[0] ];
+          this._pbox.update(data);
+        });
+      }
+      else {
+        const data = await getDataFromAttr(this);
+        if (data) {
+          this._pbox.update(data);
+        }
       }
     })();
   }
