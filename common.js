@@ -53,6 +53,19 @@ function insertStyleElement(el) {
   }
 }
 
+function getBrokerEl(el) {
+  const dataBrokerId = el.getAttribute('broker-id');
+  let brokerEl;
+  if (dataBrokerId) {
+    brokerEl = document.getElementById(dataBrokerId);
+  }
+  else {
+    brokerEl = document.querySelector('iobio-data-broker');
+  }
+
+  return brokerEl;
+}
+
 async function getDataFromAttr(el) {
   const dataAttr = el.getAttribute('data');
   const dataScriptId = el.getAttribute('data-script-id');
@@ -75,4 +88,5 @@ export {
   applyCommonGlobalCSS,
   applyGlobalCSS,
   getDataFromAttr,
+  getBrokerEl,
 };

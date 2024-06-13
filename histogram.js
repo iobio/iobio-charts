@@ -1,6 +1,9 @@
 import iobioviz from './lib/iobio.viz/index.js';
-import { applyCommonGlobalCSS, getDataFromAttr } from './common.js';
+import { applyCommonGlobalCSS, getDataFromAttr, getBrokerEl } from './common.js';
 import * as d3 from "d3";
+// TODO: currently data_broker has to be import first, otherwise it's methods
+// are not defined when other custom elements try to call them
+import './data_broker.js';
 
 class HistogramElement extends HTMLElement {
   constructor() {
@@ -14,9 +17,8 @@ class HistogramElement extends HTMLElement {
     
     this.shadowRoot.appendChild(this._histo.el);
 
-    const dataBrokerId = this.getAttribute('broker-id');
-    if (dataBrokerId) {
-      const brokerEl = document.getElementById(dataBrokerId);
+    const brokerEl = getBrokerEl(this);
+    if (brokerEl) {
       const broker = brokerEl.broker;
 
       let data = [[0,1],[1,2]];
