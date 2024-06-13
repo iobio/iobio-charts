@@ -1,22 +1,34 @@
-class DataBrokerElement extends HTMLElement {
-  constructor() {
-    super();
+class DataBroker {
+  constructor(url, options) {
+
+    this._server = "https://backend.iobio.io";
+
+    if (options) {
+      if (options.server) {
+        this._server = options.server;
+      }
+    }
+
+    this._callbacks = {};
 
     const decoder = new TextDecoder('utf8');
 
-    //const url = "https://s3.amazonaws.com/iobio/NA12878/NA12878.autsome.bam";
-    const url = this.getAttribute("url");
-
     (async () => {
 
-      const coverageText = await iobioRequest("/baiReadDepth", {
+      const coverageTextPromise = this._iobioRequest("/baiReadDepth", {
         url: url + ".bai",
       });
-      const coverage = parseCoverage(await coverageText.text());
 
-      const headerText = await iobioRequest("/alignmentHeader", {
+      const headerTextPromise = this._iobioRequest("/alignmentHeader", {
         url,
       });
+
+      const [ coverageText, headerText ] = await Promise.all([
+        coverageTextPromise,
+        headerTextPromise
+      ]);
+
+      const coverage = parseCoverage(await coverageText.text());
       const header = parseHeader(await headerText.text());
 
       const refsWithCoverage = Object.keys(coverage);
@@ -27,8 +39,7 @@ class DataBrokerElement extends HTMLElement {
 
       const regions = sample(validRefs);
 
-      //const res = await fetch("/data.json");
-      const res = await iobioRequest("/alignmentStatsStream", {
+      const res = await this._iobioRequest("/alignmentStatsStream", {
         url,
         regions,
       });
@@ -67,9 +78,11 @@ class DataBrokerElement extends HTMLElement {
         for (const key in update) {
           if (update[key] !== prevUpdate[key]) {
             //console.log("emit", key, update[key]);
-            this.dispatchEvent(new CustomEvent(key, {
-              detail: update[key],
-            }));
+            if (this._callbacks[key]) {
+              for (const callback of this._callbacks[key]) {
+                callback(update[key]);
+              }
+            }
           }
         }
 
@@ -79,9 +92,24 @@ class DataBrokerElement extends HTMLElement {
     })();
   }
 
-  connectedCallback() {
+  onEvent(eventName, callback) {
+    if (!this._callbacks[eventName]) {
+      this._callbacks[eventName] = [];
+    }
+    this._callbacks[eventName].push(callback);
   }
 
+  async _iobioRequest(endpoint, params) {
+  const res = await fetch(`${this._server}${endpoint}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'text/plain',
+    },
+    body: JSON.stringify(params),
+  });
+
+  return res;
+}
 }
 
 function parseHeader(headerStr) {
@@ -146,19 +174,6 @@ function sample(SQs) {
   return regions;
 }
 
-async function iobioRequest(endpoint, params) {
-  //const res = await fetch(`https://backend.iobio.io${endpoint}`, {
-  const res = await fetch(`http://localhost:9002${endpoint}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'text/plain',
-    },
-    body: JSON.stringify(params),
-  });
-
-  return res;
-}
-
 function parseCoverage(coverageText) {
 
   const readDepth = {};
@@ -190,6 +205,31 @@ function parseCoverage(coverageText) {
   }
 
   return readDepth;
+}
+
+class DataBrokerElement extends HTMLElement {
+
+  get broker() {
+    return this._broker
+  }
+
+  constructor() {
+    super();
+
+    const url = this.getAttribute("url");
+
+    const options = {};
+    const server = this.getAttribute("server");
+
+    if (server) {
+      options.server = server;
+    }
+
+    this._broker = new DataBroker(url, options);
+  }
+
+  connectedCallback() {
+  }
 }
 
 customElements.define('iobio-data-broker', DataBrokerElement);

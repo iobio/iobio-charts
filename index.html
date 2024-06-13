@@ -10,6 +10,10 @@
       :root {
         //--iobio-background-color: blue;
       }
+
+      .row {
+        display: flex;
+      }
     </style>
 
   </head>
@@ -21,17 +25,48 @@
       url="https://s3.amazonaws.com/iobio/NA12878/NA12878.autsome.bam">
     </iobio-data-broker>
 
-    <iobio-percent-box
-      broker-id="broker"
-      percent-key="mapped_reads"
-      total-key="total_reads">
-    </iobio-percent-box>
+    <div class="row">
+      <iobio-percent-box
+        broker-id="broker"
+        percent-key="mapped_reads"
+        total-key="total_reads">
+      </iobio-percent-box>
 
-    <iobio-percent-box
+      <iobio-percent-box
+        broker-id="broker"
+        percent-key="forward_strands"
+        total-key="total_reads">
+      </iobio-percent-box>
+
+      <iobio-percent-box
+        broker-id="broker"
+        percent-key="proper_pairs"
+        total-key="total_reads">
+      </iobio-percent-box>
+
+      <iobio-percent-box
+        broker-id="broker"
+        percent-key="singletones"
+        total-key="total_reads">
+      </iobio-percent-box>
+
+      <iobio-percent-box
+        broker-id="broker"
+        percent-key="both_mates_mapped"
+        total-key="total_reads">
+      </iobio-percent-box>
+
+      <iobio-percent-box
+        broker-id="broker"
+        percent-key="duplicates"
+        total-key="total_reads">
+      </iobio-percent-box>
+    </div>
+
+    <iobio-histogram
       broker-id="broker"
-      percent-key="forward_strands"
-      total-key="total_reads">
-    </iobio-percent-box>
+      key="coverage_hist">
+    </iobio-histogram>
 
 
     <!--
@@ -65,8 +100,11 @@
 
     <script type='module'>
 
-      import iobio from './index.js';
+      // TODO: currently data_broker has to be implemented first, otherwise
+      // it's methods are not defined when other custom elements try to call
+      // them
       import './data_broker.js';
+      import iobio from './index.js';
 
       //const pbox = iobio.createPercentBox();
       //document.body.appendChild(pbox.el);

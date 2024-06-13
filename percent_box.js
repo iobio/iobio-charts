@@ -20,33 +20,31 @@ class PercentBoxElement extends HTMLElement {
 
     this.shadowRoot.appendChild(this._pbox.el);
 
-    (async () => {
+    const dataBrokerId = this.getAttribute('broker-id');
 
-      const dataBrokerId = this.getAttribute('broker-id');
+    if (dataBrokerId) {
+      const brokerEl = document.getElementById(dataBrokerId);
+      const broker = brokerEl.broker;
 
-      if (dataBrokerId) {
-        const broker = document.getElementById(dataBrokerId);
-
-        let data = [1,1];
+      let data = [1,1];
+      this._pbox.update(data);
+      broker.onEvent(this.getAttribute('percent-key'), (val) => {
+        data = [ val, data[1] - val ];
         this._pbox.update(data);
-        broker.addEventListener(this.getAttribute('percent-key'), (evt) => {
-          //console.log("update percent-key", evt.detail);
-          data = [ evt.detail, data[1] - evt.detail];
-          this._pbox.update(data);
-        });
-        broker.addEventListener(this.getAttribute('total-key'), (evt) => {
-          //console.log("update total-key", evt.detail);
-          data = [ data[0], evt.detail - data[0] ];
-          this._pbox.update(data);
-        });
-      }
-      else {
+      });
+      broker.onEvent(this.getAttribute('total-key'), (val) => {
+        data = [ data[0], val - data[0] ];
+        this._pbox.update(data);
+      });
+    }
+    else {
+      (async () => {
         const data = await getDataFromAttr(this);
         if (data) {
           this._pbox.update(data);
         }
-      }
-    })();
+      })();
+    }
   }
 
   update(data) {

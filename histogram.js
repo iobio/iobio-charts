@@ -14,12 +14,33 @@ class HistogramElement extends HTMLElement {
     
     this.shadowRoot.appendChild(this._histo.el);
 
-    (async () => {
-      const data = await getDataFromAttr(this);
-      if (data) {
-        this._histo.update(data);
-      }
-    })();
+    const dataBrokerId = this.getAttribute('broker-id');
+    if (dataBrokerId) {
+      const brokerEl = document.getElementById(dataBrokerId);
+      const broker = brokerEl.broker;
+
+      let data = [[0,1],[1,2]];
+      this._histo.update(data);
+
+      broker.onEvent(this.getAttribute('key'), (data) => {
+
+        var d = Object.keys(data).filter(function (i) {
+          return data[i] != "0"
+        }).map(function (k) {
+          return [+k, +data[k]]
+        });
+
+        this._histo.update(d);
+      });
+    }
+    else {
+      (async () => {
+        const data = await getDataFromAttr(this);
+        if (data) {
+          this._histo.update(data);
+        }
+      })();
+    }
   }
 
   update(data) {
