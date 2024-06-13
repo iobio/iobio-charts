@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bam2.iobio</title>
+   
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <div id="app">
+      <div id="bam2iobio-header">
+        <h1 style="color: white; margin: 0; padding-left: 20px; line-height: 42px; font-size: 26px; text-align: start;">Bam2.iobio</h1>
+      </div>
+      <div id="content-container">
+        <div id="bamview">
+          <div id="bamview-controls">
+            <div id="baview-controls-chromosome-region">
+              <i class="fa fa-search-plus"></i>
+              <input type="text" id="bamview-region-chromosome" placeholder="chr1"></input>
+              <span>:</span>
+              <input type="text" id="bamview-region-start" placeholder="Start" />
+              <span>-</span>
+              <input type="text" id="bamview-region-end" placeholder="End" />
+              <button id="bamview-controls-go">Go</button>
+            </div>
+            <div id="gene-search-container">
+              <i class="fa fa-search"></i>
+              <input type="text" placeholder="Gene name" />
+            </div>
+          </div>
+          <div id="chart-container" style="width:1200px; height:350px; position: relative;">
+            <div class="loader"></div>
+          </div>
+        </div>
+        <!-- <div id="pie-chart-container">
+
+        </div> --> 
+
+      </div>
+      
+    </div>
+    <script type="module">
+      import { createBamView, brushToRegion} from "./src/BamViewChart.js";
+      import { getBamReadDepth, getBamHeader } from "./src/BamData.js";
+      import * as d3 from 'd3';
+      import '@fortawesome/fontawesome-free/css/all.min.css';
+
+      async function init() {
+        // Show loader while data is being fetched
+        const bamReadDepth = await getBamReadDepth();
+        console.log('bamReadDepth', bamReadDepth);
+
+        // get the object length of the bamReadDepth
+        const bamReadDepthLength = Object.keys(bamReadDepth).length;
+        console.log('bamReadDepthGroupLength', bamReadDepthLength);
+
+        const bamHeader = await getBamHeader();
+        console.log('bamHeader', bamHeader);
+
+        // Hide loader once data is ready
+        document.querySelector('.loader').style.display = 'none';
+
+        const bamViewContainer = document.getElementById("chart-container");
+        createBamView(bamHeader, bamReadDepth, bamViewContainer);
+
+           // Zoom to a specific region
+        document.getElementById('bamview-controls-go').addEventListener('click', () => {
+          let start, end;
+          const chromosome = document.getElementById('bamview-region-chromosome').value.trim();
+          // Convert the chromosome from Chr1 to 1
+          const chromosomeNumber = parseInt(chromosome.replace('chr', ''));
+          start = parseInt(document.getElementById('bamview-region-start').value.trim());
+          end = parseInt(document.getElementById('bamview-region-end').value.trim());
+
+          if (isNaN(chromosomeNumber) || isNaN(start) || isNaN(end)) {
+            alert('Invalid input');
+            return;
+          }
+          if (start > end) {
+            alert('Start position cannot be greater than end position');
+            return;
+          }
+          if (start < 0 || end < 0) {
+            alert('Start and end positions must be positive');
+            return;
+          }
+          if (start > bamHeader[chromosomeNumber - 1].length || end > bamHeader[chromosomeNumber - 1].length) {
+            alert('Start and end positions must be within the chromosome length');
+            return;
+          }
+          if (chromosomeNumber > bamHeader.length || chromosomeNumber < 1 || chromosomeNumber > 22) {
+            alert('Invalid chromosome number');
+            return;
+          }
+          if (end - start < 500000) {
+            end = start + 500000;
+          }
+          // change the end input value to the new end value
+          document.getElementById('bamview-region-end').value = end;
+
+          brushToRegion(bamReadDepth, chromosomeNumber, start, end);
+        });
+      }
+
+      init();
+
+   
+
+    </script>
+  </body>
+</html>
+
+
