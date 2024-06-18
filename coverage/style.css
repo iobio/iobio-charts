@@ -42,27 +42,80 @@ body {
   
 }
 
-#pie-chart-container {
-  flex: 1;
-  padding: 10px;
-  box-sizing: border-box;
-  margin-top: 55px;
-  margin-right: 20px;
-  border: 1px solid #ccc;
-}
-
 #bamview-controls {
   display: flex;
-  flex-direction: row;
-  justify-content: space-between;
+  gap: 10px;
   align-items: center;
-  width: fit-content;
   margin-bottom: 15px;
  
 }
 
+#bamview-region-chromosome {
+  width: 50px; 
+}
+
+#bamview-region-start{
+  width: 80px; 
+  padding: 0px 5px;
+}
+
+#bamview-region-end{
+  width: 80px; 
+  padding: 0 5px;
+}
+
 #gene-search-container {
   margin-left: 30px;
+}
+
+.input-group {
+  display: flex;
+  align-items: center;
+  /* background: white; */
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  padding: 5px 10px;
+}
+
+.input-group i, .input-group input, .input-group span {
+  align-self: center;
+  border: none; 
+  margin: 0 5px;
+}
+
+.input-group input {
+  outline: none;
+}
+
+.input-group i {
+  color: grey;
+}
+
+select {
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  padding: 5px 10px;
+  background: white;
+  cursor: pointer;
+}
+
+select:focus {
+  outline: none;
+}
+
+button {
+  background-color: #2d8fc1;
+  color: white;
+  border: none;
+  padding: 5px 15px;
+  border-radius: 20px; 
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #2d8fc1;
+  /* make it a hightlight bigger effect */
+  transform: scale(1.05);
 }
 
 #chart-container {
