@@ -53,7 +53,14 @@ function insertStyleElement(el) {
   }
 }
 
-function getBrokerEl(el) {
+function getDataBroker(el) {
+
+  if (el.broker) {
+    return el.broker;
+  }
+
+  let broker = null;
+
   const dataBrokerId = el.getAttribute('broker-id');
   let brokerEl;
   if (dataBrokerId) {
@@ -63,7 +70,11 @@ function getBrokerEl(el) {
     brokerEl = document.querySelector('iobio-data-broker');
   }
 
-  return brokerEl;
+  if (brokerEl) {
+    broker = brokerEl.broker;
+  }
+
+  return broker;
 }
 
 async function getDataFromAttr(el) {
@@ -83,10 +94,20 @@ async function getDataFromAttr(el) {
   }
 }
 
+// See https://web.dev/articles/custom-elements-best-practices#make_properties_lazy
+function upgradeProperty(obj, prop) {
+  if (obj.hasOwnProperty(prop)) {
+    let value = obj[prop];
+    delete obj[prop];
+    obj[prop] = value;
+  }
+}
+
 export {
   commonStyleSheet,
   applyCommonGlobalCSS,
   applyGlobalCSS,
   getDataFromAttr,
-  getBrokerEl,
+  getDataBroker,
+  upgradeProperty,
 };

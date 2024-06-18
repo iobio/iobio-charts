@@ -94,13 +94,22 @@
 
       import iobio from './index.js';
 
+      //const dbEl = document.createElement('iobio-data-broker');
+      ////db.setAttribute('url', "https://s3.amazonaws.com/iobio/NA12878/NA12878.autsome.bam");
+      //dbEl.url = "https://s3.amazonaws.com/iobio/NA12878/NA12878.autsome.bam";
+      //document.body.appendChild(dbEl);
+
+      const db = new iobio.DataBroker("https://s3.amazonaws.com/iobio/NA12878/NA12878.autsome.bam");
+
       //const pbox = iobio.createPercentBox();
       //document.body.appendChild(pbox.el);
       //pbox.update([1,2]);
 
-      //const pbox3 = document.createElement('iobio-percent-box');
-      //document.body.appendChild(pbox3);
-      //pbox3.update([5,6]);
+      const pbox3 = document.createElement('iobio-percent-box');
+      pbox3.percentKey = "mapped_reads";
+      pbox3.totalKey = "total_reads";
+      pbox3.broker = db;
+      document.body.appendChild(pbox3);
 
       //const numHisto = 256;
       //const histoData = [];

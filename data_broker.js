@@ -1,3 +1,5 @@
+import { upgradeProperty } from './common.js';
+
 class DataBroker {
   constructor(url, options) {
 
@@ -77,7 +79,6 @@ class DataBroker {
 
         for (const key in update) {
           if (update[key] !== prevUpdate[key]) {
-            //console.log("emit", key, update[key]);
             if (this._callbacks[key]) {
               for (const callback of this._callbacks[key]) {
                 callback(update[key]);
@@ -209,27 +210,47 @@ function parseCoverage(coverageText) {
 
 class DataBrokerElement extends HTMLElement {
 
+  constructor() {
+    super();
+
+    upgradeProperty(this, 'url');
+    upgradeProperty(this, 'server');
+  }
+
   get broker() {
     return this._broker
   }
 
-  constructor() {
-    super();
+  // TODO: restart data fetching when URL or server changes
+  get url() {
+    return this.getAttribute('url');
+  }
+  set url(_) {
+    this.setAttribute('url', _);
+  }
 
-    const url = this.getAttribute("url");
-
-    const options = {};
-    const server = this.getAttribute("server");
-
-    if (server) {
-      options.server = server;
-    }
-
-    this._broker = new DataBroker(url, options);
+  get server() {
+    return this.getAttribute('server');
+  }
+  set server(_) {
+    this.setAttribute('server', _);
   }
 
   connectedCallback() {
+
+    const options = {};
+
+    if (this.server) {
+      options.server = this.server;
+    }
+
+    this._broker = new DataBroker(this.url, options);
   }
 }
 
 customElements.define('iobio-data-broker', DataBrokerElement);
+
+export {
+  DataBroker,
+  DataBrokerElement,
+};
