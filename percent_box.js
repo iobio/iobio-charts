@@ -87,12 +87,13 @@ function createPercentBox() {
 
 function core() {
   const el = document.createElement('div');
-  el.classList.add('iobio-percent');
-  el.classList.add('iobio-panel');
+  el.classList.add('iobio-percent-box');
   //const el = document.getElementById('container');
 
-  const donutEl = document.createElement('div');
-  el.appendChild(donutEl);
+  const chartEl = document.createElement('div');
+  chartEl.classList.add('iobio-percent');
+  chartEl.classList.add('iobio-panel');
+  el.appendChild(chartEl);
 
   const d3Pie = d3.pie()
   //const d3Pie = d3.layout.pie()
@@ -105,7 +106,7 @@ function core() {
 
   const data = [1, 3];
 
-  const selection = d3.select(donutEl)
+  const selection = d3.select(chartEl)
     .datum(d3Pie(data));
 
   function update(data) {

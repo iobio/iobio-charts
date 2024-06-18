@@ -3,13 +3,26 @@ const css = `
     --iobio-background-color: #fff;
   }
 
+  .iobio-percent-box,
+  .iobio-percent-box *,
+  .iobio-percent-box *::before,
+  .iobio-percent-box *::after {
+    box-sizing: border-box;
+  }
+
+  .iobio-percent-box {
+    width: 100%;
+    height: 100%;
+  }
+
   .iobio-panel > .iobio-title {
     font-size: 30px
   }
 
   .iobio-panel {
+    width: 100%;
+    height: 100%;
     background-color: var(--iobio-background-color);
-    margin: 20px;
     padding: 5px;
     border: 1px solid rgb(230,230,230);
     border-radius: 2pt;
