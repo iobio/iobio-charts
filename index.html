@@ -20,6 +20,7 @@
 
   <body>
 
+    <!--
     <iobio-data-broker
       url="https://s3.amazonaws.com/iobio/NA12878/NA12878.autsome.bam">
     </iobio-data-broker>
@@ -59,28 +60,10 @@
     <iobio-histogram
       key="coverage_hist">
     </iobio-histogram>
-
-
-    <!--
-    <iobio-percent-box data="[1,2]"></iobio-percent-box>
-
-    <script id='data' type='application/json'>
-      [1,1]
-    </script>
-
-    <iobio-percent-box data-script-id="data"></iobio-percent-box>
-
-    <iobio-histogram data="[[0,1],[1,3],[2,2]]"></iobio-histogram>
-
-
-    <script id='histo-data' type='application/json'>
-      [[0,89.37071561272796],[1,3.188511391301585],[2,13.999562748631622],[3,39.825836830365716],[4,56.295374995632066],[5,96.67856446141705],[6,14.959097691124889],[7,85.21808028461261],[8,31.37452889475628],[9,77.00765227727699],[10,69.12696767860925],[11,46.74304599348955],[12,50.80529951115452],[13,15.231111363371063],[14,92.2342580524643],[15,55.082552307050314],[16,4.133566188111326],[17,0.3926773448014953],[18,28.105232373868837],[19,48.01514188192859],[20,35.65485222735142],[21,77.68982762174385],[22,19.86253432732199],[23,77.06135128697537],[24,71.50768978383826],[25,74.48563751388494],[26,75.70644790802564],[27,87.56857044980796],[28,23.214396927327265],[29,28.167066915543305],[30,77.74141857121303],[31,29.95561485552424]]
-    </script>
-
-    <histogram data-script-id="histo-data"></histogram>
-
-    <histogram data-url="./test/example_data.json"></histogram>
     -->
+
+    <div class='row'>
+    </div>
 
     <script type=importmap>
       {
@@ -93,36 +76,6 @@
     <script type='module'>
 
       import iobio from './index.js';
-
-      //const dbEl = document.createElement('iobio-data-broker');
-      ////db.setAttribute('url', "https://s3.amazonaws.com/iobio/NA12878/NA12878.autsome.bam");
-      //dbEl.url = "https://s3.amazonaws.com/iobio/NA12878/NA12878.autsome.bam";
-      //document.body.appendChild(dbEl);
-
-      const db = new iobio.DataBroker("https://s3.amazonaws.com/iobio/NA12878/NA12878.autsome.bam");
-
-      //const pbox = iobio.createPercentBox();
-      //document.body.appendChild(pbox.el);
-      //pbox.update([1,2]);
-
-      const pbox3 = document.createElement('iobio-percent-box');
-      pbox3.percentKey = "mapped_reads";
-      pbox3.totalKey = "total_reads";
-      pbox3.broker = db;
-      document.body.appendChild(pbox3);
-
-      //const numHisto = 256;
-      //const histoData = [];
-      //for (let i = 0; i < numHisto; i++) {
-      //  const val = Math.random()*100;
-      //  histoData.push([i,val]);
-      //}
-
-      //const histo = iobio.createHistogram();
-      //document.body.appendChild(histo.el);
-      //histo.update(histoData);
-
-      //console.log(JSON.stringify(histoData));
 
     </script>
   </body>
