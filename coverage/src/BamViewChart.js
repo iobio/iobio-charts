@@ -558,7 +558,7 @@ function brushToRegion(data, chromosome, start, end, geneName) {
 
     if (geneName != null){
         console.log('geneName', geneName)
-        drawGeneRegion(xScale, margin, svg, originStart, originEnd, geneName)
+        drawGeneRegion(xScale, margin, svg, originStart, originEnd, geneName, chromosome)
     }
 
     // Calculate the center of the selected region and adjust to ensure a minimum range of 500,000 bp
@@ -664,7 +664,7 @@ function brushToRegion(data, chromosome, start, end, geneName) {
             mainXScale.domain([x0, x1]);
 
             if (geneName != null) {
-                drawGeneRegion(mainXScale, margin, svg, originStart, originEnd, geneName);
+                drawGeneRegion(mainXScale, margin, svg, originStart, originEnd, geneName, chromosome);
             }
            
 
@@ -722,10 +722,25 @@ function brushToRegion(data, chromosome, start, end, geneName) {
     }
 }
 
-function drawGeneRegion(xScale, margin, svg, start, end, geneName) {
+function drawGeneRegion(xScale, margin, svg, start, end, geneName, chromosome) {
     const yPos = margin.top - 10;
     const rectHeight = 5;
     svg.selectAll(".region-highlight, .region-label").remove();
+
+    // Append tooltip div to the body if it doesn't already exist
+    let tooltip = d3.select("body").select(".tooltip");
+    if (tooltip.empty()) {
+        tooltip = d3.select("body")
+                    .append("div")
+                    .attr("class", "tooltip")
+                    .style("position", "absolute")
+                    .style("visibility", "hidden")
+                    .style("padding", "10px")
+                    .style("background", "white")
+                    .style("border", "1px solid #ccc")
+                    .style("border-radius", "5px")
+                    .style('pointer-events', 'none');
+    }
 
     // Draw the rectangle for the gene region
     svg.append("rect")
@@ -735,7 +750,23 @@ function drawGeneRegion(xScale, margin, svg, start, end, geneName) {
         .attr("width", xScale(end) - xScale(start))
         .attr("height", rectHeight)
         .attr("fill", "red")
-        .attr("opacity", 0.5);
+        .attr("opacity", 0.5)
+        .style('cursor', 'pointer')      
+        .on("mouseover", function(event) {
+            tooltip.html(`<strong>${geneName}</strong><hr style="border: 0; height: 1px; background-color: #333; margin: 5px 0;">
+                <table style="margin-top: 5px;">
+                    <tr><td>Chr:</td><td style="padding-left: 10px;">${chromosome}</td></tr>
+                    <tr><td>Start:</td><td style="padding-left: 10px;">${start}</td></tr>
+                    <tr><td>End:</td><td style="padding-left: 10px;">${end}</td></tr>
+                </table>`)
+                   .style("visibility", "visible")
+                   .style("left", (event.pageX + 10) + "px")
+                   .style("top", (event.pageY - 10) + "px");
+        })
+        
+        .on("mouseout", function() {
+            tooltip.style("visibility", "hidden");
+        });
 
     // Add a label for the gene
     svg.append("text")
