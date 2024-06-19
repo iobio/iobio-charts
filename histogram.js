@@ -11,14 +11,14 @@ class HistogramElement extends HTMLElement {
 
     this.attachShadow({ mode: 'open' });
 
-    upgradeProperty(this, 'key');
+    upgradeProperty(this, 'broker-key');
   }
 
-  get key() {
-    return this.getAttribute('key');
+  get brokerKey() {
+    return this.getAttribute('broker-key');
   }
-  set key(_) {
-    this.setAttribute('key', _);
+  set brokerKey(_) {
+    this.setAttribute('broker-key', _);
   }
 
   connectedCallback() {
@@ -32,7 +32,7 @@ class HistogramElement extends HTMLElement {
       let data = [[0,1],[1,2]];
       this._histo.update(data);
 
-      broker.onEvent(this.key, (data) => {
+      broker.onEvent(this.brokerKey, (data) => {
 
         var d = Object.keys(data).filter(function (i) {
           return data[i] != "0"
