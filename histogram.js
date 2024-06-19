@@ -1,5 +1,5 @@
 import iobioviz from './lib/iobio.viz/index.js';
-import { applyCommonGlobalCSS, getDataFromAttr, getDataBroker } from './common.js';
+import { applyCommonGlobalCSS, getDataFromAttr, getDataBroker, upgradeProperty } from './common.js';
 import * as d3 from "d3";
 // TODO: currently data_broker has to be imported first, otherwise it's methods
 // are not defined when other custom elements try to call them
@@ -8,7 +8,17 @@ import './data_broker.js';
 class HistogramElement extends HTMLElement {
   constructor() {
     super();
+
     this.attachShadow({ mode: 'open' });
+
+    upgradeProperty(this, 'key');
+  }
+
+  get key() {
+    return this.getAttribute('key');
+  }
+  set key(_) {
+    this.setAttribute('key', _);
   }
 
   connectedCallback() {
@@ -22,7 +32,7 @@ class HistogramElement extends HTMLElement {
       let data = [[0,1],[1,2]];
       this._histo.update(data);
 
-      broker.onEvent(this.getAttribute('key'), (data) => {
+      broker.onEvent(this.key, (data) => {
 
         var d = Object.keys(data).filter(function (i) {
           return data[i] != "0"

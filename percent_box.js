@@ -1,4 +1,4 @@
-import { commonStyleSheet, applyCommonGlobalCSS, applyGlobalCSS, getDataFromAttr, getDataBroker } from './common.js';
+import { commonStyleSheet, applyCommonGlobalCSS, applyGlobalCSS, getDataFromAttr, getDataBroker, upgradeProperty } from './common.js';
 import iobioviz from './lib/iobio.viz/index.js';
 import * as d3 from "d3";
 // TODO: currently data_broker has to be imported first, otherwise it's methods
@@ -9,7 +9,12 @@ import './data_broker.js';
 class PercentBoxElement extends HTMLElement {
   constructor() {
     super();
+
     this.attachShadow({ mode: 'open' });
+
+    upgradeProperty(this, 'percent-key');
+    upgradeProperty(this, 'total-key');
+    upgradeProperty(this, 'broker');
   }
 
   get percentKey() {
