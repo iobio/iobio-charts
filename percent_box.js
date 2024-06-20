@@ -1,4 +1,4 @@
-import { commonStyleSheet, applyCommonGlobalCSS, applyGlobalCSS, getDataFromAttr, getDataBroker, upgradeProperty } from './common.js';
+import { commonStyleSheet, applyCommonGlobalCSS, applyGlobalCSS, getDataFromAttr, getDataBroker, upgradeProperty, getDimensions } from './common.js';
 import iobioviz from './lib/iobio.viz/index.js';
 import * as d3 from "d3";
 // TODO: currently data_broker has to be imported first, otherwise it's methods
@@ -115,6 +115,14 @@ function core() {
     .datum(d3Pie(data));
 
   function update(data) {
+
+    const dim = getDimensions(chartEl);
+
+    let smallest = dim.contentWidth < dim.contentHeight ? dim.contentWidth : dim.contentHeight;
+    const radius = smallest / 2;
+    chart.radius(radius);
+    chart.innerRadius(radius - (.1*smallest));
+
     selection.datum(d3Pie(data));
     chart(selection);
   }
@@ -126,8 +134,8 @@ function core() {
   return { el, update, getStyles };
 }
 
-customElements.define('iobio-percent-box', PercentBoxElement);
 
+customElements.define('iobio-percent-box', PercentBoxElement);
 
 export {
   PercentBoxElement,

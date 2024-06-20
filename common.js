@@ -116,6 +116,46 @@ function upgradeProperty(obj, prop) {
   }
 }
 
+function getDimensions(el) {
+  const bcr = el.getBoundingClientRect();
+  const cs = getComputedStyle(el);
+
+  const paddingTop = parseFloat(cs.paddingTop);
+  const paddingBottom = parseFloat(cs.paddingBottom);
+  const paddingY = paddingTop + paddingBottom;
+
+  const paddingLeft = parseFloat(cs.paddingLeft);
+  const paddingRight = parseFloat(cs.paddingRight);
+  const paddingX = paddingLeft + paddingRight;
+
+  const borderTop = parseFloat(cs.borderTopWidth);
+  const borderBottom = parseFloat(cs.borderBottomWidth);
+  const borderY = borderTop + borderBottom;
+
+  const borderLeft = parseFloat(cs.borderLeftWidth);
+  const borderRight = parseFloat(cs.borderRightWidth);
+  const borderX = borderLeft + borderRight;
+
+  return {
+    width: bcr.width,
+    height: bcr.height,
+    contentWidth: bcr.width - paddingX - borderX,
+    contentHeight: bcr.height - paddingY - borderY,
+    paddingTop,
+    paddingBottom,
+    paddingY,
+    paddingLeft,
+    paddingRight,
+    paddingX,
+    borderTop,
+    borderBottom,
+    borderY,
+    borderLeft,
+    borderRight,
+    borderX,
+  };
+}
+
 export {
   commonStyleSheet,
   applyCommonGlobalCSS,
@@ -123,4 +163,5 @@ export {
   getDataFromAttr,
   getDataBroker,
   upgradeProperty,
+  getDimensions,
 };
