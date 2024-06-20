@@ -1,151 +1,28 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="/vite.svg">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bam2.iobio</title>
-   
     <link rel="stylesheet" href="style.css">
-  </head>
-  <body>
-     <div id="app">
-      <div id="bam2iobio-header">
-        <h1 style="color: white; margin: 0; padding-left: 20px; line-height: 42px; font-size: 26px; text-align: start;">Bam2.iobio</h1>
-      </div>
-      <div id="content-container">
-        <div id="bamview">
-          <div id="bamview-controls">
-            <div id="baview-controls-chromosome-region" class="input-group">
-              <i class="fa fa-search-plus"></i>
-              <input type="text" id="bamview-region-chromosome" placeholder="chr1">
-              <span>:</span>
-              <input type="text" id="bamview-region-start" placeholder="Start">
-              <span>-</span>
-              <input type="text" id="bamview-region-end" placeholder="End">
-            </div>
-            <button id="bamview-controls-go">Go</button>
-            <div id="gene-search-container" class="input-group">
-              <i class="fa fa-search"></i>
-              <input type="text" id="gene-name-input" placeholder="Gene name">
-            </div>
-            <select id="source-select">
-              <option value="gencode" selected>gencode</option>
-              <option value="refseq">refseq</option>
-            </select>
-            <button id="gene-search-button">Search</button>
-          </div>
-          <div id="chart-container" style="width: 1200px; height: 350px; position: relative;">
-            <div class="loader"></div>
-          </div>
+
+</head>
+<body>
+    <div id="app">
+        <div id="bam2iobio-header">
+            <h1 style="color: white; margin: 0; padding-left: 20px; line-height: 42px; font-size: 26px; text-align: start;">Bam2.iobio</h1>
         </div>
-      </div>
+        <div class="components">
+            <bam-view-chart></bam-view-chart>
+            <bam-view-chart></bam-view-chart>
+        </div>
+       
+      
+       
     </div>
-    
-
-  
     <script type="module">
-      import { createBamView, brushToRegion} from "./src/BamViewChart.js";
-      import { getBamReadDepth, getBamHeader } from "./src/BamData.js";
-      import * as d3 from 'd3';
-      import '@fortawesome/fontawesome-free/css/all.min.css';
-
-      let bamHeader;
-      let bamReadDepth;
-
-      async function init() {
-        // Show loader while data is being fetched
-        bamReadDepth = await getBamReadDepth();
-
-        bamHeader = await getBamHeader();
-
-        // Hide loader once data is ready
-        document.querySelector('.loader').style.display = 'none';
-
-        const bamViewContainer = document.getElementById("chart-container");
-        createBamView(bamHeader, bamReadDepth, bamViewContainer);
-        
-        // Zoom to a specific region
-        document.getElementById('bamview-controls-go').addEventListener('click', () => {
-          let start, end;
-          const geneName = null;
-          const chromosome = document.getElementById('bamview-region-chromosome').value.trim();
-          // Convert the chromosome from Chr1 to 1
-          const chromosomeNumber = parseInt(chromosome.replace('chr', ''));
-          start = parseInt(document.getElementById('bamview-region-start').value.trim());
-          end = parseInt(document.getElementById('bamview-region-end').value.trim());
-
-          if (isNaN(chromosomeNumber) || isNaN(start) || isNaN(end)) {
-            alert('Invalid input');
-            return;
-          }
-          if (start > end) {
-            alert('Start position cannot be greater than end position');
-            return;
-          }
-          if (start < 0 || end < 0) {
-            alert('Start and end positions must be positive');
-            return;
-          }
-          if (start > bamHeader[chromosomeNumber - 1].length || end > bamHeader[chromosomeNumber - 1].length) {
-            alert('Start and end positions must be within the chromosome length');
-            return;
-          }
-          if (chromosomeNumber > bamHeader.length || chromosomeNumber < 1 || chromosomeNumber > 22) {
-            alert('Invalid chromosome number');
-            return;
-          }
-
-          brushToRegion(bamReadDepth, chromosomeNumber, start, end, geneName);
-        });
-
-        // Attach event listener directly to the button
-        document.getElementById('gene-search-button').addEventListener('click', fetchGeneInfo);
-      }
-
-      init();
-
-      function fetchGeneInfo() {
-        let build;
-        const geneName = document.getElementById('gene-name-input').value.trim();
-        // ignore empty gene name
-        if (!geneName) {
-          return;
-        }
-        const source = document.getElementById('source-select').value;
-        const species = 'homo_sapiens';
-        build = bamHeader[0].length === '249250621' ? 'GRCh37' : 'GRCh38';
-        const url = `https://backend.iobio.io/geneinfo/${geneName}?source=${source}&species=${species}&build=${build}`;
-
-        fetch(url)
-          .then(response => {
-            if (!response.ok) {
-              throw new Error('Network response was not ok');
-            }
-            return response.json();
-          })
-          .then(data => {
-            console.log(data); 
-            // deal with the empty data
-            if (!data[0] || data[0].chr === undefined) {
-              alert(`Gene ${geneName} is not in gencode for build ${build}`);
-              return;
-            }
-              // get chr, start, end, gene_name
-              const chr = parseInt((data[0].chr).replace('chr', ''));
-              let start = parseInt(data[0].start);
-              let end = parseInt(data[0].end);
-              const gene_name = data[0].gene_name
-
-            brushToRegion(bamReadDepth, chr, start, end, geneName);
-          })
-          .catch(error => {
-            console.error('Error fetching gene information:', error);
-          });
-      }
-
+        import { BamViewChart } from "./src/BamView-WebComponent.js";
     </script>
-  </body>
+</body>
 </html>
-
-

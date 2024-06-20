@@ -1,146 +1,40 @@
-html {
-  overflow: hidden;
+html, body{
   height: 100vh;
   width: 100vw;
   margin: 0;
   padding: 0;
-  }
+  overflow: hidden;
+}
 
-body {
-  overflow: hidden;
-  height: 100vh;
-  width: 100vw;
-  margin: 0;
-  padding: 0;
-  font-family: sans-serif;
-  }
-  
 #app {
-  overflow: hidden;
-  height: 100vh;
-  width: 100vw;
-  }
-
-#content-container {
-  display: flex;
+  height: 100%;
   width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: scroll;
 }
 
 #bam2iobio-header {
-  width: 100%;
   height: 42px;
-  background-color: #2d8fc1;
-}
-
-#bamview {
-  flex: 5;
-  /* flex-direction: column; */
-  margin-left: 20px;
-  margin-top: 20px;
-  overflow: hidden;
-  height: 100%;
-  
-}
-
-#bamview-controls {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  margin-bottom: 15px;
- 
-}
-
-#bamview-region-chromosome {
-  width: 50px; 
-}
-
-#bamview-region-start{
-  width: 80px; 
-  padding: 0px 5px;
-}
-
-#bamview-region-end{
-  width: 80px; 
-  padding: 0 5px;
-}
-
-#gene-search-container {
-  margin-left: 30px;
-}
-
-.input-group {
-  display: flex;
-  align-items: center;
-  /* background: white; */
-  border: 1px solid #ccc;
-  border-radius: 20px;
-  padding: 5px 10px;
-}
-
-.input-group i, .input-group input, .input-group span {
-  align-self: center;
-  border: none; 
-  margin: 0 5px;
-}
-
-.input-group input {
-  outline: none;
-}
-
-.input-group i {
-  color: grey;
-}
-
-select {
-  border: 1px solid #ccc;
-  border-radius: 20px;
-  padding: 5px 10px;
-  background: white;
-  cursor: pointer;
-}
-
-select:focus {
-  outline: none;
-}
-
-button {
-  background-color: #2d8fc1;
-  color: white;
-  border: none;
-  padding: 5px 15px;
-  border-radius: 20px; 
-  cursor: pointer;
-}
-
-button:hover {
-  background-color: #2d8fc1;
-  /* make it a hightlight bigger effect */
-  transform: scale(1.05);
-}
-
-#chart-container {
   width: 100%;
-  height: fit-content;
-  border: 1px solid #ccc;
+  background-color: #2d8fc1;
+}
+
+.components {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+bam-view-chart {
+  flex: 1 1 auto;
+  width: 100%;
+  padding: 30px; 
   box-sizing: border-box;
 }
 
-.loader {
-  border: 8px solid #f3f3f3; 
-  border-top: 8px solid #3498db;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 2s linear infinite;
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-}
 
-@keyframes spin {
-  0% { transform: translate(-50%, -50%) rotate(0deg); }
-  100% { transform: translate(-50%, -50%) rotate(360deg); }
-}
+
 
 
