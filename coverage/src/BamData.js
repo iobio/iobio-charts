@@ -43,7 +43,6 @@ function parseReadDepthData(rawData) {
 }
 
 
-
 // parse the bam header data
 function parseBamHeaderData(rawData) {
   const bamHeader = [];
@@ -73,6 +72,7 @@ async function getBamReadDepth() {
     console.error(error);
   } 
 }
+
 
 // get the bam header data
 async function getBamHeader() {

@@ -5,7 +5,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
     let xScale, yScale, xNavScale, yNavScale, svg, main, nav, color, brush, yAxis, bamHeaderArray, 
         margin, margin2, mainHeight, navHeight, innerWidth, innerHeight;
 
-    function createBamViewInner(bamHeader, data, element) {
+    function createBamViewInner(bamHeader, data, element, bamViewControlsElement) {
         const meanCoverage = calculateMeanCoverage(data);
         const aggregatedDataArray = aggregateData(data, 30);
         bamHeaderArray = getChromosomeData(data);
