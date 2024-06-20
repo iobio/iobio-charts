@@ -101,16 +101,16 @@ class DataBroker {
   }
 
   async _iobioRequest(endpoint, params) {
-  const res = await fetch(`${this._server}${endpoint}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'text/plain',
-    },
-    body: JSON.stringify(params),
-  });
+    const res = await fetch(`${this._server}${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain',
+      },
+      body: JSON.stringify(params),
+    });
 
-  return res;
-}
+    return res;
+  }
 }
 
 function parseHeader(headerStr) {
