@@ -16,10 +16,24 @@
         margin-bottom: 20px;
       }
 
-      .percent-row {
+      .bottom-container {
         display: flex;
+      }
+
+      .percent-row {
+        flex: 3;
+        display: flex;
+        flex-wrap: wrap;
         height: 168px;
         gap: 20px;
+      }
+
+      .histogram-container {
+        flex: 5;
+      }
+
+      iobio-percent-box {
+        max-height: 168px;
       }
     </style>
 
@@ -27,53 +41,58 @@
 
   <body>
 
-    <iobio-data-broker
-      url="https://s3.amazonaws.com/iobio/NA12878/NA12878.autsome.bam">
-    </iobio-data-broker>
+    <iobio-data-broker></iobio-data-broker>
 
     <div class='read-depth-container'>
       <bam-view-chart></bam-view-chart>
     </div>
 
-    <div class="percent-row">
-      <iobio-percent-box
-        percent-key="mapped_reads"
-        total-key="total_reads">
-      </iobio-percent-box>
+    <div class='bottom-container'>
+      <div class="percent-row">
+        <iobio-percent-box
+          percent-key="mapped_reads"
+          total-key="total_reads">
+        </iobio-percent-box>
 
-      <iobio-percent-box
-        percent-key="forward_strands"
-        total-key="total_reads">
-      </iobio-percent-box>
+        <iobio-percent-box
+          percent-key="forward_strands"
+          total-key="total_reads">
+        </iobio-percent-box>
 
-      <iobio-percent-box
-        percent-key="proper_pairs"
-        total-key="total_reads">
-      </iobio-percent-box>
+        <iobio-percent-box
+          percent-key="proper_pairs"
+          total-key="total_reads">
+        </iobio-percent-box>
 
-      <iobio-percent-box
-        percent-key="singletones"
-        total-key="total_reads">
-      </iobio-percent-box>
+        <iobio-percent-box
+          percent-key="singletones"
+          total-key="total_reads">
+        </iobio-percent-box>
 
-      <iobio-percent-box
-        percent-key="both_mates_mapped"
-        total-key="total_reads">
-      </iobio-percent-box>
+        <iobio-percent-box
+          percent-key="both_mates_mapped"
+          total-key="total_reads">
+        </iobio-percent-box>
 
-      <iobio-percent-box
-        percent-key="duplicates"
-        total-key="total_reads">
-      </iobio-percent-box>
-    </div>
+        <iobio-percent-box
+          percent-key="duplicates"
+          total-key="total_reads">
+        </iobio-percent-box>
+      </div>
 
-    <!--
-    <iobio-histogram
-      broker-key="coverage_hist">
-    </iobio-histogram>
-    -->
+      <div class='histogram-container'>
+        <iobio-histogram
+          broker-key="coverage_hist">
+        </iobio-histogram>
 
-    <div class='row'>
+        <iobio-histogram
+          broker-key="frag_hist">
+        </iobio-histogram>
+
+        <iobio-histogram
+          broker-key="mapq_hist">
+        </iobio-histogram>
+      </div>
     </div>
 
     <script type=importmap>
@@ -84,9 +103,68 @@
       }
     </script>
 
+    <script type='module' src='./index.js'></script>
     <script type='module'>
 
-      import iobio from './index.js';
+      const urlParams = new URLSearchParams(window.location.search);
+
+
+      const source = urlParams.get("source");
+
+      let alignmentUrl;
+      let indexUrl;
+
+      if (source) {
+        // Mosaic integration
+
+        const token = urlParams.get("access_token");
+        const project_id = urlParams.get("project_id");
+        const sample_id = urlParams.get("sample_id");
+
+        const mosaicRequest = mosaicRequesterForProject(source, project_id, token);
+
+        const files = await mosaicRequest(`/samples/${sample_id}/files`);
+
+        const alignmentFile = files.data.filter(f => (f.type == 'bam' || f.type == 'cram'))[0];
+        const indexFile = files.data.filter(f => (f.type == 'bai' || f.type == 'crai'))[0];
+
+        const [ alignmentUrlRes, indexUrlRes ] = await Promise.all([
+          mosaicRequest(`/files/${alignmentFile.id}/url`),
+          mosaicRequest(`/files/${indexFile.id}/url`),
+        ]);
+
+        alignmentUrl = alignmentUrlRes.url
+        indexUrl = indexUrlRes.url;
+      }
+      else {
+        alignmentUrl = urlParams.get("alignment-url");
+        indexUrl = urlParams.get("index-url");
+      }
+
+      const broker = document.querySelector('iobio-data-broker');
+
+      // TODO: figure out how to set broker.alignmentUrl and broker.indexUrl
+      // without firing two sets of requests.
+      broker.alignmentUrl = alignmentUrl;
+
+
+      function mosaicRequesterForProject(server, projectId, token) {
+
+        async function request(path) {
+          const url = `${server}/api/v1/projects/${projectId}${path}`;
+          const res = await fetch(url, {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': "Bearer " + token,
+            }
+          });
+
+          return res.json();
+        }
+
+        return request;
+      }
+
 
     </script>
   </body>
