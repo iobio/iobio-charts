@@ -88,4 +88,4 @@ async function getBamHeader() {
   }
 }
 
-export { getBamReadDepth, getBamHeader };
+export { parseReadDepthData, parseBamHeaderData, getBamReadDepth, getBamHeader };

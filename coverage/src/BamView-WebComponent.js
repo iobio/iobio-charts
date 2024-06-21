@@ -1,5 +1,5 @@
 import { createBamView} from "./BamViewChart.js";
-import { getBamReadDepth, getBamHeader } from "./BamData";
+import { getDataBroker } from '../../common.js';
 
 const template = document.createElement('template');
 template.innerHTML = `
@@ -163,20 +163,33 @@ class BamViewChart extends HTMLElement {
     }
 
     async connectedCallback() {
-        let bamReadDepth = await getBamReadDepth();
-        let bamHeader = await getBamHeader();
+        const broker = getDataBroker(this);
 
-        const bamViewContainer = this.shadowRoot.querySelector('#chart-container');
-        const bamViewControls = this.shadowRoot.querySelector('#bamview-controls');
-        this._bamView = createBamView(bamHeader, bamReadDepth, bamViewContainer, bamViewControls);
+        if (broker) {
 
-        this.shadowRoot.querySelector(".loader").style.display = 'none';
+            const readDepthPromise = new Promise((resolve, reject) => {
+              broker.onEvent('read-depth', resolve);
+            });
 
-        const goButton = this.shadowRoot.querySelector('#bamview-controls-go');
-        const searchButton = this.shadowRoot.querySelector('#gene-search-button');
+            const headerPromise = new Promise((resolve, reject) => {
+              broker.onEvent('header', resolve);
+            });
 
-        goButton.addEventListener("click", () => this.handleGoClick(bamReadDepth, bamHeader));
-        searchButton.addEventListener("click", () => this.handleSearchClick(bamHeader, bamReadDepth));
+            let bamReadDepth = await readDepthPromise;
+            let bamHeader = await headerPromise;
+
+            const bamViewContainer = this.shadowRoot.querySelector('#chart-container');
+            const bamViewControls = this.shadowRoot.querySelector('#bamview-controls');
+            this._bamView = createBamView(bamHeader, bamReadDepth, bamViewContainer, bamViewControls);
+
+            this.shadowRoot.querySelector(".loader").style.display = 'none';
+
+            const goButton = this.shadowRoot.querySelector('#bamview-controls-go');
+            const searchButton = this.shadowRoot.querySelector('#gene-search-button');
+
+            goButton.addEventListener("click", () => this.handleGoClick(bamReadDepth, bamHeader));
+            searchButton.addEventListener("click", () => this.handleSearchClick(bamHeader, bamReadDepth));
+        }
     }
     
     handleGoClick(bamReadDepth, bamHeader) {

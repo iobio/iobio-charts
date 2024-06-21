@@ -1,4 +1,5 @@
 import { upgradeProperty } from './common.js';
+import { parseReadDepthData, parseBamHeaderData } from './coverage/src/BamData.js';
 
 class DataBroker {
   constructor(url, options) {
@@ -25,13 +26,22 @@ class DataBroker {
         url,
       });
 
-      const [ coverageText, headerText ] = await Promise.all([
+      const [ coverageTextRes, headerTextRes ] = await Promise.all([
         coverageTextPromise,
         headerTextPromise
       ]);
 
-      const coverage = parseCoverage(await coverageText.text());
-      const header = parseHeader(await headerText.text());
+      const coverageText = await coverageTextRes.text();
+      const headerText = await headerTextRes.text();
+
+      this._readDepthData = parseReadDepthData(coverageText);
+      this.emitEvent('read-depth', this._readDepthData);
+
+      const depthHeader = parseBamHeaderData(headerText);
+      this.emitEvent('header', depthHeader);
+
+      const coverage = parseCoverage(coverageText);
+      const header = parseHeader(headerText);
 
       const refsWithCoverage = Object.keys(coverage);
       const validRefs = [];
@@ -71,26 +81,31 @@ class DataBroker {
         })
         .filter(o => o !== null);
 
-        const update = objs[objs.length - 1];
+        this._update = objs[objs.length - 1];
 
-        if (!update) {
+        if (!this._update) {
           continue;
         }
 
-        for (const key in update) {
-          if (update[key] !== prevUpdate[key]) {
-            if (this._callbacks[key]) {
-              for (const callback of this._callbacks[key]) {
-                callback(update[key]);
-              }
-            }
+        for (const key in this._update) {
+          // TODO: need to deep compare
+          if (this._update[key] !== prevUpdate[key]) {
+            this.emitEvent(key, this._update[key]);
           }
         }
 
-        prevUpdate = update;
+        prevUpdate = this._update;
       }
 
     })();
+  }
+
+  emitEvent(eventName, data) {
+      if (this._callbacks[eventName]) {
+        for (const callback of this._callbacks[eventName]) {
+          callback(data);
+        }
+      }
   }
 
   onEvent(eventName, callback) {
