@@ -15,6 +15,10 @@ const css = `
     height: 100%;
   }
 
+  .iobio-percent-box-title {
+    margin: 10px;
+  }
+
   .iobio-panel > .iobio-title {
     font-size: 30px
   }
@@ -22,11 +26,17 @@ const css = `
   .iobio-panel {
     width: 100%;
     height: 100%;
+    display: flex;
+    flex-direction: column;
     background-color: var(--iobio-background-color);
     padding: 5px;
     border: 1px solid rgb(230,230,230);
     border-radius: 2pt;
     text-align: center;
+  }
+
+  .iobio-svg-container {
+    max-height: 180px;
   }
 `;
 

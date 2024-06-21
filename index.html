@@ -24,17 +24,14 @@
         flex: 3;
         display: flex;
         flex-wrap: wrap;
-        height: 168px;
         gap: 20px;
+        align-content: flex-start;
       }
 
       .histogram-container {
         flex: 5;
       }
 
-      iobio-percent-box {
-        max-height: 168px;
-      }
     </style>
 
   </head>
@@ -50,31 +47,37 @@
     <div class='bottom-container'>
       <div class="percent-row">
         <iobio-percent-box
+          title="Mapped Reads"
           percent-key="mapped_reads"
           total-key="total_reads">
         </iobio-percent-box>
 
         <iobio-percent-box
+          title="Forward Strands"
           percent-key="forward_strands"
           total-key="total_reads">
         </iobio-percent-box>
 
         <iobio-percent-box
+          title="Proper Pairs"
           percent-key="proper_pairs"
           total-key="total_reads">
         </iobio-percent-box>
 
         <iobio-percent-box
-          percent-key="singletones"
+          title="Singletons"
+          percent-key="singletons"
           total-key="total_reads">
         </iobio-percent-box>
 
         <iobio-percent-box
+          title="Both Mates Mapped"
           percent-key="both_mates_mapped"
           total-key="total_reads">
         </iobio-percent-box>
 
         <iobio-percent-box
+          title="Duplicates"
           percent-key="duplicates"
           total-key="total_reads">
         </iobio-percent-box>
