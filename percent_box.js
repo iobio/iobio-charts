@@ -109,12 +109,13 @@ function core() {
     .innerRadius(50)
     .color( function(d,i) { if (i==0) return '#2d8fc1'; else return 'rgba(45,143,193,0.2)'; });
 
-  const data = [1, 3];
+  let data = [1, 3];
 
   const selection = d3.select(chartEl)
     .datum(d3Pie(data));
 
-  function update(data) {
+
+  function render() {
 
     const dim = getDimensions(chartEl);
 
@@ -125,6 +126,16 @@ function core() {
 
     selection.datum(d3Pie(data));
     chart(selection);
+  }
+
+  const ro = new ResizeObserver(() => {
+    render();
+  });
+  ro.observe(chartEl);
+
+  function update(newData) {
+    data = newData
+    render();
   }
 
   function getStyles() {
