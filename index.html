@@ -11,6 +11,10 @@
         //--iobio-background-color: blue;
       }
 
+      body {
+        height: 320px;
+      }
+
       .row {
         display: flex;
         height: 256px;
@@ -22,10 +26,18 @@
 
   <body>
 
+    <bam-view-chart></bam-view-chart>
+
     <iobio-data-broker
       url="https://s3.amazonaws.com/iobio/NA12878/NA12878.autsome.bam">
     </iobio-data-broker>
 
+    <iobio-percent-box
+      percent-key="mapped_reads"
+      total-key="total_reads">
+    </iobio-percent-box>
+
+    <!--
     <div class="row">
       <iobio-percent-box
         percent-key="mapped_reads"
@@ -61,6 +73,7 @@
     <iobio-histogram
       broker-key="coverage_hist">
     </iobio-histogram>
+    -->
 
     <div class='row'>
     </div>
