@@ -186,7 +186,6 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
                     d3.select(this)
                     .attr('stroke', 'red');
                     zoomToChromosome(d.sn);
-                    console.log('clicked', d.sn);
                 });
 
             // Add labels for each chromosome
@@ -376,7 +375,6 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
 
         
             function zoomToChromosome(chromosome) {
-                console.log('zoomToChromosome', chromosome);
                 const orgChromosome = chromosome;
                 if (chromosome === "X") {
                     chromosome = 23;
@@ -571,7 +569,6 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
 
 
         if (geneName != null){
-            console.log('geneName', geneName)
             drawGeneRegion(xScale, margin, svg, originStart, originEnd, geneName, orgChromosome)
         }
         if (geneName == null){

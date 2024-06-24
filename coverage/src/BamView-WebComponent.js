@@ -247,7 +247,6 @@ class BamViewChart extends HTMLElement {
             alert('Invalid chromosome number');
             return false;
         }
-        console.log('bamHeader', bamHeader);
         if (isNaN(start) || isNaN(end)) {
             alert('Invalid input');
             return false;
