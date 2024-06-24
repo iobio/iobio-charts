@@ -200,7 +200,7 @@ class BamViewChart extends HTMLElement {
         const chromosome = chromosomeInput.value.trim();
         const start = parseInt(startInput.value.trim());
         const end = parseInt(endInput.value.trim());
-        const chromosomeNumber = parseInt(chromosome.replace('chr', ''));
+        const chromosomeNumber = chromosome.replace('chr', '');
 
         if (this.validateInput(chromosomeNumber, start, end, bamHeader)) {
             this._bamView.brushToRegion(bamReadDepth, chromosomeNumber, start, end, null);
@@ -230,7 +230,7 @@ class BamViewChart extends HTMLElement {
                 alert(`Gene ${geneName} is not in ${source} for build ${build}`);
                 return;
             }
-            const chr = parseInt(data[0].chr.replace('chr', ''));
+            const chr = data[0].chr.replace('chr', '');
             const start = parseInt(data[0].start);
             const end = parseInt(data[0].end);
             this._bamView.brushToRegion(bamReadDepth, chr, start, end, geneName);
@@ -240,7 +240,15 @@ class BamViewChart extends HTMLElement {
     }
 
     validateInput(chromosomeNumber, start, end, bamHeader) {
-        if (isNaN(chromosomeNumber) || isNaN(start) || isNaN(end)) {
+        const validChromosomes = new Set(bamHeader.map(header => header.sn));
+
+        // Check if the chromosome number is valid
+        if (!validChromosomes.has(chromosomeNumber)) {
+            alert('Invalid chromosome number');
+            return false;
+        }
+        console.log('bamHeader', bamHeader);
+        if (isNaN(start) || isNaN(end)) {
             alert('Invalid input');
             return false;
         }
@@ -250,10 +258,6 @@ class BamViewChart extends HTMLElement {
         }
         if (start < 0 || end < 0) {
             alert('Start and end positions must be positive');
-            return false;
-        }
-        if (chromosomeNumber > bamHeader.length || chromosomeNumber < 1) {
-            alert('Invalid chromosome number');
             return false;
         }
         return true;
