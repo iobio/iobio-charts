@@ -160,6 +160,21 @@ class BamViewChart extends HTMLElement {
         super();
         this.attachShadow({ mode: 'open' });
         this.shadowRoot.appendChild(template.content.cloneNode(true));
+        this.initDOMElements();
+        this.bamReadDepth = null;
+        this.bamHeader = null;
+    }
+
+    initDOMElements() {
+        this.bamViewContainer = this.shadowRoot.querySelector('#chart-container');
+        this.bamViewControls = this.shadowRoot.querySelector('#bamview-controls');
+        this.chromosomeInput = this.shadowRoot.querySelector('#bamview-region-chromosome');
+        this.startInput = this.shadowRoot.querySelector('#bamview-region-start');
+        this.endInput = this.shadowRoot.querySelector('#bamview-region-end');
+        this.geneNameInput = this.shadowRoot.querySelector('#gene-name-input');
+        this.sourceSelect = this.shadowRoot.querySelector('#source-select');
+        this.goButton = this.shadowRoot.querySelector('#bamview-controls-go');
+        this.searchButton = this.shadowRoot.querySelector('#gene-search-button');
     }
 
     async connectedCallback() {
@@ -175,51 +190,60 @@ class BamViewChart extends HTMLElement {
               broker.onEvent('header', resolve);
             });
 
-            let bamReadDepth = await readDepthPromise;
-            let bamHeader = await headerPromise;
-
-            const bamViewContainer = this.shadowRoot.querySelector('#chart-container');
-            const bamViewControls = this.shadowRoot.querySelector('#bamview-controls');
-            this._bamView = createBamView(bamHeader, bamReadDepth, bamViewContainer, bamViewControls);
-
+            this.bamReadDepth = await readDepthPromise;
+            this.bamHeader = await headerPromise;
+            this._bamView = createBamView(this.bamHeader, this.bamReadDepth, this.bamViewContainer, this.bamViewControls);
             this.shadowRoot.querySelector(".loader").style.display = 'none';
+            this.goButton.addEventListener("click", () => this.handleGoClick());
+            this.searchButton.addEventListener("click", () => this.handleSearchClick());
+            this.setupResizeObserver();
+        }
+    }
 
-            const goButton = this.shadowRoot.querySelector('#bamview-controls-go');
-            const searchButton = this.shadowRoot.querySelector('#gene-search-button');
+    setupResizeObserver() {
+        let resizeTimeout;
+        this.resizeObserver = new ResizeObserver(entries => {
+            if (resizeTimeout) clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                entries.forEach(entry => {
+                    if (entry.target === this.bamViewContainer) {
+                        this.bamViewContainer.innerHTML = ''; // Clear the current SVG
+                        this._bamView = createBamView(this.bamHeader, this.bamReadDepth, this.bamViewContainer, this.bamViewControls);
+                    }
+                });
+            }, 200);
+        });
+        this.resizeObserver.observe(this.bamViewContainer);
+    }
 
-            goButton.addEventListener("click", () => this.handleGoClick(bamReadDepth, bamHeader));
-            searchButton.addEventListener("click", () => this.handleSearchClick(bamHeader, bamReadDepth));
+    disconnectedCallback() {
+        if (this.resizeObserver) {
+            this.resizeObserver.disconnect();
         }
     }
     
-    handleGoClick(bamReadDepth, bamHeader) {
-        const chromosomeInput = this.shadowRoot.querySelector('#bamview-region-chromosome');
-        const startInput = this.shadowRoot.querySelector('#bamview-region-start');
-        const endInput = this.shadowRoot.querySelector('#bamview-region-end');
-
+    handleGoClick() {
         const chromosome = chromosomeInput.value.trim();
         const start = parseInt(startInput.value.trim());
         const end = parseInt(endInput.value.trim());
         const chromosomeNumber = chromosome.replace('chr', '');
 
-        if (this.validateInput(chromosomeNumber, start, end, bamHeader)) {
-            this._bamView.brushToRegion(bamReadDepth, chromosomeNumber, start, end, null);
+        if (this.validateInput(chromosomeNumber, start, end)) {
+            this._bamView.brushToRegion(this.bamReadDepth, chromosomeNumber, start, end, null);
         }
     }
 
-    handleSearchClick(bamHeader, bamReadDepth) {
-        const geneNameInput = this.shadowRoot.querySelector('#gene-name-input');
-        const geneName = geneNameInput.value.trim();
-        const sourceSelect = this.shadowRoot.querySelector('#source-select');
-        const source = sourceSelect.value;
-        const build = bamHeader[0].length === 249250621 ? 'GRCh37' : 'GRCh38';
+    handleSearchClick() {
+        const geneName = this.geneNameInput.value.trim();
+        const source = this.sourceSelect.value;
+        const build = this.bamHeader[0].length === 249250621 ? 'GRCh37' : 'GRCh38';
 
         if (geneName) {
-            this.fetchGeneInfo(geneName, source, 'homo_sapiens', build, bamReadDepth);
+            this.fetchGeneInfo(geneName, source, 'homo_sapiens', build);
         }
     }
 
-    async fetchGeneInfo(geneName, source, species, build, bamReadDepth) {
+    async fetchGeneInfo(geneName, source, species, build) {
         try {
             const response = await fetch(`https://backend.iobio.io/geneinfo/${geneName}?source=${source}&species=${species}&build=${build}`);
             if (!response.ok) {
@@ -233,16 +257,16 @@ class BamViewChart extends HTMLElement {
             const chr = data[0].chr.replace('chr', '');
             const start = parseInt(data[0].start);
             const end = parseInt(data[0].end);
-            this._bamView.brushToRegion(bamReadDepth, chr, start, end, geneName);
+            this._bamView.brushToRegion(this.bamReadDepth, chr, start, end, geneName);
         } catch (error) {
             console.error('Error fetching gene information:', error);
+            alert('Failed to fetch gene information');
         }
     }
 
-    validateInput(chromosomeNumber, start, end, bamHeader) {
-        const validChromosomes = new Set(bamHeader.map(header => header.sn));
+    validateInput(chromosomeNumber, start, end) {
+        const validChromosomes = new Set(this.bamHeader.map(header => header.sn));
 
-        // Check if the chromosome number is valid
         if (!validChromosomes.has(chromosomeNumber)) {
             alert('Invalid chromosome number');
             return false;
