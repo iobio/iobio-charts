@@ -296,7 +296,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
                 .attr('dy', "0.35em") 
                 .attr('text-anchor', 'end') 
                 .style('fill', 'red') 
-                .text(`${Math.round(meanCoverage)}x`)
+                .text(`${meanCoverage.toFixed(2)}x`)
                 .style('font-size', '12px');
 
             // Brush
@@ -333,7 +333,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
 
                     svg.selectAll('text.mean-label')
                         .attr('y', yScale(selectedMeanCoverage) + margin.top)
-                        .text(`${Math.round(selectedMeanCoverage)}x`);
+                        .text(`${selectedMeanCoverage.toFixed(2)}x`);
 
                     // Update the bars
                     main.selectAll('.bar')
@@ -362,7 +362,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
 
                     svg.selectAll('text.mean-label')
                         .attr('y', yScale(selectedMeanCoverage) + margin.top)
-                        .text(`${Math.round(selectedMeanCoverage)}x`);
+                        .text(`${selectedMeanCoverage.toFixed(2)}x`);
 
                     main.selectAll('.bar')
                         .attr('x', d => xScale(getChromosomeStart(d.group) + parseInt(d.newOffset)))
@@ -450,7 +450,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
                     .attr('y2', yScale(meanCoverage));
 
                 svg.selectAll('text.mean-label')
-                    .text(`${Math.round(meanCoverage)}x`)
+                    .text(`${meanCoverage.toFixed(2)}x`)
                     .attr('y', yScale(meanCoverage) + margin.top);
 
                 // Update y-axis
@@ -498,7 +498,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
                             .attr('y2', yScale(meanCoverageBrushed));
                         
                         svg.selectAll('text.mean-label')
-                            .text(`${Math.round(meanCoverageBrushed)}x`)
+                            .text(`${meanCoverageBrushed.toFixed(2)}x`)
                             .attr('y', yScale(meanCoverageBrushed) + margin.top);
 
                         // Update the chromosome label to show the selected region
@@ -522,7 +522,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
                             .attr('y2', yScale(meanCoverage));
                         
                         svg.selectAll('text.mean-label')
-                            .text(`${Math.round(meanCoverage)}x`)
+                            .text(`${meanCoverage.toFixed(2)}x`)
                             .attr('y', yScale(meanCoverage) + margin.top);
 
                         // Reset the chromosome label to show the full chromosome region
@@ -693,7 +693,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
                     .attr('y2', yScale(meanCoverageBrushed));
                 
                 svg.selectAll('text.mean-label')
-                    .text(`${Math.round(meanCoverageBrushed)}x`)
+                    .text(`${meanCoverageBrushed.toFixed(2)}x`)
                     .attr('y', yScale(meanCoverageBrushed) + margin.top);
 
                 // Update the chromosome label to show the selected region
@@ -721,7 +721,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
                     .attr('y2', yScale(meanCoverage));
 
                 svg.selectAll('text.mean-label')
-                    .text(`${Math.round(meanCoverage)}x`)
+                    .text(`${meanCoverage.toFixed(2)}x`)
                     .attr('y', yScale(meanCoverage) + margin.top);
 
                 // Reset the chromosome label to show the full chromosome region
