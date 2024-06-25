@@ -39,7 +39,10 @@ class PercentBoxElement extends HTMLElement {
   }
 
   connectedCallback() {
-    this._pbox = core();
+
+    this._pbox = core({
+      title: this.getAttribute('title'),
+    });
 
     const sheet = new CSSStyleSheet();
     const styles = this._pbox.getStyles()
@@ -90,15 +93,26 @@ function createPercentBox() {
   return pbox;
 }
 
-function core() {
+function core(opt) {
   const el = document.createElement('div');
   el.classList.add('iobio-percent-box');
   //const el = document.getElementById('container');
 
+  const panelEl = document.createElement('div');
+  panelEl.classList.add('iobio-panel');
+  el.appendChild(panelEl);
+
+  if (opt && opt.title) {
+    const titleEl = document.createElement('div');
+    titleEl.classList.add('iobio-percent-box-title');
+    titleEl.innerText = opt.title;
+    panelEl.appendChild(titleEl);
+  }
+
   const chartEl = document.createElement('div');
-  chartEl.classList.add('iobio-percent');
-  chartEl.classList.add('iobio-panel');
-  el.appendChild(chartEl);
+  chartEl.classList.add('iobio-svg-container');
+  panelEl.appendChild(chartEl);
+
 
   const d3Pie = d3.pie()
   //const d3Pie = d3.layout.pie()

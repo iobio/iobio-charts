@@ -14,90 +14,19 @@ class DataBroker {
 
     this._callbacks = {};
 
-    const decoder = new TextDecoder('utf8');
+    this.url = url;
+  }
 
-    (async () => {
+  get url() {
+    return this._url;
+  }
 
-      const coverageTextPromise = this._iobioRequest("/baiReadDepth", {
-        url: url + ".bai",
-      });
+  set url(_) {
+    this._url = _;
 
-      const headerTextPromise = this._iobioRequest("/alignmentHeader", {
-        url,
-      });
-
-      const [ coverageTextRes, headerTextRes ] = await Promise.all([
-        coverageTextPromise,
-        headerTextPromise
-      ]);
-
-      const coverageText = await coverageTextRes.text();
-      const headerText = await headerTextRes.text();
-
-      this._readDepthData = parseReadDepthData(coverageText);
-      this.emitEvent('read-depth', this._readDepthData);
-
-      const depthHeader = parseBamHeaderData(headerText);
-      this.emitEvent('header', depthHeader);
-
-      const coverage = parseCoverage(coverageText);
-      const header = parseHeader(headerText);
-
-      const refsWithCoverage = Object.keys(coverage);
-      const validRefs = [];
-      for (let i = 0; i < refsWithCoverage.length; i++) {
-        validRefs.push(header.sq[i]);
-      }
-
-      const regions = sample(validRefs);
-
-      const res = await this._iobioRequest("/alignmentStatsStream", {
-        url,
-        regions,
-      });
-
-      let prevUpdate = {};
-      let remainder = "";
-      for await (const chunk of res.body) {
-        const messages = decoder.decode(chunk).split(";");
-
-        if (remainder !== "") {
-          messages[0] = remainder + messages[0];
-          remainder = "";
-        }
-
-        const objs = messages.map((m, i) => {
-          try {
-            const obj = JSON.parse(m)
-            return obj
-          }
-          catch (e) {
-            if (i !== messages.length - 1) {
-              console.error(e);
-            }
-            remainder = m;
-            return null;
-          }
-        })
-        .filter(o => o !== null);
-
-        this._update = objs[objs.length - 1];
-
-        if (!this._update) {
-          continue;
-        }
-
-        for (const key in this._update) {
-          // TODO: need to deep compare
-          if (this._update[key] !== prevUpdate[key]) {
-            this.emitEvent(key, this._update[key]);
-          }
-        }
-
-        prevUpdate = this._update;
-      }
-
-    })();
+    if (this._url) {
+      this._go();
+    }
   }
 
   emitEvent(eventName, data) {
@@ -125,6 +54,100 @@ class DataBroker {
     });
 
     return res;
+  }
+
+  async _go() {
+
+    const decoder = new TextDecoder('utf8');
+
+    const parsedUrl = new URL(this.url);
+
+    let coverageTextPromise;
+    if (parsedUrl.pathname.endsWith(".cram")) {
+      coverageTextPromise = this._iobioRequest("/craiReadDepth", {
+        url: this.url + ".crai",
+      });
+    }
+    else {
+      coverageTextPromise = this._iobioRequest("/baiReadDepth", {
+        url: this.url + ".bai",
+      });
+    }
+
+    const headerTextPromise = this._iobioRequest("/alignmentHeader", {
+      url: this.url,
+    });
+
+    const [ coverageTextRes, headerTextRes ] = await Promise.all([
+      coverageTextPromise,
+      headerTextPromise
+    ]);
+
+    const coverageText = await coverageTextRes.text();
+    const headerText = await headerTextRes.text();
+
+    this._readDepthData = parseReadDepthData(coverageText);
+    this.emitEvent('read-depth', this._readDepthData);
+
+    const depthHeader = parseBamHeaderData(headerText);
+    this.emitEvent('header', depthHeader);
+
+    const coverage = parseCoverage(coverageText);
+    const header = parseHeader(headerText);
+
+    const refsWithCoverage = Object.keys(coverage);
+    const validRefs = [];
+    for (let i = 0; i < refsWithCoverage.length; i++) {
+      validRefs.push(header.sq[i]);
+    }
+
+    const regions = sample(validRefs);
+
+    const res = await this._iobioRequest("/alignmentStatsStream", {
+      url: this.url,
+      regions,
+    });
+
+    let prevUpdate = {};
+    let remainder = "";
+    for await (const chunk of res.body) {
+      const messages = decoder.decode(chunk).split(";");
+
+      if (remainder !== "") {
+        messages[0] = remainder + messages[0];
+        remainder = "";
+      }
+
+      const objs = messages.map((m, i) => {
+        try {
+          const obj = JSON.parse(m)
+          return obj
+        }
+        catch (e) {
+          if (i !== messages.length - 1) {
+            console.error(e);
+          }
+          remainder = m;
+          return null;
+        }
+      })
+      .filter(o => o !== null);
+
+      this._update = objs[objs.length - 1];
+
+      if (!this._update) {
+        continue;
+      }
+
+      for (const key in this._update) {
+        // TODO: need to deep compare
+        if (this._update[key] !== prevUpdate[key]) {
+          this.emitEvent(key, this._update[key]);
+        }
+      }
+
+      prevUpdate = this._update;
+    }
   }
 }
 
@@ -228,7 +251,7 @@ class DataBrokerElement extends HTMLElement {
   constructor() {
     super();
 
-    upgradeProperty(this, 'url');
+    upgradeProperty(this, 'alignmentUrl');
     upgradeProperty(this, 'server');
   }
 
@@ -236,12 +259,12 @@ class DataBrokerElement extends HTMLElement {
     return this._broker
   }
 
-  // TODO: restart data fetching when URL or server changes
-  get url() {
-    return this.getAttribute('url');
+  get alignmentUrl() {
+    return this.getAttribute('alignment-url');
   }
-  set url(_) {
-    this.setAttribute('url', _);
+  set alignmentUrl(_) {
+    this.broker.url = _;
+    this.setAttribute('alignment-url', _);
   }
 
   get server() {
