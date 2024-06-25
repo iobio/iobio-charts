@@ -101,19 +101,16 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
             svg.selectAll('.chromosome-label').remove();
             svg.selectAll(".region-highlight, .region-label").remove();
             // Create a circle button for reseting to all chromosomes
-            svg.append('circle')
-                .attr('cx', 30)
-                .attr('cy', 30)
-                .attr('r', 15)
-                .attr('fill', 'steelblue')
+            const circleButton = svg.append('g')
+                .attr('class', 'reset-button')
+                .attr('transform', 'translate(30, 30)')
                 .on('mouseover', function (event, d) {
-                    d3.select(this).style('cursor', 'pointer')
-                                    .attr('stroke', 'red')
-                                    .attr('stroke-width', 1);
+                    d3.select(this).select('circle').style('cursor', 'pointer').attr('stroke', 'red').attr('stroke-width', 1);
+                    d3.select(this).select('text').style('cursor', 'pointer');
                 })
                 .on('mouseout', function (event, d) {
-                    d3.select(this).style('cursor', 'default')
-                                    .attr('stroke', 'none');
+                    d3.select(this).select('circle').style('cursor', 'default').attr('stroke', 'none');
+                    d3.select(this).select('text').style('cursor', 'default');
                 })
                 .on('click', (event, d) => {
                     // Clear the input fields
@@ -121,14 +118,21 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
                     bamViewControlsElement.querySelector('#bamview-region-start').value = '';
                     bamViewControlsElement.querySelector('#bamview-region-end').value = '';
                     bamViewControlsElement.querySelector('#gene-name-input').value = '';
-                    // Redraw the chart
-                    drawChart(svg);
-                });
+                // Redraw the chart
+                drawChart(svg);
+            });
+
+            // Create a circle for the reset button
+            circleButton.append('circle')
+                .attr('cx', 0)
+                .attr('cy', 0)
+                .attr('r', 15)
+                .attr('fill', 'steelblue');
 
             // Create a text for the reset button
-            svg.append('text')
-                .attr('x', 30)
-                .attr('y', 30)
+            circleButton.append('text')
+                .attr('x', 0)
+                .attr('y', 0)
                 .attr('dy', '.35em')
                 .attr('text-anchor', 'middle')
                 .attr('fill', 'white')
@@ -157,7 +161,26 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
                 .data(bamHeaderArray)
                 .enter().append('g')
                 .attr('class', 'chromosome')
-                .attr('transform', (d, i) => `translate(${buttons_xScale(d3.sum(bamHeaderArray.slice(0, i), e => e.length)) + margin2.left}, ${margin2.top})`);
+                .attr('transform', (d, i) => `translate(${buttons_xScale(d3.sum(bamHeaderArray.slice(0, i), e => e.length)) + margin2.left}, ${margin2.top})`)
+                .on('mouseover', function (event, d) {
+                    d3.select(this).select('rect').style('cursor', 'pointer').attr('stroke', 'red');
+                    d3.select(this).select('text').style('cursor', 'pointer');
+                })
+                .on('mouseout', function (event, d) {
+                    if (this !== activeButton) {
+                        d3.select(this).select('rect').style('cursor', 'default').attr('stroke', 'none');
+                        d3.select(this).select('text').style('cursor', 'default');
+                    }
+                })
+                .on('click', function (event, d) {
+                    if (activeButton) {
+                        d3.select(activeButton).select('rect').attr('stroke', 'none');  // Reset the previous active button
+                    }
+                    activeButton = this;  // Update the currently active button
+                    d3.select(this).select('rect').attr('stroke', 'red');
+                    console.log('clicked', d.sn);
+                    zoomToChromosome(d.sn);
+                });
 
             let activeButton = null;
             // Add rectangles for each chromosome
@@ -166,27 +189,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
                 .attr('height', 20)
                 .attr('y', 0)
                 .attr('fill', (d, i) => color(i))
-                .style('stroke-width', 2)
-                .on('mouseover', function (event, d) {
-                    d3.select(this).style('cursor', 'pointer')
-                                    .attr('stroke', 'red');
-                })
-                .on('mouseout', function (event, d) {
-                    if (this !== activeButton) {
-                        d3.select(this).style('cursor', 'default')
-                                        .attr('stroke', 'none');
-                    }
-                })
-                .on('click', function (event, d) {
-                    if (activeButton) {
-                        d3.select(activeButton)
-                        .attr('stroke', 'none');  // Reset the previous active button
-                    }
-                    activeButton = this;  // Update the currently active button
-                    d3.select(this)
-                    .attr('stroke', 'red');
-                    zoomToChromosome(d.sn);
-                });
+                .style('stroke-width', 2);
 
             // Add labels for each chromosome
             chromosomes.append('text')
