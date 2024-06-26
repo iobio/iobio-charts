@@ -13,6 +13,7 @@ class DataBroker {
     }
 
     this._callbacks = {};
+    this._latestUpdates = {};
 
     this.url = url;
   }
@@ -30,11 +31,14 @@ class DataBroker {
   }
 
   emitEvent(eventName, data) {
+
       if (this._callbacks[eventName]) {
         for (const callback of this._callbacks[eventName]) {
           callback(data);
         }
       }
+
+      this._latestUpdates[eventName] = data;
   }
 
   onEvent(eventName, callback) {
@@ -42,6 +46,10 @@ class DataBroker {
       this._callbacks[eventName] = [];
     }
     this._callbacks[eventName].push(callback);
+
+    if (this._latestUpdates[eventName]) {
+      callback(this._latestUpdates[eventName]);
+    }
   }
 
   async _iobioRequest(endpoint, params) {
