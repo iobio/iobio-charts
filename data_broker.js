@@ -282,7 +282,7 @@ class DataBrokerElement extends HTMLElement {
       options.server = this.server;
     }
 
-    this._broker = new DataBroker(this.url, options);
+    this._broker = new DataBroker(this.alignmentUrl, options);
   }
 }
 
