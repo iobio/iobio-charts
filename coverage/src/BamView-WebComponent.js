@@ -7,6 +7,7 @@ template.innerHTML = `
 :host {
     width: 100%;
     height: 100%;
+    --data-color: var(--iobio-data-color, #2d8fc1);
 }
 
 #bamview {
@@ -98,6 +99,10 @@ button:hover {
     height: 100%;
     border: 1px solid #ccc;
     position: relative;
+}
+
+.bar {
+    fill: var(--data-color);
 }
 
 .loader {
