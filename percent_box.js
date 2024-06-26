@@ -1,9 +1,28 @@
-import { commonStyleSheet, applyCommonGlobalCSS, applyGlobalCSS, getDataFromAttr, getDataBroker, upgradeProperty, getDimensions } from './common.js';
+import { commonCss, applyCommonGlobalCSS, applyGlobalCSS, getDataFromAttr, getDataBroker, upgradeProperty, getDimensions } from './common.js';
 import iobioviz from './lib/iobio.viz/index.js';
 import * as d3 from "d3";
 // TODO: currently data_broker has to be imported first, otherwise it's methods
 // are not defined when other custom elements try to call them
 import './data_broker.js';
+
+function genHtml(styles) {
+  return `
+    <style>
+      ${commonCss}
+      ${styles}
+
+      .iobio-percent-box {
+      }
+    </style>
+
+    <div class='iobio-percent-box'>
+      <div class='iobio-panel'>
+        <div class='iobio-svg-container'>
+        </div>
+      </div>
+    </div>
+  `;
+}
 
 
 class PercentBoxElement extends HTMLElement {
@@ -45,11 +64,6 @@ class PercentBoxElement extends HTMLElement {
     });
 
     const sheet = new CSSStyleSheet();
-    const styles = this._pbox.getStyles()
-    sheet.replaceSync(styles);
-
-    this.shadowRoot.adoptedStyleSheets = [commonStyleSheet, sheet];
-
     this.shadowRoot.appendChild(this._pbox.el);
 
     const broker = getDataBroker(this);
@@ -93,35 +107,35 @@ function createPercentBox() {
   return pbox;
 }
 
+let templateEl;
 function core(opt) {
-  const el = document.createElement('div');
-  el.classList.add('iobio-percent-box');
-  //const el = document.getElementById('container');
-
-  const panelEl = document.createElement('div');
-  panelEl.classList.add('iobio-panel');
-  el.appendChild(panelEl);
-
-  if (opt && opt.title) {
-    const titleEl = document.createElement('div');
-    titleEl.classList.add('iobio-percent-box-title');
-    titleEl.innerText = opt.title;
-    panelEl.appendChild(titleEl);
-  }
-
-  const chartEl = document.createElement('div');
-  chartEl.classList.add('iobio-svg-container');
-  panelEl.appendChild(chartEl);
-
-
-  const d3Pie = d3.pie()
-  //const d3Pie = d3.layout.pie()
-    .sort(null);
 
   const chart = iobioviz.pie()
     .radius(61)
     .innerRadius(50)
     .color( function(d,i) { if (i==0) return '#2d8fc1'; else return 'rgba(45,143,193,0.2)'; });
+
+  if (!templateEl) {
+    templateEl = document.createElement('template');
+    templateEl.innerHTML = genHtml(chart.getStyles());
+  }
+
+  const docFrag = templateEl.content.cloneNode(true);
+
+  const panelEl = docFrag.querySelector('.iobio-panel');
+
+  const chartEl = docFrag.querySelector('.iobio-svg-container');
+
+  if (opt && opt.title) {
+    const titleEl = document.createElement('div');
+    titleEl.classList.add('iobio-percent-box-title');
+    titleEl.innerText = opt.title;
+    panelEl.insertBefore(titleEl, chartEl);
+  }
+
+  const d3Pie = d3.pie()
+  //const d3Pie = d3.layout.pie()
+    .sort(null);
 
   let data = [1, 3];
 
@@ -156,7 +170,7 @@ function core(opt) {
     return chart.getStyles();
   }
 
-  return { el, update, getStyles };
+  return { el: docFrag, update, getStyles };
 }
 
 

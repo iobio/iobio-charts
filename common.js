@@ -1,4 +1,4 @@
-const css = `
+const commonCss = `
   :root {
     --iobio-background-color: #fff;
   }
@@ -41,14 +41,14 @@ const css = `
 `;
 
 const commonStyleSheet = new CSSStyleSheet();
-commonStyleSheet.replaceSync(css);
+commonStyleSheet.replaceSync(commonCss);
 
 let styleEl;
 function applyCommonGlobalCSS() {
   if (!styleEl) {
     styleEl = document.createElement('style');
     styleEl.classList.add('iobio-css-common');
-    styleEl.textContent = css;
+    styleEl.textContent = commonCss;
     insertStyleElement(styleEl);
   }
 }
@@ -167,6 +167,7 @@ function getDimensions(el) {
 }
 
 export {
+  commonCss,
   commonStyleSheet,
   applyCommonGlobalCSS,
   applyGlobalCSS,
