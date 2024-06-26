@@ -1,6 +1,11 @@
 const commonCss = `
-  :root {
-    --iobio-background-color: #fff;
+
+  :host {
+    --data-color: var(--iobio-data-color, #2d8fc1);
+  }
+
+  .iobio-data {
+    fill: var(--data-color);
   }
 
   .iobio-percent-box,
