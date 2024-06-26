@@ -31,14 +31,13 @@ class DataBroker {
   }
 
   emitEvent(eventName, data) {
-
-      if (this._callbacks[eventName]) {
-        for (const callback of this._callbacks[eventName]) {
-          callback(data);
-        }
+    if (this._callbacks[eventName]) {
+      for (const callback of this._callbacks[eventName]) {
+        callback(data);
       }
+    }
 
-      this._latestUpdates[eventName] = data;
+    this._latestUpdates[eventName] = data;
   }
 
   onEvent(eventName, callback) {
