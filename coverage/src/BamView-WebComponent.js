@@ -100,29 +100,27 @@ button:hover {
     position: relative;
 }
 
-/* Styles for the reset button */
-.reset-button:hover circle {
+.circle-button-reset-chromosomes:hover circle {
     cursor: pointer;
     stroke: red;
     stroke-width: 2;
 }
 
-.reset-button:hover text {
+.circle-button-reset-chromosomes:hover text {
     cursor: pointer;
 }
 
-/* Styles for the chromosome button */
-.chromosome:hover rect {
+.chromosome-button-small:hover rect {
     cursor: pointer;
     stroke: red;
     stroke-width: 2;
 }
 
-.chromosome:hover text {
+.chromosome-button-small:hover text {
     cursor: pointer;
 }
 
-.chromosome-span text {
+.chromosome-button-big text {
     user-select: none;
 }
 
