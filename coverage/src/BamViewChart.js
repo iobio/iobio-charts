@@ -104,14 +104,6 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
             const circleButton = svg.append('g')
                 .attr('class', 'reset-button')
                 .attr('transform', 'translate(30, 30)')
-                .on('mouseover', function (event, d) {
-                    d3.select(this).select('circle').style('cursor', 'pointer').attr('stroke', 'red').attr('stroke-width', 1);
-                    d3.select(this).select('text').style('cursor', 'pointer');
-                })
-                .on('mouseout', function (event, d) {
-                    d3.select(this).select('circle').style('cursor', 'default').attr('stroke', 'none');
-                    d3.select(this).select('text').style('cursor', 'default');
-                })
                 .on('click', (event, d) => {
                     // Clear the input fields
                     bamViewControlsElement.querySelector('#bamview-region-chromosome').value = '';
@@ -162,34 +154,17 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
                 .enter().append('g')
                 .attr('class', 'chromosome')
                 .attr('transform', (d, i) => `translate(${buttons_xScale(d3.sum(bamHeaderArray.slice(0, i), e => e.length)) + margin2.left}, ${margin2.top})`)
-                .on('mouseover', function (event, d) {
-                    d3.select(this).select('rect').style('cursor', 'pointer').attr('stroke', 'red');
-                    d3.select(this).select('text').style('cursor', 'pointer');
-                })
-                .on('mouseout', function (event, d) {
-                    if (this !== activeButton) {
-                        d3.select(this).select('rect').style('cursor', 'default').attr('stroke', 'none');
-                        d3.select(this).select('text').style('cursor', 'default');
-                    }
-                })
                 .on('click', function (event, d) {
-                    if (activeButton) {
-                        d3.select(activeButton).select('rect').attr('stroke', 'none');  // Reset the previous active button
-                    }
-                    activeButton = this;  // Update the currently active button
-                    d3.select(this).select('rect').attr('stroke', 'red');
-                    console.log('clicked', d.sn);
                     zoomToChromosome(d.sn);
                 });
 
-            let activeButton = null;
+            
             // Add rectangles for each chromosome
             chromosomes.append('rect')
                 .attr('width', d => buttons_xScale(d.length))
                 .attr('height', 20)
                 .attr('y', 0)
-                .attr('fill', (d, i) => color(i))
-                .style('stroke-width', 2);
+                .attr('fill', (d, i) => color(i));
 
             // Add labels for each chromosome
             chromosomes.append('text')
@@ -399,10 +374,10 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
                 svg.selectAll('.chromosome-label').remove();
 
                 // Re-draw the chromosome button for the selected chromosome
-                const chromosomes = svg.selectAll('.chromosome')
+                const chromosomes = svg.selectAll('.chromosome-span')
                     .data([bamHeaderArray[chromosome - 1]])
                     .enter().append('g')
-                    .attr('class', 'chromosome')
+                    .attr('class', 'chromosome-span')
                     .attr('transform', `translate(${margin2.left}, ${margin2.top})`);
 
                 chromosomes.append('rect')
@@ -605,10 +580,10 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
         svg.selectAll('.chromosome-label').remove();
 
         // Re-draw the chromosome button for the selected chromosome
-        const chromosomes = svg.selectAll('.chromosome')
+        const chromosomes = svg.selectAll('.chromosome-span')
             .data([bamHeaderArray[chromosome - 1]])
             .enter().append('g')
-            .attr('class', 'chromosome')
+            .attr('class', 'chromosome-span')
             .attr('transform', `translate(${margin2.left}, ${margin2.top})`);
 
         chromosomes.append('rect')
