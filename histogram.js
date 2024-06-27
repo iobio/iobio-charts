@@ -1,9 +1,22 @@
 import iobioviz from './lib/iobio.viz/index.js';
-import { applyCommonGlobalCSS, getDataFromAttr, getDataBroker, upgradeProperty } from './common.js';
+import { commonCss, applyCommonGlobalCSS, getDataFromAttr, getDataBroker, upgradeProperty } from './common.js';
 import * as d3 from "d3";
 // TODO: currently data_broker has to be imported first, otherwise it's methods
 // are not defined when other custom elements try to call them
 import './data_broker.js';
+
+function genHtml(styles) {
+  return `
+    <style>
+      ${commonCss}
+    </style>
+
+    <div class='iobio-histogram'>
+      <div class='iobio-svg-container'>
+      </div>
+    </div>
+  `;
+}
 
 class HistogramElement extends HTMLElement {
   constructor() {
@@ -63,8 +76,17 @@ function createHistogram() {
   return core();
 }
 
+let templateEl;
 function core() {
-  const el = document.createElement('div');
+
+  if (!templateEl) {
+    templateEl = document.createElement('template');
+    templateEl.innerHTML = genHtml("");
+  }
+
+  const docFrag = templateEl.content.cloneNode(true);
+
+  const chartEl = docFrag.querySelector('.iobio-svg-container');
 
   const histogramChart = iobioviz.barViewer()
     .xValue(function(d) { return d[0]; })
@@ -79,11 +101,11 @@ function core() {
     });
 
   function update(data) {
-    const selection = d3.select(el).datum(data);
+    const selection = d3.select(chartEl).datum(data);
     histogramChart(selection);
   }
 
-  return { el, update };
+  return { el: docFrag, update };
 }
 
 
