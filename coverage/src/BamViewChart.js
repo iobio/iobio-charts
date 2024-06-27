@@ -108,10 +108,10 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
 
             // Create a circle for the reset button
             circleButton.append('circle')
+                .attr('class', 'circle')
                 .attr('cx', 0)
                 .attr('cy', 0)
-                .attr('r', 15)
-                .attr('fill', 'steelblue');
+                .attr('r', 15);
 
             // Create a text for the reset button
             circleButton.append('text')
@@ -239,8 +239,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
                 .attr('x', d => xScale(getChromosomeStart(d.group) + parseInt(d.newOffset)))
                 .attr('y', d => yScale(d.avgCoverage))
                 .attr('width', d => xScale(d.chunkLength * 16384)) // Width of each bar
-                .attr('height', d => mainHeight - yScale(d.avgCoverage))
-                .attr('fill', 'steelblue');
+                .attr('height', d => mainHeight - yScale(d.avgCoverage));
 
             // Navigation bars
             nav.selectAll('.bar')
@@ -250,8 +249,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
                 .attr('x', (d, i) => xNavScale(getChromosomeStart(d.group) + parseInt(d.newOffset)))
                 .attr('y', d => yNavScale(d.avgCoverage))
                 .attr('width', d => xScale(d.chunkLength * 16384)) // Width of each bar
-                .attr('height', d => navHeight - yNavScale(d.avgCoverage))
-                .attr('fill', 'steelblue');
+                .attr('height', d => navHeight - yNavScale(d.avgCoverage)); 
 
             // Add mean line
             main.append('line')
@@ -405,8 +403,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
                     .attr('x', d => xScale(d.offset))
                     .attr('width', d => xScale(16384))
                     .attr('y', d => yScale(d.avgCoverage_16kbp))
-                    .attr('height', d => mainHeight - yScale(d.avgCoverage_16kbp))
-                    .attr('fill', 'steelblue');
+                    .attr('height', d => mainHeight - yScale(d.avgCoverage_16kbp));
 
                 nav.selectAll('.bar')
                     .data(selectedChromosomeData)
@@ -415,8 +412,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
                     .attr('x', d => xScale(d.offset))
                     .attr('width', d => xScale(16384))
                     .attr('y', d => yNavScale(d.avgCoverage_16kbp))
-                    .attr('height', d => navHeight - yNavScale(d.avgCoverage_16kbp))
-                    .attr('fill', 'steelblue');
+                    .attr('height', d => navHeight - yNavScale(d.avgCoverage_16kbp));
 
                 // Create a text label for showing the chromosome name and selected region and put it in the botton of the main chart
                 svg.append('text')
@@ -615,8 +611,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
             .attr('x', d => xScale(d.offset))
             .attr('width', d => xScale(16384))
             .attr('y', d => yScale(d.avgCoverage_16kbp))
-            .attr('height', d => mainHeight - yScale(d.avgCoverage_16kbp))
-            .attr('fill', 'steelblue');
+            .attr('height', d => mainHeight - yScale(d.avgCoverage_16kbp));
 
         nav.selectAll('.bar')
             .data(selectedChromosomeData)
@@ -625,8 +620,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
             .attr('x', d => xScale(d.offset))
             .attr('width', d => xScale(16384))
             .attr('y', d => yNavScale(d.avgCoverage_16kbp))
-            .attr('height', d => navHeight - yNavScale(d.avgCoverage_16kbp))
-            .attr('fill', 'steelblue');
+            .attr('height', d => navHeight - yNavScale(d.avgCoverage_16kbp));
 
         // Create a text label for showing the chromosome name and selected region and put it in the botton of the main chart
         svg.append('text')
