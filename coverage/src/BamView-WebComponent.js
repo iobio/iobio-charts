@@ -112,7 +112,8 @@ button:hover {
     user-select: none;
 }
 
-.chromosome-button-big text {
+.chromosome-button-big text,
+.gene-region-label  {
     user-select: none;
 }
 
