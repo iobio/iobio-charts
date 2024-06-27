@@ -101,6 +101,22 @@ button:hover {
     position: relative;
 }
 
+.chromosome-button:hover rect,
+.chromosome-button:hover circle {
+    cursor: pointer;
+    stroke: red;
+    stroke-width: 2;
+}
+
+.chromosome-button text {
+    cursor: pointer;
+    user-select: none;
+}
+
+.chromosome-button-big text {
+    user-select: none;
+}
+
 .bar {
     fill: var(--data-color);
 }
@@ -228,9 +244,9 @@ class BamViewChart extends HTMLElement {
     }
     
     handleGoClick() {
-        const chromosome = chromosomeInput.value.trim();
-        const start = parseInt(startInput.value.trim());
-        const end = parseInt(endInput.value.trim());
+        const chromosome = this.chromosomeInput.value.trim();
+        const start = parseInt(this.startInput.value.trim());
+        const end = parseInt(this.endInput.value.trim());
         const chromosomeNumber = chromosome.replace('chr', '');
 
         if (this.validateInput(chromosomeNumber, start, end)) {

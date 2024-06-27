@@ -1,7 +1,14 @@
 const commonCss = `
 
   :host {
+    display: block;
+    width: 100%;
+    height: 100%;
     --data-color: var(--iobio-data-color, #2d8fc1);
+  }
+
+  * {
+    box-sizing: border-box;
   }
 
   .iobio-data {
@@ -20,8 +27,9 @@ const commonCss = `
     height: 100%;
   }
 
-  .iobio-percent-box-title {
-    margin: 10px;
+  .iobio-histogram {
+    width: 100%;
+    height: 100%;
   }
 
   .iobio-panel > .iobio-title {
@@ -40,8 +48,18 @@ const commonCss = `
     text-align: center;
   }
 
-  .iobio-svg-container {
-    max-height: 180px;
+  .iobio-percent-box-title {
+    height: 20%;
+  }
+
+  .iobio-percent-box-svg-container {
+    width: 100%;
+    height: 80%;
+  }
+
+  .iobio-histogram-svg-container {
+    width: 100%;
+    height: 100%;
   }
 `;
 
