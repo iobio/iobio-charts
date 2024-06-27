@@ -7,29 +7,12 @@ const commonCss = `
     --data-color: var(--iobio-data-color, #2d8fc1);
   }
 
-  * {
+  *, *::before, *::after {
     box-sizing: border-box;
   }
 
   .iobio-data {
     fill: var(--data-color);
-  }
-
-  .iobio-percent-box,
-  .iobio-percent-box *,
-  .iobio-percent-box *::before,
-  .iobio-percent-box *::after {
-    box-sizing: border-box;
-  }
-
-  .iobio-percent-box {
-    width: 100%;
-    height: 100%;
-  }
-
-  .iobio-histogram {
-    width: 100%;
-    height: 100%;
   }
 
   .iobio-panel > .iobio-title {
@@ -46,24 +29,6 @@ const commonCss = `
     border: 1px solid rgb(230,230,230);
     border-radius: 2pt;
     text-align: center;
-  }
-
-  .iobio-percent-box-title {
-    height: 20%;
-  }
-
-  .iobio-percent-box-svg-container {
-    width: 100%;
-    height: 80%;
-  }
-
-  .iobio-histogram-title {
-    height: 10%;
-  }
-
-  .iobio-histogram-svg-container {
-    width: 100%;
-    height: 90%;
   }
 `;
 

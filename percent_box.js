@@ -12,7 +12,19 @@ function genHtml(styles) {
       ${styles}
 
       .iobio-percent-box {
+        width: 100%;
+        height: 100%;
       }
+
+      .iobio-percent-box-title {
+        height: 20%;
+      }
+
+      .iobio-percent-box-svg-container {
+        width: 100%;
+        height: 80%;
+      }
+
     </style>
 
     <div class='iobio-percent-box'>

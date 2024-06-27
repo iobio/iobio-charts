@@ -9,6 +9,21 @@ function genHtml(styles) {
   return `
     <style>
       ${commonCss}
+
+      .iobio-histogram {
+        width: 100%;
+        height: 100%;
+      }
+
+      .iobio-histogram-title {
+        height: 10%;
+      }
+
+      .iobio-histogram-svg-container {
+        width: 100%;
+        height: 90%;
+      }
+
     </style>
 
     <div class='iobio-histogram'>
