@@ -31,9 +31,17 @@ class PercentBoxElement extends HTMLElement {
 
     this.attachShadow({ mode: 'open' });
 
+    upgradeProperty(this, 'title');
     upgradeProperty(this, 'percent-key');
     upgradeProperty(this, 'total-key');
     upgradeProperty(this, 'broker');
+  }
+
+  get title() {
+    return this.getAttribute('title');
+  }
+  set title(_) {
+    this.setAttribute('title', _);
   }
 
   get percentKey() {
@@ -60,7 +68,7 @@ class PercentBoxElement extends HTMLElement {
   connectedCallback() {
 
     this._pbox = core({
-      title: this.getAttribute('title'),
+      title: this.title,
     });
 
     const sheet = new CSSStyleSheet();

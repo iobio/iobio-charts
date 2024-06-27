@@ -12,7 +12,9 @@ function genHtml(styles) {
     </style>
 
     <div class='iobio-histogram'>
-      <div class='iobio-histogram-svg-container'>
+      <div class='iobio-panel'>
+        <div class='iobio-histogram-svg-container'>
+        </div>
       </div>
     </div>
   `;
@@ -24,7 +26,15 @@ class HistogramElement extends HTMLElement {
 
     this.attachShadow({ mode: 'open' });
 
+    upgradeProperty(this, 'title');
     upgradeProperty(this, 'broker-key');
+  }
+
+  get title() {
+    return this.getAttribute('title');
+  }
+  set title(_) {
+    this.setAttribute('title', _);
   }
 
   get brokerKey() {
@@ -36,7 +46,9 @@ class HistogramElement extends HTMLElement {
 
   connectedCallback() {
 
-    this._histo = core();
+    this._histo = core({
+      title: this.title,
+    });
     
     this.shadowRoot.appendChild(this._histo.el);
 
@@ -77,7 +89,7 @@ function createHistogram() {
 }
 
 let templateEl;
-function core() {
+function core(opt) {
 
   if (!templateEl) {
     templateEl = document.createElement('template');
@@ -86,7 +98,16 @@ function core() {
 
   const docFrag = templateEl.content.cloneNode(true);
 
+  const panelEl = docFrag.querySelector('.iobio-panel');
+
   const chartEl = docFrag.querySelector('.iobio-histogram-svg-container');
+
+  if (opt && opt.title) {
+    const titleEl = document.createElement('div');
+    titleEl.classList.add('iobio-histogram-title');
+    titleEl.innerText = opt.title;
+    panelEl.insertBefore(titleEl, chartEl);
+  }
 
   const chart = iobioviz.barViewer()
     .xValue(function(d) { return d[0]; })
