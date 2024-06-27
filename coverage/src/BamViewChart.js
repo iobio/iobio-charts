@@ -137,7 +137,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
             svg.selectAll('.chromosome-button-small').remove();
             svg.selectAll('.chromosome-label').remove();
             svg.selectAll('.chromosome-button-big').remove();
-            svg.selectAll('.region-highlight, .region-label').remove();
+            svg.selectAll('.gene-region-highlight, .gene-region-label').remove();
 
             // Create button group
             const buttons_xScale = d3.scaleLinear()
@@ -550,7 +550,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
             drawGeneRegion(xScale, margin, svg, originStart, originEnd, geneName, orgChromosome)
         }
         if (geneName == null){
-            svg.selectAll(".region-highlight, .region-label").remove();
+            svg.selectAll(".gene-region-highlight, .gene-region-label").remove();
         }
 
         // Calculate the center of the selected region and adjust to ensure a minimum range of 500,000 bp
@@ -658,7 +658,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
                     drawGeneRegion(mainXScale, margin, svg, originStart, originEnd, geneName, orgChromosome);
                 }
                 if (geneName == null){
-                    svg.selectAll(".region-highlight, .region-label").remove();
+                    svg.selectAll(".gene-region-highlight, .gene-region-label").remove();
                 }
             
 
@@ -728,7 +728,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
     function drawGeneRegion(xScale, margin, svg, start, end, geneName, chromosome) {
         const yPos = margin.top - 10;
         const rectHeight = 5;
-        svg.selectAll(".region-highlight, .region-label").remove();
+        svg.selectAll(".gene-region-highlight, .gene-region-label").remove();
 
         // Append tooltip div to the body if it doesn't already exist
         let tooltip = d3.select("body").select(".tooltip");
@@ -747,7 +747,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
 
         // Draw the rectangle for the gene region
         svg.append("rect")
-            .attr("class", "region-highlight")
+            .attr("class", "gene-region-highlight")
             .attr("x", xScale(start) + margin.left)
             .attr("y", yPos)
             .attr("width", xScale(end) - xScale(start))
@@ -773,9 +773,9 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
 
             // Add a label for the gene
             svg.append("text")
-            .attr("class", "region-label")
+            .attr("class", "gene-region-label")
             .attr("x", xScale(start) + (xScale(end) - xScale(start)) / 2 + margin.left)
-            .attr("y", yPos + rectHeight / 2)
+            .attr("y", yPos - rectHeight)
             .attr("dy", ".35em")
             .attr("text-anchor", "middle")
             .attr("fill", "black")
