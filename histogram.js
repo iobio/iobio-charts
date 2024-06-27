@@ -43,6 +43,7 @@ class HistogramElement extends HTMLElement {
 
     upgradeProperty(this, 'title');
     upgradeProperty(this, 'broker-key');
+    upgradeProperty(this, 'ignore-outliers');
   }
 
   get title() {
@@ -50,6 +51,13 @@ class HistogramElement extends HTMLElement {
   }
   set title(_) {
     this.setAttribute('title', _);
+  }
+
+  get ignoreOutliers() {
+    return this.hasAttribute('ignore-outliers');
+  }
+  set ignoreOutliers(_) {
+    this.setAttribute('ignore-outliers', _);
   }
 
   get brokerKey() {
@@ -79,6 +87,10 @@ class HistogramElement extends HTMLElement {
         }).map(function (k) {
           return [+k, +data[k]]
         });
+
+        if (this.ignoreOutliers) {
+          d = iobioviz.layout.outlier()(d);
+        }
 
         this._histo.update(d);
       });
