@@ -219,8 +219,13 @@
       }
 
       document.addEventListener('chromosomeSelected', (event) => {
-        console.log('Chromosome selected:', event.detail.chromosome);
+        console.log('Chromosome selected:', event.detail);
         // do something with the selected chromosome
+      });
+
+      document.addEventListener('allChromosomes', (event) => {
+        console.log('All chromosomes selected', event.detail);
+        // do something to all chromosome selection
       });
 
 

@@ -88,6 +88,19 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
             return start;
         }
 
+
+        // Dispatch custom event from the shadow DOM element, set to bubble up and be composed to cross shadow DOM boundaries
+        function dispatchCustomEvent(eventName, detail) {
+            const customEvent = new CustomEvent(eventName, {
+                detail: detail,
+                bubbles: true,
+                composed: true
+            });
+            const shadowRoot = document.querySelector('iobio-coverage-depth').shadowRoot;
+            shadowRoot.dispatchEvent(customEvent);
+        }
+        
+
         // Reset to all chromosomes
         function drawCircleButton(svg) {
             // Remove existing reset button if it exists
@@ -104,6 +117,9 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
                     bamViewControlsElement.querySelector('#gene-name-input').value = '';
                 // Redraw the chart
                 drawChart(svg);
+
+                // Dispatch custom event from the shadow DOM element
+                dispatchCustomEvent('allChromosomes', { refName: "_all"});
             });
 
             // Create a circle for the reset button
@@ -156,16 +172,9 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
                 .attr('transform', (d, i) => `translate(${buttons_xScale(d3.sum(bamHeaderArray.slice(0, i), e => e.length)) + margin2.left}, ${margin2.top})`)
                 .on('click', function (event, d) {
                     zoomToChromosome(d.sn);
-                    console.log(d.sn);
                     
-                    // Dispatch custom event from the shadow DOM element, set to bubble up and be composed to cross shadow DOM boundaries
-                    const customEvent = new CustomEvent('chromosomeSelected', {
-                        detail: { chromosome: d.sn },
-                        bubbles: true,
-                        composed: true
-                    });
-                    const shadowRoot = document.querySelector('iobio-coverage-depth').shadowRoot;
-                    shadowRoot.dispatchEvent(customEvent);
+                    // Dispatch custom event from the shadow DOM element
+                    dispatchCustomEvent('chromosomeSelected', { refName: "chr" + d.sn });
                 });
 
             
