@@ -94,7 +94,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
             svg.selectAll('.circle-button-reset-chromosomes').remove();
             // Create a circle button for reseting to all chromosomes
             const circleButton = svg.append('g')
-                .attr('class', 'circle-button-reset-chromosomes')
+                .attr('class', 'circle-button-reset-chromosomes chromosome-button')
                 .attr('transform', 'translate(30, 30)')
                 .on('click', (event, d) => {
                     // Clear the input fields
@@ -152,7 +152,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
             const chromosomes = svg.selectAll('.chromosome-button-small')
                 .data(bamHeaderArray)
                 .enter().append('g')
-                .attr('class', 'chromosome-button-small')
+                .attr('class', 'chromosome-button-small chromosome-button')
                 .attr('transform', (d, i) => `translate(${buttons_xScale(d3.sum(bamHeaderArray.slice(0, i), e => e.length)) + margin2.left}, ${margin2.top})`)
                 .on('click', function (event, d) {
                     zoomToChromosome(d.sn);

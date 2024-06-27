@@ -100,24 +100,16 @@ button:hover {
     position: relative;
 }
 
-.circle-button-reset-chromosomes:hover circle {
+.chromosome-button:hover rect,
+.chromosome-button:hover circle {
     cursor: pointer;
     stroke: red;
     stroke-width: 2;
 }
 
-.circle-button-reset-chromosomes:hover text {
+.chromosome-button text {
     cursor: pointer;
-}
-
-.chromosome-button-small:hover rect {
-    cursor: pointer;
-    stroke: red;
-    stroke-width: 2;
-}
-
-.chromosome-button-small:hover text {
-    cursor: pointer;
+    user-select: none;
 }
 
 .chromosome-button-big text {
