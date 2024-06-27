@@ -115,7 +115,7 @@ function core(opt) {
     .wValue(function() { return 1; })
     //.height(256)
     //.width("100%")
-    .margin({ top: 5, right: 20, bottom: 20, left: 50 })
+    .margin({ top: 5, right: 20, bottom: 20, left: 55 })
     .sizeRatio(.75)
     .tooltip(function(d) {
       return d[1];
