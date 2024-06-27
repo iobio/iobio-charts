@@ -117,7 +117,7 @@ button:hover {
     user-select: none;
 }
 
-.bar {
+.bar, .circle {
     fill: var(--data-color);
 }
 

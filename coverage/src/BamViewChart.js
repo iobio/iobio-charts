@@ -108,10 +108,10 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
 
             // Create a circle for the reset button
             circleButton.append('circle')
+                .attr('class', 'circle')
                 .attr('cx', 0)
                 .attr('cy', 0)
-                .attr('r', 15)
-                .attr('fill', 'steelblue');
+                .attr('r', 15);
 
             // Create a text for the reset button
             circleButton.append('text')
