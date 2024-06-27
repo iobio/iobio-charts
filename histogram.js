@@ -77,7 +77,7 @@ class HistogramElement extends HTMLElement {
 
     const broker = getDataBroker(this);
     if (broker) {
-      let data = [[0,1],[1,2]];
+      let data = [];
       this._histo.update(data);
 
       broker.onEvent(this.brokerKey, (data) => {
