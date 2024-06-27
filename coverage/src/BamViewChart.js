@@ -90,45 +90,33 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
 
         // Reset to all chromosomes
         function drawCircleButton(svg) {
-            // Remove existing chromosome buttons and charts
-            svg.selectAll('.chromosome').remove();
-            svg.selectAll('.bar').remove();
-            svg.selectAll('.brush').remove();
-            svg.selectAll('.mean-line').remove();
-            svg.selectAll('.mean-label').remove();
-            svg.selectAll('.y-axis').remove();
-            svg.selectAll('.y-axis-label').remove();
-            svg.selectAll('.chromosome-label').remove();
-            svg.selectAll(".region-highlight, .region-label").remove();
+            // Remove existing reset button if it exists
+            svg.selectAll('.circle-button-reset-chromosomes').remove();
             // Create a circle button for reseting to all chromosomes
-            svg.append('circle')
-                .attr('cx', 30)
-                .attr('cy', 30)
-                .attr('r', 15)
-                .attr('fill', 'steelblue')
-                .on('mouseover', function (event, d) {
-                    d3.select(this).style('cursor', 'pointer')
-                                    .attr('stroke', 'red')
-                                    .attr('stroke-width', 1);
-                })
-                .on('mouseout', function (event, d) {
-                    d3.select(this).style('cursor', 'default')
-                                    .attr('stroke', 'none');
-                })
+            const circleButton = svg.append('g')
+                .attr('class', 'circle-button-reset-chromosomes chromosome-button')
+                .attr('transform', 'translate(30, 30)')
                 .on('click', (event, d) => {
                     // Clear the input fields
                     bamViewControlsElement.querySelector('#bamview-region-chromosome').value = '';
                     bamViewControlsElement.querySelector('#bamview-region-start').value = '';
                     bamViewControlsElement.querySelector('#bamview-region-end').value = '';
                     bamViewControlsElement.querySelector('#gene-name-input').value = '';
-                    // Redraw the chart
-                    drawChart(svg);
-                });
+                // Redraw the chart
+                drawChart(svg);
+            });
+
+            // Create a circle for the reset button
+            circleButton.append('circle')
+                .attr('cx', 0)
+                .attr('cy', 0)
+                .attr('r', 15)
+                .attr('fill', 'steelblue');
 
             // Create a text for the reset button
-            svg.append('text')
-                .attr('x', 30)
-                .attr('y', 30)
+            circleButton.append('text')
+                .attr('x', 0)
+                .attr('y', 0)
                 .attr('dy', '.35em')
                 .attr('text-anchor', 'middle')
                 .attr('fill', 'white')
@@ -139,9 +127,17 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
 
         // Draw the bar chart
         function drawChart(svg) {
-
-            // Create circle button for reset
-            drawCircleButton(svg);
+            // Remove existing elements to avoid duplication
+            svg.selectAll('.bar').remove();
+            svg.selectAll('.brush').remove();
+            svg.selectAll('.mean-line').remove();
+            svg.selectAll('.mean-label').remove();
+            svg.selectAll('.y-axis').remove();
+            svg.selectAll('.y-axis-label').remove();
+            svg.selectAll('.chromosome-button-small').remove();
+            svg.selectAll('.chromosome-label').remove();
+            svg.selectAll('.chromosome-button-big').remove();
+            svg.selectAll('.region-highlight, .region-label').remove();
 
             // Create button group
             const buttons_xScale = d3.scaleLinear()
@@ -153,40 +149,22 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
                             .domain([0, bamHeaderArray.length - 1]);
 
             // Create groups for each chromosome
-            const chromosomes = svg.selectAll('.chromosome')
+            const chromosomes = svg.selectAll('.chromosome-button-small')
                 .data(bamHeaderArray)
                 .enter().append('g')
-                .attr('class', 'chromosome')
-                .attr('transform', (d, i) => `translate(${buttons_xScale(d3.sum(bamHeaderArray.slice(0, i), e => e.length)) + margin2.left}, ${margin2.top})`);
+                .attr('class', 'chromosome-button-small chromosome-button')
+                .attr('transform', (d, i) => `translate(${buttons_xScale(d3.sum(bamHeaderArray.slice(0, i), e => e.length)) + margin2.left}, ${margin2.top})`)
+                .on('click', function (event, d) {
+                    zoomToChromosome(d.sn);
+                });
 
-            let activeButton = null;
+            
             // Add rectangles for each chromosome
             chromosomes.append('rect')
                 .attr('width', d => buttons_xScale(d.length))
                 .attr('height', 20)
                 .attr('y', 0)
-                .attr('fill', (d, i) => color(i))
-                .style('stroke-width', 2)
-                .on('mouseover', function (event, d) {
-                    d3.select(this).style('cursor', 'pointer')
-                                    .attr('stroke', 'red');
-                })
-                .on('mouseout', function (event, d) {
-                    if (this !== activeButton) {
-                        d3.select(this).style('cursor', 'default')
-                                        .attr('stroke', 'none');
-                    }
-                })
-                .on('click', function (event, d) {
-                    if (activeButton) {
-                        d3.select(activeButton)
-                        .attr('stroke', 'none');  // Reset the previous active button
-                    }
-                    activeButton = this;  // Update the currently active button
-                    d3.select(this)
-                    .attr('stroke', 'red');
-                    zoomToChromosome(d.sn);
-                });
+                .attr('fill', (d, i) => color(i));
 
             // Add labels for each chromosome
             chromosomes.append('text')
@@ -300,8 +278,8 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
 
             // Brush
             brush = d3.brushX()
-                            .extent([[0, 0], [innerWidth, navHeight]])
-                            .on('brush end', brushed);
+                        .extent([[0, 0], [innerWidth, navHeight]])
+                        .on('brush end', brushed);
 
             nav.append('g')
                 .attr('class', 'brush')
@@ -392,14 +370,15 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
                 main.selectAll('.bar').remove();
                 nav.selectAll('.bar').remove();
                 nav.selectAll('.brush').remove();
-                svg.selectAll('.chromosome').remove();
+                svg.selectAll('.chromosome-button-small').remove();
                 svg.selectAll('.chromosome-label').remove();
+                svg.selectAll('.chromosome-button-big').remove();
 
                 // Re-draw the chromosome button for the selected chromosome
-                const chromosomes = svg.selectAll('.chromosome')
+                const chromosomes = svg.selectAll('.chromosome-button-big')
                     .data([bamHeaderArray[chromosome - 1]])
                     .enter().append('g')
-                    .attr('class', 'chromosome')
+                    .attr('class', 'chromosome-button-big')
                     .attr('transform', `translate(${margin2.left}, ${margin2.top})`);
 
                 chromosomes.append('rect')
@@ -544,8 +523,11 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
             }
 
         }
-
+        
+        // Draw the chart
         drawChart(svg);
+        // Create circle button for reset chromosomes and redraw the chart
+        drawCircleButton(svg);
     }
 
 
@@ -598,14 +580,15 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
         main.selectAll('.bar').remove();
         nav.selectAll('.bar').remove();
         nav.selectAll('.brush').remove();
-        svg.selectAll('.chromosome').remove();
+        svg.selectAll('.chromosome-button-small').remove();
         svg.selectAll('.chromosome-label').remove();
+        svg.selectAll('.chromosome-button-big').remove();
 
         // Re-draw the chromosome button for the selected chromosome
-        const chromosomes = svg.selectAll('.chromosome')
+        const chromosomes = svg.selectAll('.chromosome-button-big')
             .data([bamHeaderArray[chromosome - 1]])
             .enter().append('g')
-            .attr('class', 'chromosome')
+            .attr('class', 'chromosome-button-big')
             .attr('transform', `translate(${margin2.left}, ${margin2.top})`);
 
         chromosomes.append('rect')
