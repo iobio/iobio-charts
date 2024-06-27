@@ -218,6 +218,12 @@
         return request;
       }
 
+      document.addEventListener('chromosomeSelected', (event) => {
+        console.log('Chromosome selected:', event.detail.chromosome);
+        // do something with the selected chromosome
+      });
+
+
 
     </script>
   </body>
