@@ -1,5 +1,5 @@
 import iobioviz from './lib/iobio.viz/index.js';
-import { commonCss, applyCommonGlobalCSS, getDataFromAttr, getDataBroker, upgradeProperty } from './common.js';
+import { commonCss, applyCommonGlobalCSS, getDataFromAttr, getDataBroker, upgradeProperty, getDimensions } from './common.js';
 import * as d3 from "d3";
 // TODO: currently data_broker has to be imported first, otherwise it's methods
 // are not defined when other custom elements try to call them
@@ -12,7 +12,7 @@ function genHtml(styles) {
     </style>
 
     <div class='iobio-histogram'>
-      <div class='iobio-svg-container'>
+      <div class='iobio-histogram-svg-container'>
       </div>
     </div>
   `;
@@ -86,14 +86,14 @@ function core() {
 
   const docFrag = templateEl.content.cloneNode(true);
 
-  const chartEl = docFrag.querySelector('.iobio-svg-container');
+  const chartEl = docFrag.querySelector('.iobio-histogram-svg-container');
 
-  const histogramChart = iobioviz.barViewer()
+  const chart = iobioviz.barViewer()
     .xValue(function(d) { return d[0]; })
     .yValue(function(d) { return d[1]; })
     .wValue(function() { return 1; })
-    .height(256)
-    .width("100%")
+    //.height(256)
+    //.width("100%")
     .margin({ top: 5, right: 20, bottom: 20, left: 50 })
     .sizeRatio(.75)
     .tooltip(function(d) {
@@ -101,8 +101,14 @@ function core() {
     });
 
   function update(data) {
+    const dim = getDimensions(chartEl);
+    //console.log(dim);
+
+    chart.width(dim.contentWidth);
+    chart.height(dim.contentHeight);
+
     const selection = d3.select(chartEl).datum(data);
-    histogramChart(selection);
+    chart(selection);
   }
 
   return { el: docFrag, update };

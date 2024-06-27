@@ -30,8 +30,19 @@
         align-content: flex-start;
       }
 
-      .histogram-container {
+      .percent-container {
+        width: 180px;
+        height: 180px;
+      }
+
+      .histogram-column {
+        display: flex;
+        flex-direction: column;
         flex: 5;
+      }
+
+      .histogram-container {
+        height: 256px;
       }
 
     </style>
@@ -48,55 +59,74 @@
 
     <div class='bottom-container'>
       <div class="percent-row">
-        <iobio-percent-box
-          title="Mapped Reads"
-          percent-key="mapped_reads"
-          total-key="total_reads">
-        </iobio-percent-box>
 
-        <iobio-percent-box
-          title="Forward Strands"
-          percent-key="forward_strands"
-          total-key="total_reads">
-        </iobio-percent-box>
+        <div class='percent-container'>
+          <iobio-percent-box
+            title="Mapped Reads"
+            percent-key="mapped_reads"
+            total-key="total_reads">
+          </iobio-percent-box>
+        </div>
 
-        <iobio-percent-box
-          title="Proper Pairs"
-          percent-key="proper_pairs"
-          total-key="total_reads">
-        </iobio-percent-box>
+        <div class='percent-container'>
+          <iobio-percent-box
+            title="Forward Strands"
+            percent-key="forward_strands"
+            total-key="total_reads">
+          </iobio-percent-box>
+        </div>
 
-        <iobio-percent-box
-          title="Singletons"
-          percent-key="singletons"
-          total-key="total_reads">
-        </iobio-percent-box>
+        <div class='percent-container'>
+          <iobio-percent-box
+            title="Proper Pairs"
+            percent-key="proper_pairs"
+            total-key="total_reads">
+          </iobio-percent-box>
+        </div>
 
-        <iobio-percent-box
-          title="Both Mates Mapped"
-          percent-key="both_mates_mapped"
-          total-key="total_reads">
-        </iobio-percent-box>
+        <div class='percent-container'>
+          <iobio-percent-box
+            title="Singletons"
+            percent-key="singletons"
+            total-key="total_reads">
+          </iobio-percent-box>
+        </div>
 
-        <iobio-percent-box
-          title="Duplicates"
-          percent-key="duplicates"
-          total-key="total_reads">
-        </iobio-percent-box>
+        <div class='percent-container'>
+          <iobio-percent-box
+            title="Both Mates Mapped"
+            percent-key="both_mates_mapped"
+            total-key="total_reads">
+          </iobio-percent-box>
+        </div>
+
+        <div class='percent-container'>
+          <iobio-percent-box
+            title="Duplicates"
+            percent-key="duplicates"
+            total-key="total_reads">
+          </iobio-percent-box>
+        </div>
       </div>
 
-      <div class='histogram-container'>
-        <iobio-histogram
-          broker-key="coverage_hist">
-        </iobio-histogram>
+      <div class='histogram-column'>
+        <div class='histogram-container'>
+          <iobio-histogram
+            broker-key="coverage_hist">
+          </iobio-histogram>
+        </div>
 
-        <iobio-histogram
-          broker-key="frag_hist">
-        </iobio-histogram>
+        <div class='histogram-container'>
+          <iobio-histogram
+            broker-key="frag_hist">
+          </iobio-histogram>
+        </div>
 
-        <iobio-histogram
-          broker-key="mapq_hist">
-        </iobio-histogram>
+        <div class='histogram-container'>
+          <iobio-histogram
+            broker-key="mapq_hist">
+          </iobio-histogram>
+        </div>
       </div>
     </div>
 

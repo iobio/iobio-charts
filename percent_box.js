@@ -17,7 +17,7 @@ function genHtml(styles) {
 
     <div class='iobio-percent-box'>
       <div class='iobio-panel'>
-        <div class='iobio-svg-container'>
+        <div class='iobio-percent-box-svg-container'>
         </div>
       </div>
     </div>
@@ -124,7 +124,7 @@ function core(opt) {
 
   const panelEl = docFrag.querySelector('.iobio-panel');
 
-  const chartEl = docFrag.querySelector('.iobio-svg-container');
+  const chartEl = docFrag.querySelector('.iobio-percent-box-svg-container');
 
   if (opt && opt.title) {
     const titleEl = document.createElement('div');
@@ -146,6 +146,7 @@ function core(opt) {
   function render() {
 
     const dim = getDimensions(chartEl);
+    //console.log(chartEl, dim);
 
     let smallest = dim.contentWidth < dim.contentHeight ? dim.contentWidth : dim.contentHeight;
     const radius = smallest / 2;
