@@ -136,7 +136,9 @@ function core(opt) {
       return d[1];
     });
 
-  function update(data) {
+  let data;
+
+  function render() {
     const dim = getDimensions(chartEl);
     //console.log(dim);
 
@@ -145,6 +147,14 @@ function core(opt) {
 
     const selection = d3.select(chartEl).datum(data);
     chart(selection);
+  }
+
+  const observer = new ResizeObserver(render);
+  observer.observe(chartEl);
+
+  function update(newData) {
+    data = newData;
+    render();
   }
 
   return { el: docFrag, update };
