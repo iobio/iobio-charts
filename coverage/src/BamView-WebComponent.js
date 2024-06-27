@@ -256,7 +256,7 @@ class BamViewChart extends HTMLElement {
     }
 
     handleSearchClick() {
-        const geneName = this.geneNameInput.value.trim();
+        const geneName = this.geneNameInput.value.trim().toUpperCase();
         const source = this.sourceSelect.value;
         const build = this.bamHeader[0].length === 249250621 ? 'GRCh37' : 'GRCh38';
 
