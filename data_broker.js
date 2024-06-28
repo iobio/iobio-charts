@@ -139,8 +139,12 @@ class DataBroker {
     const coverage = parseCoverage(coverageText);
     const header = parseHeader(headerText);
 
-    const refsWithCoverage = Object.keys(coverage);
-    const validRefs = [];
+    const refsWithCoverage = Object.keys(coverage).filter((key) => {
+      // TODO: 1000 is pretty arbitrary
+      return coverage[key].length > 1000;
+    });
+
+    let validRefs = [];
     for (let i = 0; i < refsWithCoverage.length; i++) {
       validRefs.push(header.sq[i]);
     }
@@ -149,6 +153,7 @@ class DataBroker {
 
     const res = await this._iobioRequest("/alignmentStatsStream", {
       url: this.url,
+      indexUrl,
       regions,
     });
 
