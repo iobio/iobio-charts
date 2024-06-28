@@ -245,9 +245,18 @@ class BamViewChart extends HTMLElement {
     }
     
     handleGoClick() {
+        let parsedStart, parsedEnd;
         const chromosome = this.chromosomeInput.value.trim();
-        const start = parseInt(this.startInput.value.trim());
-        const end = parseInt(this.endInput.value.trim());
+        const startInput = this.startInput.value.trim();
+        const endInput = this.endInput.value.trim();
+        
+        // Check if start and end inputs are non-empty before parsing
+        if (startInput !== "") {
+            parsedStart = parseInt(startInput);
+        }
+        if (endInput !== "") {
+            parsedEnd = parseInt(endInput);
+        }
         const chromosomeNumber = chromosome.replace('chr', '');
 
         // Validate chromosome number first
@@ -256,11 +265,11 @@ class BamViewChart extends HTMLElement {
             return;
         }
 
-        // Check if only the chromosome is provided and start/end are NaN
-        if (isNaN(start) && isNaN(end)) {
+        // Check if only the chromosome is provided and start and end inputs are empty
+        if (startInput === "" && endInput === "") {
             this._bamView.zoomToChromosome(chromosomeNumber);
-        } else if (this.validateInput(chromosomeNumber, start, end)) {
-            this._bamView.brushToRegion(this.bamReadDepth, chromosomeNumber, start, end, null);
+        } else if (this.validateInput(chromosomeNumber, parsedStart, parsedEnd)) {
+            this._bamView.brushToRegion(this.bamReadDepth, chromosomeNumber, parsedStart, parsedEnd, null);
         }
     }
 
@@ -304,9 +313,6 @@ class BamViewChart extends HTMLElement {
         if (!this.isValidChromosome(chromosomeNumber)) {
             alert('Invalid chromosome number');
             return false;
-        }
-        if (isNaN(start) && isNaN(end)) {
-            return true;
         }
         if (isNaN(start) || isNaN(end)) {
             alert('Invalid input');
