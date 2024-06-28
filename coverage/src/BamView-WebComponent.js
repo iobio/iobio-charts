@@ -249,6 +249,13 @@ class BamViewChart extends HTMLElement {
         const chromosome = this.chromosomeInput.value.trim();
         const startInput = this.startInput.value.trim();
         const endInput = this.endInput.value.trim();
+        const chromosomeNumber = chromosome.replace('chr', '');
+
+        // Validate chromosome number first
+        if (!this.isValidChromosome(chromosomeNumber)) {
+            alert('Invalid chromosome number');
+            return;
+        }
         
         // Check if start and end inputs are non-empty before parsing
         if (startInput !== "") {
@@ -257,18 +264,11 @@ class BamViewChart extends HTMLElement {
         if (endInput !== "") {
             parsedEnd = parseInt(endInput);
         }
-        const chromosomeNumber = chromosome.replace('chr', '');
-
-        // Validate chromosome number first
-        if (!this.isValidChromosome(chromosomeNumber)) {
-            alert('Invalid chromosome number');
-            return;
-        }
 
         // Check if only the chromosome is provided and start and end inputs are empty
-        if (startInput === "" && endInput === "") {
+        if (parsedStart === undefined && parsedEnd === undefined) {
             this._bamView.zoomToChromosome(chromosomeNumber);
-        } else if (this.validateInput(chromosomeNumber, parsedStart, parsedEnd)) {
+        } else if (this.validateInput(parsedStart, parsedEnd)) {
             this._bamView.brushToRegion(this.bamReadDepth, chromosomeNumber, parsedStart, parsedEnd, null);
         }
     }
@@ -309,13 +309,9 @@ class BamViewChart extends HTMLElement {
         return validChromosomes.has(chromosomeNumber);
     }    
 
-    validateInput(chromosomeNumber, start, end) {
-        if (!this.isValidChromosome(chromosomeNumber)) {
-            alert('Invalid chromosome number');
-            return false;
-        }
-        if (isNaN(start) || isNaN(end)) {
-            alert('Invalid input');
+    validateInput(start, end) {
+        if (!Number.isInteger(start) || !Number.isInteger(end)) {
+            alert('Start and end positions must be integers');
             return false;
         }
         if (start > end) {
