@@ -24,10 +24,16 @@ class DataBroker {
 
   set url(_) {
     this._url = _;
+    this._tryUpdate();
+  }
 
-    if (this._url) {
-      this._go();
-    }
+  get indexUrl() {
+    return this._indexUrl;
+  }
+
+  set indexUrl(_) {
+    this._indexUrl = _;
+    this._tryUpdate();
   }
 
   emitEvent(eventName, data) {
@@ -63,21 +69,52 @@ class DataBroker {
     return res;
   }
 
-  async _go() {
+  // Using 0 timeout here to handle the case where the caller sets url and
+  // indexUrl one right after the other. The goal is to prevent firing off two
+  // updates.
+  async _tryUpdate() {
+
+    if (this._updateTimeout) {
+      clearTimeout(this._updateTimeout);
+      this._updateTimeout = null;
+    }
+
+    this._updateTimeout = setTimeout(() => {
+      this._update();
+    }, 0);
+  }
+
+  async _update() {
+
+    if (!this._url) {
+      return;
+    }
 
     const decoder = new TextDecoder('utf8');
 
     const parsedUrl = new URL(this.url);
 
+    const isCram = parsedUrl.pathname.endsWith(".cram"); 
+
+    let indexUrl;
+    if (this.indexUrl) {
+      indexUrl = this.indexUrl;
+    }
+    else {
+      const pathname = isCram ? parsedUrl.pathname + ".crai" : parsedUrl.pathname + ".bai";
+      parsedUrl.pathname = pathname;
+      indexUrl = parsedUrl.href;
+    }
+
     let coverageTextPromise;
-    if (parsedUrl.pathname.endsWith(".cram")) {
+    if (isCram) {
       coverageTextPromise = this._iobioRequest("/craiReadDepth", {
-        url: this.url + ".crai",
+        url: indexUrl,
       });
     }
     else {
       coverageTextPromise = this._iobioRequest("/baiReadDepth", {
-        url: this.url + ".bai",
+        url: indexUrl,
       });
     }
 
@@ -259,6 +296,7 @@ class DataBrokerElement extends HTMLElement {
     super();
 
     upgradeProperty(this, 'alignmentUrl');
+    upgradeProperty(this, 'indexUrl');
     upgradeProperty(this, 'server');
   }
 
@@ -272,6 +310,14 @@ class DataBrokerElement extends HTMLElement {
   set alignmentUrl(_) {
     this.broker.url = _;
     this.setAttribute('alignment-url', _);
+  }
+
+  get indexUrl() {
+    return this.getAttribute('index-url');
+  }
+  set indexUrl(_) {
+    this.broker.indexUrl = _;
+    this.setAttribute('index-url', _);
   }
 
   get server() {

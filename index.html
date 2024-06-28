@@ -198,9 +198,8 @@
 
       const broker = document.querySelector('iobio-data-broker');
 
-      // TODO: figure out how to set broker.alignmentUrl and broker.indexUrl
-      // without firing two sets of requests.
       broker.alignmentUrl = alignmentUrl;
+      broker.indexUrl = indexUrl;
 
 
       function mosaicRequesterForProject(server, projectId, token) {
