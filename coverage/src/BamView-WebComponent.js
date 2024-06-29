@@ -245,13 +245,31 @@ class BamViewChart extends HTMLElement {
     }
     
     handleGoClick() {
+        let parsedStart, parsedEnd;
         const chromosome = this.chromosomeInput.value.trim();
-        const start = parseInt(this.startInput.value.trim());
-        const end = parseInt(this.endInput.value.trim());
+        const startInput = this.startInput.value.trim();
+        const endInput = this.endInput.value.trim();
         const chromosomeNumber = chromosome.replace('chr', '');
 
-        if (this.validateInput(chromosomeNumber, start, end)) {
-            this._bamView.brushToRegion(this.bamReadDepth, chromosomeNumber, start, end, null);
+        // Validate chromosome number first
+        if (!this.isValidChromosome(chromosomeNumber)) {
+            alert('Invalid chromosome number');
+            return;
+        }
+        
+        // Check if start and end inputs are non-empty before parsing
+        if (startInput !== "") {
+            parsedStart = parseInt(startInput);
+        }
+        if (endInput !== "") {
+            parsedEnd = parseInt(endInput);
+        }
+
+        // Check if only the chromosome is provided and start and end inputs are empty
+        if (parsedStart === undefined && parsedEnd === undefined) {
+            this._bamView.zoomToChromosome(chromosomeNumber);
+        } else if (this.validateInput(parsedStart, parsedEnd)) {
+            this._bamView.brushToRegion(this.bamReadDepth, chromosomeNumber, parsedStart, parsedEnd, null);
         }
     }
 
@@ -286,15 +304,14 @@ class BamViewChart extends HTMLElement {
         }
     }
 
-    validateInput(chromosomeNumber, start, end) {
+    isValidChromosome(chromosomeNumber) {
         const validChromosomes = new Set(this.bamHeader.map(header => header.sn));
+        return validChromosomes.has(chromosomeNumber);
+    }    
 
-        if (!validChromosomes.has(chromosomeNumber)) {
-            alert('Invalid chromosome number');
-            return false;
-        }
-        if (isNaN(start) || isNaN(end)) {
-            alert('Invalid input');
+    validateInput(start, end) {
+        if (!Number.isInteger(start) || !Number.isInteger(end)) {
+            alert('Start and end positions must be integers');
             return false;
         }
         if (start > end) {
