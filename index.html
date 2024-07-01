@@ -219,6 +219,12 @@
         return request;
       }
 
+      document.addEventListener('region-change', (event) => {
+        console.log('Chromosome selected:', event.detail);
+        // do something with the selected chromosome
+      });
+
+
 
     </script>
   </body>
