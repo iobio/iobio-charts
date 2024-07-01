@@ -119,7 +119,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
                 drawChart(svg);
 
                 // Dispatch custom event from the shadow DOM element
-                dispatchCustomEvent('allChromosomes', { refName: "_all"});
+                dispatchCustomEvent('region-change', { refName: "_all"});
             });
 
             // Create a circle for the reset button
@@ -174,7 +174,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
                     zoomToChromosome(d.sn);
                     
                     // Dispatch custom event from the shadow DOM element
-                    dispatchCustomEvent('chromosomeSelected', { refName: "chr" + d.sn });
+                    dispatchCustomEvent('region-change', { refName: d.sn });
                 });
 
             

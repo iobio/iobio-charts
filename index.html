@@ -218,14 +218,9 @@
         return request;
       }
 
-      document.addEventListener('chromosomeSelected', (event) => {
+      document.addEventListener('region-change', (event) => {
         console.log('Chromosome selected:', event.detail);
         // do something with the selected chromosome
-      });
-
-      document.addEventListener('allChromosomes', (event) => {
-        console.log('All chromosomes selected', event.detail);
-        // do something to all chromosome selection
       });
 
 
