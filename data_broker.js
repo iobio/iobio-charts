@@ -130,18 +130,17 @@ class DataBroker {
     const coverageText = await coverageTextRes.text();
     const headerText = await headerTextRes.text();
 
-    this._readDepthData = parseReadDepthData(coverageText);
-    this.emitEvent('read-depth', this._readDepthData);
+    const readCoverageDepth = parseReadDepthData(coverageText);
+    this.emitEvent('read-depth', readCoverageDepth);
 
     const depthHeader = parseBamHeaderData(headerText);
     this.emitEvent('header', depthHeader);
 
-    const coverage = parseCoverage(coverageText);
     const header = parseHeader(headerText);
 
-    const refsWithCoverage = Object.keys(coverage).filter((key) => {
+    const refsWithCoverage = Object.keys(readCoverageDepth).filter((key) => {
       // TODO: 1000 is pretty arbitrary
-      return coverage[key].length > 1000;
+      return readCoverageDepth[key].length > 1000;
     });
 
     let validRefs = [];
@@ -260,39 +259,6 @@ function sample(SQs) {
   }
 
   return regions;
-}
-
-function parseCoverage(coverageText) {
-
-  const readDepth = {};
-
-  let currentSequence;
-  for (const line of coverageText.split('\n')) {
-    if ( line[0] == '#' ) {
-      if (currentSequence) {
-        //submitRef(currentSequence); 
-      }
-
-      var fields = line.substr(1).split("\t");
-      currentSequence = fields[0]
-      readDepth[currentSequence] = [];
-      if (fields[1]) {
-        readDepth[currentSequence].mapped = +fields[1];
-        readDepth[currentSequence].unmapped = +fields[2];
-      }
-    }
-    else if (line[0] == '*') {
-      //me.n_no_coor = +line.split("\t")[2];
-    }
-    else {
-      if (line != "") {
-        var d = line.split("\t");
-        readDepth[currentSequence].push({ pos:parseInt(d[0]), depth:parseInt(d[1]) });
-      }
-    }
-  }
-
-  return readDepth;
 }
 
 class DataBrokerElement extends HTMLElement {
