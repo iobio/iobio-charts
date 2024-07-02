@@ -16,6 +16,7 @@
       .read-depth-container {
         height: 320px;
         margin-bottom: 20px;
+        margin-top: 40px;
       }
 
       .bottom-container {
@@ -46,11 +47,31 @@
         height: 256px;
       }
 
+      #bam2-header {
+        height: 40px;
+        width: 100%;
+        background-color: #2d8fc1;
+        position: fixed;
+        z-index: 1000;
+        top: 0;
+        left: 0;
+      }
+
+      #bam2-header h1 {
+        color: white;
+        font-size: 1.5em;
+        margin: 0;
+        padding: 5px 0 5px 10px;
+      }
+
     </style>
 
   </head>
 
   <body>
+    <div id="bam2-header">
+      <h1>Bam2.iobio</h1>
+    </div>
 
     <iobio-data-broker></iobio-data-broker>
 
