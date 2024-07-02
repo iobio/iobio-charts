@@ -1,5 +1,5 @@
 import { upgradeProperty } from './common.js';
-import { parseReadDepthData, parseBamHeaderData } from './coverage/src/BamData.js';
+import { parseReadDepthData, parseBamHeaderData, getValidRefs } from './coverage/src/BamData.js';
 
 class DataBroker {
   constructor(url, options) {
@@ -130,24 +130,13 @@ class DataBroker {
     const coverageText = await coverageTextRes.text();
     const headerText = await headerTextRes.text();
 
-    this._readDepthData = parseReadDepthData(coverageText);
-    this.emitEvent('read-depth', this._readDepthData);
+    const readDepthData = parseReadDepthData(coverageText);
+    this.emitEvent('read-depth', readDepthData);
 
-    const depthHeader = parseBamHeaderData(headerText);
-    this.emitEvent('header', depthHeader);
+    const header = parseBamHeaderData(headerText);
+    this.emitEvent('header', header);
 
-    const coverage = parseCoverage(coverageText);
-    const header = parseHeader(headerText);
-
-    const refsWithCoverage = Object.keys(coverage).filter((key) => {
-      // TODO: 1000 is pretty arbitrary
-      return coverage[key].length > 1000;
-    });
-
-    let validRefs = [];
-    for (let i = 0; i < refsWithCoverage.length; i++) {
-      validRefs.push(header.sq[i]);
-    }
+    const validRefs = getValidRefs(header, readDepthData);
 
     const regions = sample(validRefs);
 
@@ -200,28 +189,6 @@ class DataBroker {
   }
 }
 
-function parseHeader(headerStr) {
-  var header = { sq:[], toStr : headerStr };
-  var lines = headerStr.split("\n");
-  for ( var i=0; i<lines.length > 0; i++) {
-    var fields = lines[i].split("\t");
-    if (fields[0] == "@SQ") {
-      var fHash = {};
-      fields.forEach(function(field) {
-        var values = field.split(':');
-        fHash[ values[0] ] = values[1]
-      })
-      header.sq.push({
-        name:fHash["SN"],
-        end:1+parseInt(fHash["LN"]),
-        hasRecords: false,
-      });
-    }
-  }
-
-  return header;
-}
-
 function sample(SQs) {
 
   const options = {
@@ -233,7 +200,9 @@ function sample(SQs) {
   var regions = [];
   var bedRegions;
   var sqStart = options.start;
-  var length = SQs.length == 1 ? SQs[0].end - sqStart : null;
+  // TODO: using length+1 for end because the old bam.iobio.io parsing did so.
+  const sq0End = SQs[0].length + 1;
+  var length = SQs.length == 1 ? sq0End - sqStart : null;
   if (length && length < options.binSize * options.binNumber) {
     SQs[0].start = sqStart;
     regions.push(SQs[0])
@@ -242,10 +211,12 @@ function sample(SQs) {
     var regions = [];
     for (var i = 0; i < options.binNumber; i++) {
       var seq = SQs[Math.floor(Math.random() * SQs.length)]; // randomly grab one seq
-      length = seq.end - sqStart;
+      // TODO: using length+1 for end because the old bam.iobio.io parsing did so.
+      const end = seq.length + 1;
+      length = end - sqStart;
       var s = sqStart + parseInt(Math.random() * length);
       regions.push({
-        'name': seq.name,
+        'name': seq.sn,
         'start': s,
         'end': s + options.binSize
       });
@@ -260,39 +231,6 @@ function sample(SQs) {
   }
 
   return regions;
-}
-
-function parseCoverage(coverageText) {
-
-  const readDepth = {};
-
-  let currentSequence;
-  for (const line of coverageText.split('\n')) {
-    if ( line[0] == '#' ) {
-      if (currentSequence) {
-        //submitRef(currentSequence); 
-      }
-
-      var fields = line.substr(1).split("\t");
-      currentSequence = fields[0]
-      readDepth[currentSequence] = [];
-      if (fields[1]) {
-        readDepth[currentSequence].mapped = +fields[1];
-        readDepth[currentSequence].unmapped = +fields[2];
-      }
-    }
-    else if (line[0] == '*') {
-      //me.n_no_coor = +line.split("\t")[2];
-    }
-    else {
-      if (line != "") {
-        var d = line.split("\t");
-        readDepth[currentSequence].push({ pos:parseInt(d[0]), depth:parseInt(d[1]) });
-      }
-    }
-  }
-
-  return readDepth;
 }
 
 class DataBrokerElement extends HTMLElement {

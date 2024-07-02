@@ -51,7 +51,7 @@ function parseBamHeaderData(rawData) {
     const [_, sn, length] = line.split('\t');
     bamHeader.push({
       sn: sn.split(':')[1],
-      length: length.split(':')[1]
+      length: Number(length.split(':')[1])
     });
   });
   return bamHeader;
@@ -88,4 +88,24 @@ async function getBamHeader() {
   }
 }
 
-export { parseReadDepthData, parseBamHeaderData, getBamReadDepth, getBamHeader };
+function getValidRefs(header, readDepthData) {
+  const refsWithCoverage = Object.keys(readDepthData).filter((key) => {
+    // TODO: 1000 is pretty arbitrary
+    return readDepthData[key].length > 1000;
+  });
+
+  const validRefs = [];
+  for (let i = 0; i < refsWithCoverage.length; i++) {
+    validRefs.push(header[i]);
+  }
+
+  return validRefs;
+}
+
+export {
+  parseReadDepthData,
+  parseBamHeaderData,
+  getValidRefs,
+  getBamReadDepth,
+  getBamHeader,
+};
