@@ -1,21 +1,3 @@
-const server = "https://backend.iobio.io";
-
-async function bamIobioRequest(endpoint, params){
-  const response = await fetch(`${server}/${endpoint}`, {
-    method: "POST",
-    headers: {
-      'Content-Type': 'text/plain; charset=utf-8',
-    },
-    body: JSON.stringify(params),
-  });
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-  const data = await response.text();
-  return data;
-}
-
-
 function parseReadDepthData(rawData) {
   const lines = rawData.split('\n').filter(line => line.trim());
   const groupedData = {};
@@ -57,37 +39,6 @@ function parseBamHeaderData(rawData) {
   return bamHeader;
 }
 
-
-//get the bam read depth data
-async function getBamReadDepth() {
-  try {
-    const endpoint = "baiReadDepth";
-    const params = {
-      url: "https://s3.amazonaws.com/iobio/NA12878/NA12878.autsome.bam.bai"
-    };
-    const data = await bamIobioRequest(endpoint, params);
-    return parseReadDepthData(data);
-   
-  } catch (error) {
-    console.error(error);
-  } 
-}
-
-
-// get the bam header data
-async function getBamHeader() {
-  try {
-    const endpoint = "alignmentHeader";
-    const params = {
-      url: "https://s3.amazonaws.com/iobio/NA12878/NA12878.autsome.bam"
-    };
-    const data = await bamIobioRequest(endpoint, params);
-    return parseBamHeaderData(data);
-  } catch (error) {
-    console.error(error);
-  }
-}
-
 function getValidRefs(header, readDepthData) {
   const refsWithCoverage = Object.keys(readDepthData).filter((key) => {
     // TODO: 1000 is pretty arbitrary
@@ -106,6 +57,4 @@ export {
   parseReadDepthData,
   parseBamHeaderData,
   getValidRefs,
-  getBamReadDepth,
-  getBamHeader,
 };
