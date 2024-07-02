@@ -13,10 +13,17 @@
         //--iobio-data-color: orange;
       }
 
+      body {
+        margin: 0;
+      }
+
+      main {
+        padding: 0 10px 10px 10px;
+      }
+
       .read-depth-container {
         height: 320px;
         margin-bottom: 20px;
-        margin-top: 40px;
       }
 
       .bottom-container {
@@ -51,10 +58,9 @@
         height: 40px;
         width: 100%;
         background-color: #2d8fc1;
-        position: fixed;
-        z-index: 1000;
+        position: sticky;
         top: 0;
-        left: 0;
+        z-index: 1;
       }
 
       #bam2-header h1 {
@@ -70,87 +76,89 @@
 
   <body>
     <div id="bam2-header">
-      <h1>Bam2.iobio</h1>
+      <h1>bam2.iobio</h1>
     </div>
 
     <iobio-data-broker></iobio-data-broker>
 
-    <div class='read-depth-container'>
-      <iobio-coverage-depth></iobio-coverage-depth>
-    </div>
-
-    <div class='bottom-container'>
-      <div class="percent-row">
-
-        <iobio-percent-box
-          title="Mapped Reads"
-          percent-key="mapped_reads"
-          total-key="total_reads">
-        </iobio-percent-box>
-
-        <iobio-percent-box
-          title="Forward Strands"
-          percent-key="forward_strands"
-          total-key="total_reads">
-        </iobio-percent-box>
-
-        <iobio-percent-box
-          title="Proper Pairs"
-          percent-key="proper_pairs"
-          total-key="total_reads">
-        </iobio-percent-box>
-
-        <iobio-percent-box
-          title="Singletons"
-          percent-key="singletons"
-          total-key="total_reads">
-        </iobio-percent-box>
-
-        <iobio-percent-box
-          title="Both Mates Mapped"
-          percent-key="both_mates_mapped"
-          total-key="total_reads">
-        </iobio-percent-box>
-
-        <iobio-percent-box
-          title="Duplicates"
-          percent-key="duplicates"
-          total-key="total_reads">
-        </iobio-percent-box>
-
+    <main>
+      <div class='read-depth-container'>
+        <iobio-coverage-depth></iobio-coverage-depth>
       </div>
 
-      <div class='histogram-column'>
+      <div class='bottom-container'>
+        <div class="percent-row">
 
-        <iobio-histogram
-          title="Read Coverage Distribution"
-          broker-key="coverage_hist">
-        </iobio-histogram>
+          <iobio-percent-box
+            title="Mapped Reads"
+            percent-key="mapped_reads"
+            total-key="total_reads">
+          </iobio-percent-box>
 
-        <iobio-histogram
-          title="Fragment Length"
-          broker-key="frag_hist"
-          ignore-outliers>
-        </iobio-histogram>
+          <iobio-percent-box
+            title="Forward Strands"
+            percent-key="forward_strands"
+            total-key="total_reads">
+          </iobio-percent-box>
 
-        <iobio-histogram
-          title="Read Length"
-          broker-key="length_hist"
-          ignore-outliers>
-        </iobio-histogram>
+          <iobio-percent-box
+            title="Proper Pairs"
+            percent-key="proper_pairs"
+            total-key="total_reads">
+          </iobio-percent-box>
 
-        <iobio-histogram
-          title="Mapping Quality"
-          broker-key="mapq_hist">
-        </iobio-histogram>
+          <iobio-percent-box
+            title="Singletons"
+            percent-key="singletons"
+            total-key="total_reads">
+          </iobio-percent-box>
 
-        <iobio-histogram
-          title="Base Quality"
-          broker-key="baseq_hist">
-        </iobio-histogram>
+          <iobio-percent-box
+            title="Both Mates Mapped"
+            percent-key="both_mates_mapped"
+            total-key="total_reads">
+          </iobio-percent-box>
 
+          <iobio-percent-box
+            title="Duplicates"
+            percent-key="duplicates"
+            total-key="total_reads">
+          </iobio-percent-box>
+
+        </div>
+
+        <div class='histogram-column'>
+
+          <iobio-histogram
+            title="Read Coverage Distribution"
+            broker-key="coverage_hist">
+          </iobio-histogram>
+
+          <iobio-histogram
+            title="Fragment Length"
+            broker-key="frag_hist"
+            ignore-outliers>
+          </iobio-histogram>
+
+          <iobio-histogram
+            title="Read Length"
+            broker-key="length_hist"
+            ignore-outliers>
+          </iobio-histogram>
+
+          <iobio-histogram
+            title="Mapping Quality"
+            broker-key="mapq_hist">
+          </iobio-histogram>
+
+          <iobio-histogram
+            title="Base Quality"
+            broker-key="baseq_hist">
+          </iobio-histogram>
+
+        </div>
       </div>
-    </div>
+    </main>
 
     <script type=importmap>
       {
