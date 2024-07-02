@@ -1,5 +1,5 @@
 import { upgradeProperty } from './common.js';
-import { parseReadDepthData, parseBamHeaderData } from './coverage/src/BamData.js';
+import { parseReadDepthData, parseBamHeaderData, getValidRefs } from './coverage/src/BamData.js';
 
 class DataBroker {
   constructor(url, options) {
@@ -130,21 +130,13 @@ class DataBroker {
     const coverageText = await coverageTextRes.text();
     const headerText = await headerTextRes.text();
 
-    const readCoverageDepth = parseReadDepthData(coverageText);
-    this.emitEvent('read-depth', readCoverageDepth);
+    const readDepthData = parseReadDepthData(coverageText);
+    this.emitEvent('read-depth', readDepthData);
 
-    const depthHeader = parseBamHeaderData(headerText);
-    this.emitEvent('header', depthHeader);
+    const header = parseBamHeaderData(headerText);
+    this.emitEvent('header', header);
 
-    const refsWithCoverage = Object.keys(readCoverageDepth).filter((key) => {
-      // TODO: 1000 is pretty arbitrary
-      return readCoverageDepth[key].length > 1000;
-    });
-
-    let validRefs = [];
-    for (let i = 0; i < refsWithCoverage.length; i++) {
-      validRefs.push(depthHeader[i]);
-    }
+    const validRefs = getValidRefs(header, readDepthData);
 
     const regions = sample(validRefs);
 
