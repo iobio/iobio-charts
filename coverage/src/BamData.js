@@ -51,7 +51,7 @@ function parseBamHeaderData(rawData) {
     const [_, sn, length] = line.split('\t');
     bamHeader.push({
       sn: sn.split(':')[1],
-      length: length.split(':')[1]
+      length: Number(length.split(':')[1])
     });
   });
   return bamHeader;

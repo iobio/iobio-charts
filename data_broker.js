@@ -136,8 +136,6 @@ class DataBroker {
     const depthHeader = parseBamHeaderData(headerText);
     this.emitEvent('header', depthHeader);
 
-    const header = parseHeader(headerText);
-
     const refsWithCoverage = Object.keys(readCoverageDepth).filter((key) => {
       // TODO: 1000 is pretty arbitrary
       return readCoverageDepth[key].length > 1000;
@@ -145,7 +143,7 @@ class DataBroker {
 
     let validRefs = [];
     for (let i = 0; i < refsWithCoverage.length; i++) {
-      validRefs.push(header.sq[i]);
+      validRefs.push(depthHeader[i]);
     }
 
     const regions = sample(validRefs);
@@ -199,28 +197,6 @@ class DataBroker {
   }
 }
 
-function parseHeader(headerStr) {
-  var header = { sq:[], toStr : headerStr };
-  var lines = headerStr.split("\n");
-  for ( var i=0; i<lines.length > 0; i++) {
-    var fields = lines[i].split("\t");
-    if (fields[0] == "@SQ") {
-      var fHash = {};
-      fields.forEach(function(field) {
-        var values = field.split(':');
-        fHash[ values[0] ] = values[1]
-      })
-      header.sq.push({
-        name:fHash["SN"],
-        end:1+parseInt(fHash["LN"]),
-        hasRecords: false,
-      });
-    }
-  }
-
-  return header;
-}
-
 function sample(SQs) {
 
   const options = {
@@ -232,7 +208,9 @@ function sample(SQs) {
   var regions = [];
   var bedRegions;
   var sqStart = options.start;
-  var length = SQs.length == 1 ? SQs[0].end - sqStart : null;
+  // TODO: using length+1 for end because the old bam.iobio.io parsing did so.
+  const sq0End = SQs[0].length + 1;
+  var length = SQs.length == 1 ? sq0End - sqStart : null;
   if (length && length < options.binSize * options.binNumber) {
     SQs[0].start = sqStart;
     regions.push(SQs[0])
@@ -241,10 +219,12 @@ function sample(SQs) {
     var regions = [];
     for (var i = 0; i < options.binNumber; i++) {
       var seq = SQs[Math.floor(Math.random() * SQs.length)]; // randomly grab one seq
-      length = seq.end - sqStart;
+      // TODO: using length+1 for end because the old bam.iobio.io parsing did so.
+      const end = seq.length + 1;
+      length = end - sqStart;
       var s = sqStart + parseInt(Math.random() * length);
       regions.push({
-        'name': seq.name,
+        'name': seq.sn,
         'start': s,
         'end': s + options.binSize
       });
