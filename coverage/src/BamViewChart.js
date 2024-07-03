@@ -8,7 +8,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
     function createBamViewInner(bamHeader, data, element, bamViewControlsElement) {
         const meanCoverage = calculateMeanCoverage(data);
         const aggregatedDataArray = aggregateData(data, 30);
-        bamHeaderArray = getChromosomeData(data);
+        bamHeaderArray = bamHeader;
         const totalLength = d3.sum(bamHeaderArray, d => d.length);
 
         const width = element.offsetWidth;
@@ -65,16 +65,6 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
             }
             meanCoverage = totalCoverage / totalLength;
             return meanCoverage;
-        }
-
-
-        // get out the chromosome names and lengths from the bamHeader based on the data
-        function getChromosomeData(data) {
-            const chromosomeData = {};
-            for (const key in data) {
-                chromosomeData[key] = bamHeader[key];
-            }
-            return Object.values(chromosomeData).map(d => ({sn: d.sn, length: +d.length}));;
         }
 
 
@@ -171,7 +161,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
                 .attr('class', 'chromosome-button-small chromosome-button')
                 .attr('transform', (d, i) => `translate(${buttons_xScale(d3.sum(bamHeaderArray.slice(0, i), e => e.length)) + margin2.left}, ${margin2.top})`)
                 .on('click', function (event, d) {
-                    zoomToChromosome(d.sn);
+                    zoomToChromosome(d.sn.replace('chr', ''));
                     
                     // Dispatch custom event from the shadow DOM element
                     dispatchCustomEvent('region-change', { refName: d.sn });
@@ -194,7 +184,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
                 .attr('text-anchor', 'middle')
                 .attr('fill', 'white')
                 .attr('font-size', '10px')
-                .text(d => d.sn);
+                .text(d => d.sn.replace('chr', ''));
 
             // Scales for the main chart
             xScale = d3.scaleLinear()
@@ -420,7 +410,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
             .attr('text-anchor', 'middle')
             .attr('fill', 'white')
             .attr('font-size', '10px')
-            .text(d => d.sn);
+            .text(d => d.sn.replace('chr', ''));
 
         // Update the bars for the selected chromosome in the main and navigation charts
         main.selectAll('.bar')
@@ -620,7 +610,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
             .attr('text-anchor', 'middle')
             .attr('fill', 'white')
             .attr('font-size', '10px')
-            .text(d => d.sn);
+            .text(d => d.sn.replace('chr', ''));
 
         // Update the bars for the selected chromosome in the main and navigation charts
         main.selectAll('.bar')

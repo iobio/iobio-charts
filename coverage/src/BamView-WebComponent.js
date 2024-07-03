@@ -1,5 +1,6 @@
 import { createBamView} from "./BamViewChart.js";
 import { getDataBroker } from '../../common.js';
+import { getValidRefs } from "./BamData.js";
 
 const template = document.createElement('template');
 template.innerHTML = `
@@ -185,6 +186,8 @@ class BamViewChart extends HTMLElement {
         this.initDOMElements();
         this.bamReadDepth = null;
         this.bamHeader = null;
+        this.validBamHeader = null;
+        this.validBamReadDepth = null;
     }
 
     initDOMElements() {
@@ -214,12 +217,22 @@ class BamViewChart extends HTMLElement {
 
             this.bamReadDepth = await readDepthPromise;
             this.bamHeader = await headerPromise;
-            this._bamView = createBamView(this.bamHeader, this.bamReadDepth, this.bamViewContainer, this.bamViewControls);
+            this.validBamHeader = getValidRefs(this.bamHeader, this.bamReadDepth);
+            this.validBamReadDepth = this.getBamReadDepthByValidRefs(this.validBamHeader, this.bamReadDepth);
+            this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, this.bamViewControls);
             this.shadowRoot.querySelector(".loader").style.display = 'none';
             this.goButton.addEventListener("click", () => this.handleGoClick());
             this.searchButton.addEventListener("click", () => this.handleSearchClick());
             this.setupResizeObserver();
         }
+    }
+
+    getBamReadDepthByValidRefs(bamHeader, bamReadDepth) {
+        let validBamReadDepth = {};
+        for (let i = 0; i < bamHeader.length; i++) {
+            validBamReadDepth[i] = bamReadDepth[i];
+        }
+       return validBamReadDepth;
     }
 
     setupResizeObserver() {
@@ -230,7 +243,7 @@ class BamViewChart extends HTMLElement {
                 entries.forEach(entry => {
                     if (entry.target === this.bamViewContainer) {
                         this.bamViewContainer.innerHTML = ''; // Clear the current SVG
-                        this._bamView = createBamView(this.bamHeader, this.bamReadDepth, this.bamViewContainer, this.bamViewControls);
+                        this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, this.bamViewControls);
                     }
                 });
             }, 200);
@@ -269,7 +282,7 @@ class BamViewChart extends HTMLElement {
         if (parsedStart === undefined && parsedEnd === undefined) {
             this._bamView.zoomToChromosome(chromosomeNumber);
         } else if (this.validateInput(parsedStart, parsedEnd)) {
-            this._bamView.brushToRegion(this.bamReadDepth, chromosomeNumber, parsedStart, parsedEnd, null);
+            this._bamView.brushToRegion(this.validBamReadDepth, chromosomeNumber, parsedStart, parsedEnd, null);
         }
     }
 
@@ -297,7 +310,7 @@ class BamViewChart extends HTMLElement {
             const chr = data[0].chr.replace('chr', '');
             const start = parseInt(data[0].start);
             const end = parseInt(data[0].end);
-            this._bamView.brushToRegion(this.bamReadDepth, chr, start, end, geneName);
+            this._bamView.brushToRegion(this.validBamReadDepth, chr, start, end, geneName);
         } catch (error) {
             console.error('Error fetching gene information:', error);
             alert('Failed to fetch gene information');
@@ -305,7 +318,7 @@ class BamViewChart extends HTMLElement {
     }
 
     isValidChromosome(chromosomeNumber) {
-        const validChromosomes = new Set(this.bamHeader.map(header => header.sn));
+        const validChromosomes = new Set(this.validBamHeader.map(header => header.sn.replace('chr', '')));
         return validChromosomes.has(chromosomeNumber);
     }    
 
