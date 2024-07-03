@@ -1,5 +1,5 @@
 import { upgradeProperty } from './common.js';
-import { parseReadDepthData, parseBamHeaderData, getValidRefs } from './coverage/src/BamData.js';
+import { parseReadDepthData, parseBamHeaderData, parseBedFile, getValidRefs } from './coverage/src/BamData.js';
 
 class DataBroker {
   constructor(url, options) {
@@ -30,9 +30,16 @@ class DataBroker {
   get indexUrl() {
     return this._indexUrl;
   }
-
   set indexUrl(_) {
     this._indexUrl = _;
+    this._tryUpdate();
+  }
+
+  get bedUrl() {
+    return this._bedUrl;
+  }
+  set bedUrl(_) {
+    this._bedUrl = _;
     this._tryUpdate();
   }
 
@@ -122,9 +129,15 @@ class DataBroker {
       url: this.url,
     });
 
-    const [ coverageTextRes, headerTextRes ] = await Promise.all([
+    let bedTextPromise;
+    if (this.bedUrl) {
+      bedTextPromise = fetch(this.bedUrl).then(res => res.text());
+    }
+
+    const [ coverageTextRes, headerTextRes, bedText ] = await Promise.all([
       coverageTextPromise,
-      headerTextPromise
+      headerTextPromise,
+      bedTextPromise,
     ]);
 
     const coverageText = await coverageTextRes.text();
@@ -136,8 +149,14 @@ class DataBroker {
     const header = parseBamHeaderData(headerText);
     this.emitEvent('header', header);
 
+    let bedData;
+    if (bedText) {
+      bedData = parseBedFile(bedText, header);
+    }
+
     const validRefs = getValidRefs(header, readDepthData);
 
+    //const regions = bedData ? sample(bedData.regions) : sample(validRefs);
     const regions = sample(validRefs);
 
     const res = await this._iobioRequest("/alignmentStatsStream", {
@@ -189,49 +208,50 @@ class DataBroker {
   }
 }
 
-function sample(SQs) {
 
-  const options = {
-    start: 0,
-    binSize: 10000,
-    binNumber: 20,
-  };
+const MAX_SAMPLE_ITERATIONS = 10000;
+// TODO: This algorithm has some sampling bias. Smaller regions have an equal
+// chance of being selected, even though they represent less of the data.
+// It also can generate duplicate sampled regions
+function sample(inRegions) {
 
-  var regions = [];
-  var bedRegions;
-  var sqStart = options.start;
-  // TODO: using length+1 for end because the old bam.iobio.io parsing did so.
-  const sq0End = SQs[0].length + 1;
-  var length = SQs.length == 1 ? sq0End - sqStart : null;
-  if (length && length < options.binSize * options.binNumber) {
-    SQs[0].start = sqStart;
-    regions.push(SQs[0])
-  } else {
-    // create random reference coordinates
-    var regions = [];
-    for (var i = 0; i < options.binNumber; i++) {
-      var seq = SQs[Math.floor(Math.random() * SQs.length)]; // randomly grab one seq
-      // TODO: using length+1 for end because the old bam.iobio.io parsing did so.
-      const end = seq.length + 1;
-      length = end - sqStart;
-      var s = sqStart + parseInt(Math.random() * length);
-      regions.push({
-        'name': seq.sn,
-        'start': s,
-        'end': s + options.binSize
-      });
+  const binSize = 10000;
+  const numSamples = 20;
+
+  const sampledRegions = [];
+
+  const validRegions = inRegions.filter(r => (r.end - r.start) >= binSize);
+
+  for (let i=0; i<numSamples; i++) {
+
+    const randomIndex = Math.floor(Math.random() * validRegions.length);
+    const randomRegion = validRegions[randomIndex];
+
+    const length = randomRegion.end - randomRegion.start;
+    const maxOffset = length - binSize;
+    const randomStart = randomRegion.start + Math.round(Math.random() * maxOffset);
+
+    if ((randomStart + binSize) > randomRegion.end) {
+      throw new Error("Sampling error. This shouldn't happen.");
     }
-    // sort by start value
-    regions = regions.sort(function (a, b) {
-      if (a.name == b.name)
-        return ((a.start < b.start) ? -1 : ((a.start > b.start) ? 1 : 0));
-      else
-        return ((a.name < b.name) ? -1 : ((a.name > b.name) ? 1 : 0));
+
+    sampledRegions.push({
+      name: randomRegion.rname,
+      start: randomStart,
+      end: randomStart + binSize,
     });
   }
 
-  return regions;
+  return sampledRegions.sort(function (a, b) {
+    if (a.name == b.name) {
+      return ((a.start < b.start) ? -1 : ((a.start > b.start) ? 1 : 0));
+    }
+    else {
+      return ((a.name < b.name) ? -1 : ((a.name > b.name) ? 1 : 0));
+    }
+  });
 }
+
 
 class DataBrokerElement extends HTMLElement {
 
@@ -240,6 +260,7 @@ class DataBrokerElement extends HTMLElement {
 
     upgradeProperty(this, 'alignmentUrl');
     upgradeProperty(this, 'indexUrl');
+    upgradeProperty(this, 'bedUrl');
     upgradeProperty(this, 'server');
   }
 
@@ -261,6 +282,14 @@ class DataBrokerElement extends HTMLElement {
   set indexUrl(_) {
     this.broker.indexUrl = _;
     this.setAttribute('index-url', _);
+  }
+
+  get bedUrl() {
+    return this.getAttribute('bed-url');
+  }
+  set bedUrl(_) {
+    this.broker.bedUrl = _;
+    this.setAttribute('bed-url', _);
   }
 
   get server() {
