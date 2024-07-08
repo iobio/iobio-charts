@@ -154,10 +154,9 @@ class DataBroker {
       bedData = parseBedFile(bedText, header);
     }
 
-    const validRefs = getValidRefs(header, readDepthData);
+    const validRefs = getValidRefs(header, readDepthData); //.slice(0, 1);
 
-    //const regions = bedData ? sample(bedData.regions) : sample(validRefs);
-    const regions = sample(validRefs);
+    const regions = bedData ? sample(bedData.regions) : sample(validRefs);
 
     const res = await this._iobioRequest("/alignmentStatsStream", {
       url: this.url,
@@ -209,23 +208,129 @@ class DataBroker {
 }
 
 
-const MAX_SAMPLE_ITERATIONS = 10000;
-// TODO: This algorithm has some sampling bias. Smaller regions have an equal
-// chance of being selected, even though they represent less of the data.
-// It also can generate duplicate sampled regions
+const TARGET_BIN_SIZE = 10000;
+const SECONDARY_BIN_SIZE = 5000;
+const TERTIARY_BIN_SIZE = 2500;
+const NUM_SAMPLES = 20;
+
 function sample(inRegions) {
 
-  const binSize = 10000;
-  const numSamples = 20;
+  let idealRegions = [];
+  const secondaryRegions = [];
+  const tertiaryRegions = [];
+
+  for (const region of inRegions) {
+    const length = region.end - region.start;
+
+    if (length >= TARGET_BIN_SIZE) {
+      idealRegions.push(region);
+    }
+    else if (length >= SECONDARY_BIN_SIZE) {
+      secondaryRegions.push(region);
+    }
+    else if (length >= TERTIARY_BIN_SIZE) {
+      tertiaryRegions.push(region);
+    }
+  }
+
+  if (idealRegions.length < NUM_SAMPLES) {
+    const expanded = expandRegions(idealRegions);
+
+    if (expanded.length > idealRegions.length) {
+      idealRegions = expanded;
+    }
+  }
+
+  let sampledRegions = sampleFromRegions(idealRegions, NUM_SAMPLES, TARGET_BIN_SIZE);
+
+  if (sampledRegions.length < NUM_SAMPLES) {
+    const remaining = NUM_SAMPLES - sampledRegions.length;
+    // readRatio increases the number of regions so we still get the desired number of reads sampled
+    const readRatio = 2;
+    const batch = sampleFromRegions(secondaryRegions, remaining*readRatio, SECONDARY_BIN_SIZE);
+    sampledRegions = [...sampledRegions, ...batch];
+  }
+
+  if (sampledRegions.length < NUM_SAMPLES) {
+    const remaining = NUM_SAMPLES - sampledRegions.length;
+    const readRatio = 4;
+    const batch = sampleFromRegions(tertiaryRegions, remaining*readRatio, TERTIARY_BIN_SIZE);
+    sampledRegions = [...sampledRegions, ...batch];
+  }
+
+  return sampledRegions.sort(function (a, b) {
+    if (a.name == b.name) {
+      return ((a.start < b.start) ? -1 : ((a.start > b.start) ? 1 : 0));
+    }
+    else {
+      return ((a.name < b.name) ? -1 : ((a.name > b.name) ? 1 : 0));
+    }
+  });
+}
+
+function expandRegions(regions) {
+
+  let expanded = [];
+
+  for (const region of regions) {
+    expanded = [...expanded, ...expandRegion(region)];
+  }
+
+  return expanded;
+}
+
+function expandRegion(region) {
+  const samp = [];
+  const length = region.end - region.start;
+
+  if (length < TARGET_BIN_SIZE) {
+    return [region];
+  }
+
+  const numPossibleIndices = Math.floor((length - TARGET_BIN_SIZE) / TARGET_BIN_SIZE);
+
+
+  if (numPossibleIndices < 1000) {
+    // Small enough number to guarantee no duplicates
+    const possibleIndices = [];
+    for (let i=0; i<numPossibleIndices; i++) {
+      possibleIndices.push(i*TARGET_BIN_SIZE);
+    }
+
+    for (let i=0; i < NUM_SAMPLES && possibleIndices.length > 0; i++) {
+      const randomIndex = Math.floor(Math.random() * possibleIndices.length);
+      const start = possibleIndices.splice(randomIndex, 1)[0];
+      samp.push({
+        rname: region.rname,
+        start,
+        end: start + TARGET_BIN_SIZE,
+      });
+    }
+  }
+  else {
+    for (let i=0; i < NUM_SAMPLES; i++) {
+      const randomStart = Math.floor(Math.random() * numPossibleIndices * TARGET_BIN_SIZE);
+      samp.push({
+        rname: region.rname,
+        start: randomStart,
+        end: randomStart + TARGET_BIN_SIZE,
+      });
+    }
+  }
+
+  return samp;
+}
+
+function sampleFromRegions(inRegions, numSamples, binSize) {
+
+  const regions = [...inRegions];
 
   const sampledRegions = [];
 
-  const validRegions = inRegions.filter(r => (r.end - r.start) >= binSize);
+  for (let i=0; i < numSamples && regions.length > 0; i++) {
 
-  for (let i=0; i<numSamples; i++) {
-
-    const randomIndex = Math.floor(Math.random() * validRegions.length);
-    const randomRegion = validRegions[randomIndex];
+    const randomIndex = Math.floor(Math.random() * regions.length);
+    const randomRegion = regions.splice(randomIndex, 1)[0];
 
     const length = randomRegion.end - randomRegion.start;
     const maxOffset = length - binSize;
@@ -242,14 +347,7 @@ function sample(inRegions) {
     });
   }
 
-  return sampledRegions.sort(function (a, b) {
-    if (a.name == b.name) {
-      return ((a.start < b.start) ? -1 : ((a.start > b.start) ? 1 : 0));
-    }
-    else {
-      return ((a.name < b.name) ? -1 : ((a.name > b.name) ? 1 : 0));
-    }
-  });
+  return sampledRegions;
 }
 
 
