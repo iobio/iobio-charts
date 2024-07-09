@@ -260,8 +260,12 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
                 .attr('width', d => xScale(d.chunkLength * 16384)) // Width of each bar
                 .attr('height', d => navHeight - yNavScale(d.avgCoverage)); 
 
+            const meanLineGroup = svg.append('g')
+                        .attr('class', 'mean-line-group')
+                        .attr('transform', `translate(${margin.left}, ${margin.top})`);
+
             // Add mean line
-            main.append('line')
+            meanLineGroup.append('line')
                 .attr('class', 'mean-line')
                 .attr('x1', 0)
                 .attr('x2', innerWidth)
@@ -273,10 +277,10 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
                 .attr('z-index', 1000);
 
             // label for mean line
-            svg.append('text')
+            meanLineGroup.append('text')
                 .attr('class', 'mean-label')
-                .attr('x', margin.left)
-                .attr('y', yScale(meanCoverage) + margin.top)
+                .attr('x', 0)
+                .attr('y', yScale(meanCoverage))
                 .attr('dy', "0.35em") 
                 .attr('text-anchor', 'end') 
                 .style('fill', 'red') 
@@ -310,15 +314,6 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
                     xScale.domain([x0, x1]);
                     const selectedMeanCoverage = d3.mean(brushedData, d => d.avgCoverage);
 
-                    svg.selectAll('line.mean-line')
-                        .attr('y1', yScale(selectedMeanCoverage))
-                        .attr('y2', yScale(selectedMeanCoverage))
-                        .attr('z-index', 1000);
-
-                    svg.selectAll('text.mean-label')
-                        .attr('y', yScale(selectedMeanCoverage) + margin.top)
-                        .text(`${selectedMeanCoverage.toFixed(2)}x`);
-
                     // Update the bars
                     main.selectAll('.bar')
                         .attr('x', d => xScale(getChromosomeStart(d.group) + parseInt(d.newOffset)))
@@ -326,11 +321,16 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
                         .attr('y', d => yScale(d.avgCoverage))
                         .attr('height', d => mainHeight - yScale(d.avgCoverage));
 
+                    svg.selectAll('.mean-line')
+                        .attr('y1', yScale(selectedMeanCoverage))
+                        .attr('y2', yScale(selectedMeanCoverage));
+
+                    svg.selectAll('.mean-label')
+                        .attr('y', yScale(selectedMeanCoverage))
+                        .text(`${selectedMeanCoverage.toFixed(2)}x`);
+
                     // Update y-axis
                     svg.select('.y-axis').call(d3.axisLeft(yScale).tickSize(0).ticks(Math.floor(mainHeight / 50)).tickFormat(d => `${d}x`));
-
-                    // Update x-axis
-                    svg.select('.x-axis').call(d3.axisBottom(xScale).ticks(endIndex - startIndex));
                 } else {
                     xScale.domain([0, totalLength]);
                     yScale.domain([0, 2 * meanCoverage]);
@@ -339,20 +339,19 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
 
                     const selectedMeanCoverage = d3.mean(aggregatedDataArray, d => d.avgCoverage);
 
-                    svg.selectAll('line.mean-line')
-                        .attr('y1', yScale(selectedMeanCoverage))
-                        .attr('y2', yScale(selectedMeanCoverage))
-                        .attr('z-index', 1000);
-
-                    svg.selectAll('text.mean-label')
-                        .attr('y', yScale(selectedMeanCoverage) + margin.top)
-                        .text(`${selectedMeanCoverage.toFixed(2)}x`);
-
                     main.selectAll('.bar')
                         .attr('x', d => xScale(getChromosomeStart(d.group) + parseInt(d.newOffset)))
                         .attr('width', innerWidth / (aggregatedDataArray.length - 1)) // Width of each bar based on total data
                         .attr('y', d => yScale(d.avgCoverage))
                         .attr('height', d => mainHeight - yScale(d.avgCoverage));
+
+                    svg.selectAll('.mean-line')
+                        .attr('y1', yScale(selectedMeanCoverage))
+                        .attr('y2', yScale(selectedMeanCoverage));
+
+                    svg.selectAll('.mean-label')
+                        .attr('y', yScale(selectedMeanCoverage))
+                        .text(`${selectedMeanCoverage.toFixed(2)}x`);
 
                     svg.select('.y-axis').call(d3.axisLeft(yScale).tickSize(0).ticks(Math.floor(mainHeight / 50)).tickFormat(d => `${d}x`));
                 }
@@ -443,13 +442,13 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
             .style('font-size', '12px');
 
         // Update mean line and label
-        svg.selectAll('line.mean-line')
+        svg.selectAll('.mean-line-group .mean-line')
             .attr('y1', yScale(meanCoverage))
             .attr('y2', yScale(meanCoverage));
 
-        svg.selectAll('text.mean-label')
+        svg.selectAll('.mean-line-group .mean-label')
             .text(`${meanCoverage.toFixed(2)}x`)
-            .attr('y', yScale(meanCoverage) + margin.top);
+            .attr('y', yScale(meanCoverage));
 
         // Update y-axis
         svg.select('.y-axis').call(d3.axisLeft(yScale).tickSize(0).ticks(Math.floor(mainHeight / 50)).tickFormat(d => `${d}x`));
@@ -491,13 +490,13 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
                 const meanCoverageBrushed = d3.mean(brushedData, d => d.avgCoverage_16kbp);
                 
                 // Update the mean line and label to reflect new mean coverage
-                svg.selectAll('line.mean-line')
+                svg.selectAll('.mean-line-group .mean-line')
                     .attr('y1', yScale(meanCoverageBrushed))
                     .attr('y2', yScale(meanCoverageBrushed));
                 
-                svg.selectAll('text.mean-label')
+                svg.selectAll('.mean-line-group .mean-label')
                     .text(`${meanCoverageBrushed.toFixed(2)}x`)
-                    .attr('y', yScale(meanCoverageBrushed) + margin.top);
+                    .attr('y', yScale(meanCoverageBrushed));
 
                 // Update the chromosome label to show the selected region
                 svg.selectAll('.chromosome-label')
@@ -515,13 +514,13 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
                     .attr('width', d => mainXScale(d.offset + 16384) - mainXScale(d.offset));
         
                 // Reset the mean line and label to the overall mean
-                svg.selectAll('line.mean-line')
+                svg.selectAll('.mean-line-group .mean-line')
                     .attr('y1', yScale(meanCoverage))
                     .attr('y2', yScale(meanCoverage));
                 
-                svg.selectAll('text.mean-label')
+                svg.selectAll('.mean-line-group .mean-label')
                     .text(`${meanCoverage.toFixed(2)}x`)
-                    .attr('y', yScale(meanCoverage) + margin.top);
+                    .attr('y', yScale(meanCoverage));
 
                 // Reset the chromosome label to show the full chromosome region
                 svg.selectAll('.chromosome-label')
@@ -686,13 +685,13 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
                 const meanCoverageBrushed = d3.mean(brushedData, d => d.avgCoverage_16kbp);
 
                 // Update the mean line and label to reflect new mean coverage
-                svg.selectAll('line.mean-line')
+                svg.selectAll('.mean-line-group .mean-line')
                     .attr('y1', yScale(meanCoverageBrushed))
                     .attr('y2', yScale(meanCoverageBrushed));
                 
-                svg.selectAll('text.mean-label')
+                svg.selectAll('.mean-line-group .mean-label')
                     .text(`${meanCoverageBrushed.toFixed(2)}x`)
-                    .attr('y', yScale(meanCoverageBrushed) + margin.top);
+                    .attr('y', yScale(meanCoverageBrushed));
 
                 // Update the chromosome label to show the selected region
                 svg.selectAll('.chromosome-label')
@@ -714,13 +713,13 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
                 }
 
                 // Reset the mean line and label to the overall mean
-                svg.selectAll('line.mean-line')
+                svg.selectAll('.mean-line-group .mean-line')
                     .attr('y1', yScale(meanCoverage))
                     .attr('y2', yScale(meanCoverage));
 
-                svg.selectAll('text.mean-label')
+                svg.selectAll('.mean-line-group .mean-label')
                     .text(`${meanCoverage.toFixed(2)}x`)
-                    .attr('y', yScale(meanCoverage) + margin.top);
+                    .attr('y', yScale(meanCoverage));
 
                 // Reset the chromosome label to show the full chromosome region
                 svg.selectAll('.chromosome-label')
