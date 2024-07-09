@@ -376,7 +376,6 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
         }
 
         const selectedChromosomeData = data[chromosome - 1];
-        console.log(selectedChromosomeData);
         const chromosomeEnd = bamHeaderArray[chromosome - 1].length;
         const meanCoverage = d3.mean(selectedChromosomeData, d => d.avgCoverage_16kbp);
         xScale.domain([0, chromosomeEnd]);
