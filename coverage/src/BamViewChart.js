@@ -311,13 +311,22 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
                     }
 
                     const brushedData = aggregatedDataArray.slice(startIndex, endIndex + 1);
-                    xScale.domain([x0, x1]);
+                    if (brushedData.length === 0) {
+                        return;
+                    }
+                
                     const selectedMeanCoverage = d3.mean(brushedData, d => d.avgCoverage);
+                        
+                    xScale.domain([x0, x1]);
 
                     // Update the bars
                     main.selectAll('.bar')
                         .attr('x', d => xScale(getChromosomeStart(d.group) + parseInt(d.newOffset)))
-                        .attr('width', innerWidth / (brushedData.length - 1)) // Width of each bar based on brush selection
+                        .attr('width', d => {
+                            const startX = xScale(getChromosomeStart(d.group) + parseInt(d.newOffset));
+                            const endX = xScale(getChromosomeStart(d.group) + parseInt(d.newOffset) + d.chunkLength * 16384);
+                            return endX - startX;
+                        })
                         .attr('y', d => yScale(d.avgCoverage))
                         .attr('height', d => mainHeight - yScale(d.avgCoverage));
 
@@ -341,7 +350,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement) {
 
                     main.selectAll('.bar')
                         .attr('x', d => xScale(getChromosomeStart(d.group) + parseInt(d.newOffset)))
-                        .attr('width', innerWidth / (aggregatedDataArray.length - 1)) // Width of each bar based on total data
+                        .attr('width', d => xScale(d.chunkLength * 16384)) // Width of each bar
                         .attr('y', d => yScale(d.avgCoverage))
                         .attr('height', d => mainHeight - yScale(d.avgCoverage));
 
