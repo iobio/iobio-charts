@@ -25,7 +25,7 @@ class DataBroker {
 
   set url(_) {
     this._url = _;
-    this._tryUpdate();
+    this._tryUpdate(this._doUpdate.bind(this));
   }
 
   get indexUrl() {
@@ -33,7 +33,7 @@ class DataBroker {
   }
   set indexUrl(_) {
     this._indexUrl = _;
-    this._tryUpdate();
+    this._tryUpdate(this._doUpdate.bind(this));
   }
 
   get bedUrl() {
@@ -41,7 +41,7 @@ class DataBroker {
   }
   set bedUrl(_) {
     this._bedUrl = _;
-    this._tryUpdate();
+    this._tryUpdate(this._updateStats.bind(this));
   }
 
 
@@ -50,7 +50,7 @@ class DataBroker {
   }
   set regions(_) {
     this._regions = _;
-    this._tryUpdate();
+    this._tryUpdate(this._updateStats.bind(this));
   }
 
   emitEvent(eventName, data) {
@@ -93,7 +93,7 @@ class DataBroker {
   // Using 0 timeout here to handle the case where the caller sets url and
   // indexUrl one right after the other. The goal is to prevent firing off two
   // updates.
-  async _tryUpdate() {
+  async _tryUpdate(func) {
 
     if (this._updateTimeout) {
       clearTimeout(this._updateTimeout);
@@ -101,28 +101,17 @@ class DataBroker {
     }
 
     this._updateTimeout = setTimeout(() => {
-      this._doUpdate();
+      //this._doUpdate();
+      func();
     }, 0);
-  }
+  } 
 
-  async _doUpdate() {
-
-    if (!this._url) {
-      return;
-    }
-
-    if (this._abortController) {
-      this._abortController.abort();
-      this._abortController = null;
-    }
-
-    const decoder = new TextDecoder('utf8');
-
+  _getIndexUrl() {
     const parsedUrl = new URL(this.url);
-
     const isCram = parsedUrl.pathname.endsWith(".cram"); 
 
     let indexUrl;
+
     if (this.indexUrl) {
       indexUrl = this.indexUrl;
     }
@@ -131,6 +120,21 @@ class DataBroker {
       parsedUrl.pathname = pathname;
       indexUrl = parsedUrl.href;
     }
+
+    return indexUrl;
+  }
+
+  async _doUpdate() {
+
+    if (!this._url) {
+      return;
+    }
+
+    const parsedUrl = new URL(this.url);
+
+    const isCram = parsedUrl.pathname.endsWith(".cram"); 
+
+    const indexUrl = this._getIndexUrl();
 
     let coverageTextPromise;
     if (isCram) {
@@ -166,24 +170,33 @@ class DataBroker {
     const coverageText = await coverageTextRes.text();
     const headerText = await headerTextRes.text();
 
-    const readDepthData = parseReadDepthData(coverageText);
-    this.emitEvent('read-depth', readDepthData);
+    this._readDepthData = parseReadDepthData(coverageText);
+    this.emitEvent('read-depth', this._readDepthData);
 
-    const header = parseBamHeaderData(headerText);
-    this.emitEvent('header', header);
+    this._header = parseBamHeaderData(headerText);
+    this.emitEvent('header', this._header);
 
-    let bedData;
     if (bedText) {
-      bedData = parseBedFile(bedText, header);
+      this._bedData = parseBedFile(bedText, this._header);
     }
 
-    const validRefs = getValidRefs(header, readDepthData); //.slice(0, 1);
+    this._updateStats();
+  }
 
-    const regions = bedData ? sample(bedData.regions) : sample(validRefs);
+  async _updateStats() {
+
+    if (this._abortController) {
+      this._abortController.abort();
+      this._abortController = null;
+    }
+
+    const validRefs = getValidRefs(this._header, this._readDepthData); //.slice(0, 1);
+
+    const regions = this._bedData ? sample(this._bedData.regions) : sample(validRefs);
 
     const { response, abortController } = await this._iobioRequest("/alignmentStatsStream", {
       url: this.url,
-      indexUrl,
+      indexUrl: this._getIndexUrl(),
       regions,
     });
 
@@ -191,6 +204,8 @@ class DataBroker {
 
     let prevUpdate = {};
     let remainder = "";
+
+    const decoder = new TextDecoder('utf8');
 
     const reader = response.body.getReader();
     while (true) {
