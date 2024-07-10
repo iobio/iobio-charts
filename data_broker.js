@@ -136,25 +136,17 @@ class DataBroker {
 
     const indexUrl = this._getIndexUrl();
 
-    let coverageTextPromise;
-    if (isCram) {
-      const { response } = await this._iobioRequest("/craiReadDepth", {
-        url: indexUrl,
-      });
-      coverageTextPromise = response;
-    }
-    else {
-      const { response } = await this._iobioRequest("/baiReadDepth", {
-        url: indexUrl,
-      });
-      coverageTextPromise = response;
-    }
+    const coverageEndpoint = isCram ? "/craiReadDepth" : "/baiReadDepth";
 
-    const res = await this._iobioRequest("/alignmentHeader", {
+    const indexRes = await this._iobioRequest(coverageEndpoint, {
+      url: indexUrl,
+    });
+    const coverageTextPromise = indexRes.response;
+
+    const headerRes = await this._iobioRequest("/alignmentHeader", {
       url: this.url,
     });
-
-    const headerTextPromise = res.response;
+    const headerTextPromise = headerRes.response;
 
     let bedTextPromise;
     if (this.bedUrl) {
