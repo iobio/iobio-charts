@@ -247,6 +247,11 @@
 
       document.addEventListener('region-change', (event) => {
         console.log('Chromosome selected:', event.detail);
+        broker.regions = [
+          {
+            rname: event.detail.refName,
+          }
+        ];
         // do something with the selected chromosome
       });
 

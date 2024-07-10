@@ -44,6 +44,15 @@ class DataBroker {
     this._tryUpdate();
   }
 
+
+  get regions() {
+    return this._regions;
+  }
+  set regions(_) {
+    this._regions = _;
+    this._tryUpdate();
+  }
+
   emitEvent(eventName, data) {
     if (this._callbacks[eventName]) {
       for (const callback of this._callbacks[eventName]) {
@@ -66,15 +75,19 @@ class DataBroker {
   }
 
   async _iobioRequest(endpoint, params) {
-    const res = await fetch(`${this._server}${endpoint}`, {
+
+    const abortController = new AbortController();
+
+    const response = await fetch(`${this._server}${endpoint}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'text/plain',
       },
       body: JSON.stringify(params),
+      signal: abortController.signal,
     });
 
-    return res;
+    return { response, abortController };
   }
 
   // Using 0 timeout here to handle the case where the caller sets url and
@@ -88,14 +101,19 @@ class DataBroker {
     }
 
     this._updateTimeout = setTimeout(() => {
-      this._update();
+      this._doUpdate();
     }, 0);
   }
 
-  async _update() {
+  async _doUpdate() {
 
     if (!this._url) {
       return;
+    }
+
+    if (this._abortController) {
+      this._abortController.abort();
+      this._abortController = null;
     }
 
     const decoder = new TextDecoder('utf8');
@@ -116,19 +134,23 @@ class DataBroker {
 
     let coverageTextPromise;
     if (isCram) {
-      coverageTextPromise = this._iobioRequest("/craiReadDepth", {
+      const { response } = await this._iobioRequest("/craiReadDepth", {
         url: indexUrl,
       });
+      coverageTextPromise = response;
     }
     else {
-      coverageTextPromise = this._iobioRequest("/baiReadDepth", {
+      const { response } = await this._iobioRequest("/baiReadDepth", {
         url: indexUrl,
       });
+      coverageTextPromise = response;
     }
 
-    const headerTextPromise = this._iobioRequest("/alignmentHeader", {
+    const res = await this._iobioRequest("/alignmentHeader", {
       url: this.url,
     });
+
+    const headerTextPromise = res.response;
 
     let bedTextPromise;
     if (this.bedUrl) {
@@ -159,15 +181,34 @@ class DataBroker {
 
     const regions = bedData ? sample(bedData.regions) : sample(validRefs);
 
-    const res = await this._iobioRequest("/alignmentStatsStream", {
+    const { response, abortController } = await this._iobioRequest("/alignmentStatsStream", {
       url: this.url,
       indexUrl,
       regions,
     });
 
+    this._abortController = abortController;
+
     let prevUpdate = {};
     let remainder = "";
-    for await (const chunk of res.body) {
+
+    const reader = response.body.getReader();
+    while (true) {
+      let chunk;
+      try {
+        const { done, value } = await reader.read();
+        if (done) {
+          break;
+        }
+        chunk = value;
+      }
+      catch (e) {
+        if (e.name !== 'AbortError') {
+          console.error(e);
+        }
+        break;
+      }
+
       const messages = decoder.decode(chunk).split(";");
 
       if (remainder !== "") {
@@ -205,6 +246,8 @@ class DataBroker {
 
       prevUpdate = this._update;
     }
+
+    this._abortController = null;
   }
 }
 
@@ -246,6 +289,13 @@ class DataBrokerElement extends HTMLElement {
   set bedUrl(_) {
     this.broker.bedUrl = _;
     this.setAttribute('bed-url', _);
+  }
+
+  get regions() {
+    return this.broker.regions;
+  }
+  set regions(_) {
+    this.broker.regions = _;
   }
 
   get server() {
