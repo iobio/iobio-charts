@@ -108,6 +108,9 @@ button:hover {
 #title-container {
     display: block;
     text-align: center;
+}
+
+#title-text {
     width: 100%;
     height: 10%;
     font-size: 20px;
@@ -115,7 +118,7 @@ button:hover {
 
 #chart-container {
     width: 100%;
-    height: 90%;
+    height: 100%;
     position: relative;
 }
 
