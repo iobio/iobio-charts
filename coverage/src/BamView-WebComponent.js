@@ -188,6 +188,7 @@ class BamViewChart extends HTMLElement {
         this.bamHeader = null;
         this.validBamHeader = null;
         this.validBamReadDepth = null;
+        this.broker = getDataBroker(this);
     }
 
     initDOMElements() {
@@ -203,23 +204,20 @@ class BamViewChart extends HTMLElement {
     }
 
     async connectedCallback() {
-        const broker = getDataBroker(this);
-
-        if (broker) {
-
+        if (this.broker) {
             const readDepthPromise = new Promise((resolve, reject) => {
-              broker.onEvent('read-depth', resolve);
+              this.broker.onEvent('read-depth', resolve);
             });
 
             const headerPromise = new Promise((resolve, reject) => {
-              broker.onEvent('header', resolve);
+              this.broker.onEvent('header', resolve);
             });
 
             this.bamReadDepth = await readDepthPromise;
             this.bamHeader = await headerPromise;
             this.validBamHeader = getValidRefs(this.bamHeader, this.bamReadDepth);
             this.validBamReadDepth = this.getBamReadDepthByValidRefs(this.validBamHeader, this.bamReadDepth);
-            this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, this.bamViewControls);
+            this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, this.bamViewControls, this.broker);
             this.shadowRoot.querySelector(".loader").style.display = 'none';
             this.goButton.addEventListener("click", () => this.handleGoClick());
             this.searchButton.addEventListener("click", () => this.handleSearchClick());
@@ -243,7 +241,7 @@ class BamViewChart extends HTMLElement {
                 entries.forEach(entry => {
                     if (entry.target === this.bamViewContainer) {
                         this.bamViewContainer.innerHTML = ''; // Clear the current SVG
-                        this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, this.bamViewControls);
+                        this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, this.bamViewControls, this.broker);
                     }
                 });
             }, 200);
