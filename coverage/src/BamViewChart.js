@@ -14,7 +14,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
         const width = element.offsetWidth;
         const height = element.offsetHeight;
         margin = { top: 60, right: 20, bottom: 20, left: 60 };
-        margin2 = { top: 20, right: 20, bottom: 20, left: 60 };
+        margin2 = { top: 10, right: 20, bottom: 20, left: 60 };
         innerWidth = width - margin.left - margin.right;
         innerHeight = height - margin.top - margin.bottom;
 
@@ -98,7 +98,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
             // Create a circle button for reseting to all chromosomes
             const circleButton = svg.append('g')
                 .attr('class', 'circle-button-reset-chromosomes chromosome-button')
-                .attr('transform', 'translate(30, 30)')
+                .attr('transform', 'translate(30, 20)')
                 .on('click', (event, d) => {
                     // Clear the input fields
                     bamViewControlsElement.querySelector('#bamview-region-chromosome').value = '';

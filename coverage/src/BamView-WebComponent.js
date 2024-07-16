@@ -1,5 +1,5 @@
 import { createBamView} from "./BamViewChart.js";
-import { getDataBroker } from '../../common.js';
+import { getDataBroker, upgradeProperty } from '../../common.js';
 import { getValidRefs } from "./BamData.js";
 
 const template = document.createElement('template');
@@ -95,10 +95,27 @@ button:hover {
     transform: scale(1.05);
 }
 
-#chart-container {
+
+#bamview-chart-container {
+    display: flex;
+    flex-direction: column;
     width: 100%;
     height: 100%;
     border: 1px solid #ccc;
+    padding: 5px 0;
+}
+
+#title-container {
+    display: block;
+    text-align: center;
+    width: 100%;
+    height: 10%;
+    font-size: 20px;
+}
+
+#chart-container {
+    width: 100%;
+    height: 90%;
     position: relative;
 }
 
@@ -172,8 +189,13 @@ button:hover {
             <button id="gene-search-button">Search</button>
         </div>
     </div>
-    <div id="chart-container">
-        <div class="loader"></div>
+    <div id="bamview-chart-container">
+        <div id="title-container">
+            <span id="title-text"></span>
+        </div>
+        <div id="chart-container">
+            <div class="loader"></div>
+        </div>
     </div>
 </div>`;
 
@@ -189,6 +211,15 @@ class BamViewChart extends HTMLElement {
         this.validBamHeader = null;
         this.validBamReadDepth = null;
         this.broker = getDataBroker(this);
+        upgradeProperty(this, 'label');
+
+    }
+
+    get label() {
+        return this.getAttribute('label');
+      }
+    set label(_) {
+        this.setAttribute('label', _);
     }
 
     initDOMElements() {
@@ -222,6 +253,10 @@ class BamViewChart extends HTMLElement {
             this.goButton.addEventListener("click", () => this.handleGoClick());
             this.searchButton.addEventListener("click", () => this.handleSearchClick());
             this.setupResizeObserver();
+
+            if (this.label) {
+                this.shadowRoot.querySelector('#title-text').innerText = this.label;
+            }
         }
     }
 
