@@ -1,6 +1,14 @@
 import { parseReadDepthData, parseBamHeaderData, parseBedFile, getValidRefs } from './coverage/src/BamData.js';
 import { sample } from './sampling.js';
 
+/**
+ * @typedef {object} Region
+ * @property {string} rname Reference sequence name
+ * @property {number} start Start index
+ * @property {number} end End index
+ */
+
+
 class DataBroker {
   constructor(alignmentUrl, options) {
 
@@ -183,9 +191,14 @@ class DataBroker {
       this._abortController = null;
     }
 
-    const validRefs = getValidRefs(this._header, this._readDepthData); //.slice(0, 1);
+    const validRegions = this.regions ? this.regions : getValidRefs(this._header, this._readDepthData);
 
-    const regions = this._bedData ? sample(this._bedData.regions) : sample(validRefs);
+    let allRegions = validRegions;
+    if (this._bedData) {
+      allRegions = filterRegions(this._bedData.regions, validRegions);
+    }
+
+    const regions = sample(allRegions);
 
     const { response, abortController } = await this._iobioRequest("/alignmentStatsStream", {
       url: this.alignmentUrl,
@@ -257,6 +270,42 @@ class DataBroker {
 
     this._abortController = null;
   }
+}
+
+/**
+ * Takes an array of regions and returns an array of only those regions that
+ * completely lie within a second array of regions.
+ * @param allRegions {Region[]} Region array to be filtered
+ * @param filterRegs {Region[]} Region array to be applied as a filter
+ * @returns {Region[]} Filtered regions
+ */
+function filterRegions(allRegions, filterRegs) {
+
+  if (!filterRegs) {
+    return [...allRegions];
+  }
+
+  const startTime = performance.now();
+
+  let numIter = 0;
+  const result = allRegions.filter((r) => {
+    for (let i=0; i<filterRegs.length; i++) {
+      numIter++;
+      const fr = filterRegs[i];
+      if (r.rname === fr.rname && r.start >= fr.start && r.end <= fr.end) {
+        return true;
+      }
+    }
+    return false;
+  });
+
+  const elapsedMs = performance.now() - startTime;
+
+  if (elapsedMs > 100) {
+    console.error("Filtering is taking too long");
+  }
+
+  return result;
 }
 
 export {

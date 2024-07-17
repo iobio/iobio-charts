@@ -36,14 +36,14 @@ function sample(inRegions) {
   if (sampledRegions.length < NUM_SAMPLES) {
     const remaining = NUM_SAMPLES - sampledRegions.length;
     // readRatio increases the number of regions so we still get the desired number of reads sampled
-    const readRatio = 2;
+    const readRatio = Math.floor(TARGET_BIN_SIZE/SECONDARY_BIN_SIZE);
     const batch = sampleFromRegions(secondaryRegions, remaining*readRatio, SECONDARY_BIN_SIZE);
     sampledRegions = [...sampledRegions, ...batch];
   }
 
   if (sampledRegions.length < NUM_SAMPLES) {
     const remaining = NUM_SAMPLES - sampledRegions.length;
-    const readRatio = 4;
+    const readRatio = Math.floor(TARGET_BIN_SIZE/TERTIARY_BIN_SIZE);
     const batch = sampleFromRegions(tertiaryRegions, remaining*readRatio, TERTIARY_BIN_SIZE);
     sampledRegions = [...sampledRegions, ...batch];
   }
@@ -69,11 +69,15 @@ function expandRegions(regions) {
   return expanded;
 }
 
+/**
+ * Takes a single region and breaks it into multiple smaller regions of at
+ * least TARGET_BIN_SIZE if possible.
+ */
 function expandRegion(region) {
   const samp = [];
   const length = region.end - region.start;
 
-  if (length < TARGET_BIN_SIZE) {
+  if (length <= TARGET_BIN_SIZE) {
     return [region];
   }
 
