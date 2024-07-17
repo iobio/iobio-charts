@@ -1,9 +1,9 @@
 import { commonCss, applyCommonGlobalCSS, applyGlobalCSS, getDataFromAttr, getDataBroker, upgradeProperty, getDimensions } from './common.js';
 import iobioviz from './lib/iobio.viz/index.js';
 import * as d3 from "d3";
-// TODO: currently data_broker has to be imported first, otherwise it's methods
-// are not defined when other custom elements try to call them
-import './data_broker.js';
+// TODO: currently data_broker_component has to be imported first, otherwise
+// it's methods are not defined when other custom elements try to call them
+import './data_broker_component.js';
 
 function genHtml(styles) {
   return `
