@@ -186,11 +186,6 @@ class DataBroker {
 
   async _updateStats() {
 
-    if (this._abortController) {
-      this._abortController.abort();
-      this._abortController = null;
-    }
-
     const validRegions = this.regions ? this.regions : getValidRefs(this._header, this._readDepthData);
 
     let allRegions = validRegions;
@@ -205,6 +200,10 @@ class DataBroker {
       indexUrl: this._getIndexUrl(),
       regions,
     });
+
+    if (this._abortController) {
+      this._abortController.abort();
+    }
 
     this._abortController = abortController;
 
@@ -267,8 +266,6 @@ class DataBroker {
 
       prevUpdate = this._update;
     }
-
-    this._abortController = null;
   }
 }
 
