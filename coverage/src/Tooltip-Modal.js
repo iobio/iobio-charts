@@ -1,0 +1,144 @@
+const modalTemplate = document.createElement('template');
+modalTemplate.innerHTML = `
+  <style>
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.4);
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: 15% auto;
+      border: 1px solid #888;
+      width: 70%;
+      border-radius: 10px;
+    }
+
+    .modal-header,
+    .modal-footer {
+      display: flex;
+      align-items: center;
+      height: 60px;
+      padding: 0 20px;
+      box-sizing: border-box;
+    }
+
+    .modal-header {
+      justify-content: space-between;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .modal-footer {
+      justify-content: flex-end;
+      border-top: 1px solid #ddd;
+    }
+
+    .modal-header h4 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .modal-body {
+      text-align: justify;
+      padding: 0 30px;
+      overflow: auto;
+      font-size: 11pt;
+      max-height: 200px;
+      line-height: 1.5;
+    }
+
+    .close-icon {
+      color: #aaa;
+      float: right;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .close-icon:hover,
+    .close-icon:focus {
+      color: black;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    button {
+      background-color: #2d8fc1;
+      color: white;
+      border: none;
+      padding: 5px 15px;
+      border-radius: 20px; 
+      cursor: pointer;
+    }
+    
+    button:hover {
+        background-color: #2d8fc1;
+        transform: scale(1.05);
+    }
+
+  </style>
+  <div class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <slot name="header">
+          <h4>Default Title</h4>
+        </slot>
+        <span class="close-icon">&times;</span>
+      </div>
+      <div class="modal-body">
+        <slot name="body">
+          <p>Default content...</p>
+        </slot>
+      </div>
+      <div class="modal-footer">
+        <button class="close-button">Close</button>
+      </div>
+    </div>
+  </div>
+`;
+
+class TooltipModal extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({ mode: 'open' });
+      this.shadowRoot.appendChild(modalTemplate.content.cloneNode(true));
+  
+      this.modal = this.shadowRoot.querySelector('.modal');
+      this.closeIcon = this.shadowRoot.querySelector('.close-icon');
+      this.closeButton = this.shadowRoot.querySelector('.close-button');
+      this.addCloseEventListener();
+    }
+  
+    addCloseEventListener() {
+      this.closeIcon.addEventListener('click', () => {
+          this.close();
+          this.dispatchEvent(new CustomEvent('close')); 
+      });
+      this.closeButton.addEventListener('click', () => {
+          this.close();
+          this.dispatchEvent(new CustomEvent('close'));
+      });
+    }
+  
+    connectedCallback() {
+      if (this.hasAttribute('open')) {
+        this.show();
+      }
+    }
+  
+    show() {
+      this.modal.style.display = 'block';
+    }
+  
+    close() {
+      this.modal.style.display = 'none';
+    }
+}
+
+customElements.define('tooltip-modal', TooltipModal);
+export {TooltipModal};
