@@ -30,13 +30,64 @@ function parseBamHeaderData(rawData) {
   const bamHeader = [];
   const lines = rawData.split('\n').filter(line => line && line.startsWith('@SQ'));
   lines.forEach(line => {
-    const [_, sn, length] = line.split('\t');
+    const [_, sn, lengthStr] = line.split('\t');
+    const length = Number(lengthStr.split(':')[1]);
+    const rname = sn.split(':')[1];
     bamHeader.push({
-      sn: sn.split(':')[1],
-      length: Number(length.split(':')[1])
+      sn: rname,
+      length: length,
+      rname: rname,
+      // TODO: start should maybe be 1
+      start: 0,
+      end: length,
     });
   });
   return bamHeader;
+}
+
+function parseBedFile(bedText, header) {
+
+  const lines = bedText.split('\n');
+
+  const regions = [];
+
+  for (const line of lines) {
+    if (line == "" || line.startsWith("#")) {
+      continue;
+    }
+
+    const fields = line.split('\t');
+    const region = {
+      rname: fields[0],
+      start: Number(fields[1]),
+      end: Number(fields[2]),
+    };
+
+    regions.push(region);
+  }
+
+
+  // Create header object for faster lookups than array
+  const headerObj = {};
+  for (const ref of header) {
+    headerObj[ref.rname] = true;
+  }
+
+  // Remove leading 'chr' if present
+  for (const region of regions) {
+    if (headerObj[region.rname]) {
+      continue;
+    } else {
+      const stripped = region.rname.replaceAll('chr', '');
+      if (headerObj[stripped]) {
+        region.rname = stripped;
+      }
+    }
+  }
+
+  return {
+    regions,
+  };
 }
 
 function getValidRefs(header, readDepthData) {
@@ -56,5 +107,6 @@ function getValidRefs(header, readDepthData) {
 export {
   parseReadDepthData,
   parseBamHeaderData,
+  parseBedFile,
   getValidRefs,
 };
