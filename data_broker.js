@@ -2,7 +2,7 @@ import { parseReadDepthData, parseBamHeaderData, parseBedFile, getValidRefs } fr
 import { sample } from './sampling.js';
 
 class DataBroker {
-  constructor(url, options) {
+  constructor(alignmentUrl, options) {
 
     this._server = "https://backend.iobio.io";
 
@@ -15,15 +15,15 @@ class DataBroker {
     this._callbacks = {};
     this._latestUpdates = {};
 
-    this.url = url;
+    this.alignmentUrl = alignmentUrl;
   }
 
-  get url() {
-    return this._url;
+  get alignmentUrl() {
+    return this._alignmentUrl;
   }
 
-  set url(_) {
-    this._url = _;
+  set alignmentUrl(_) {
+    this._alignmentUrl = _;
     this._tryUpdate(this._doUpdate.bind(this));
   }
 
@@ -106,7 +106,7 @@ class DataBroker {
   } 
 
   _getIndexUrl() {
-    const parsedUrl = new URL(this.url);
+    const parsedUrl = new URL(this.alignmentUrl);
     const isCram = parsedUrl.pathname.endsWith(".cram"); 
 
     let indexUrl;
@@ -125,12 +125,12 @@ class DataBroker {
 
   async _doUpdate() {
 
-    if (!this._url) {
+    if (!this.alignmentUrl) {
       return;
     }
 
     if (!this._header) {
-      const parsedUrl = new URL(this.url);
+      const parsedUrl = new URL(this.alignmentUrl);
 
       const isCram = parsedUrl.pathname.endsWith(".cram"); 
 
@@ -144,7 +144,7 @@ class DataBroker {
       const coverageTextPromise = indexRes.response;
 
       const headerRes = await this._iobioRequest("/alignmentHeader", {
-        url: this.url,
+        url: this.alignmentUrl,
       });
       const headerTextPromise = headerRes.response;
 
@@ -188,7 +188,7 @@ class DataBroker {
     const regions = this._bedData ? sample(this._bedData.regions) : sample(validRefs);
 
     const { response, abortController } = await this._iobioRequest("/alignmentStatsStream", {
-      url: this.url,
+      url: this.alignmentUrl,
       indexUrl: this._getIndexUrl(),
       regions,
     });

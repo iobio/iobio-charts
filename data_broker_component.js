@@ -20,7 +20,7 @@ class DataBrokerElement extends HTMLElement {
     return this.getAttribute('alignment-url');
   }
   set alignmentUrl(_) {
-    this.broker.url = _;
+    this.broker.alignmentUrl = _;
     this.setAttribute('alignment-url', _);
   }
 
