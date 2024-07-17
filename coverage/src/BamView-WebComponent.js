@@ -213,11 +213,11 @@ button:hover {
         </div>
     </div>
 </div>
-<tooltip-modal id="tooltip-modal">
+<iobio-modal id="tooltip-modal">
   <div slot="header">
     <h4>Read Coverage</h4>
   </div>
-  <div slot="body">
+  <div slot="content">
     <p>The read coverage shows how the read coverage varies across the entire genome. The coloured
     numbers beneath represent chromosomes in the reference genome used and can be selected to view
     the read coverage in an individual chromosome. Selecting a different chromosome will cause
@@ -226,7 +226,7 @@ button:hover {
     of interest; again, all other metrics will then be recalculated for that region only.
     </p>
   </div>
-</tooltip-modal>
+</iobio-modal>
 `;
 
 
@@ -287,7 +287,9 @@ class BamViewChart extends HTMLElement {
             this.setupResizeObserver();
             this.tooltipButton.addEventListener('click', () => this.handleTooltipClick());
             if (this.modal) {
-                this.modal.addEventListener('close', () => this.handleModalClose());
+                this.modal.addEventListener('close', () => {
+                    this.modal.removeAttribute('open');
+                });
             }
 
             if (this.label) {
@@ -408,16 +410,14 @@ class BamViewChart extends HTMLElement {
     }
 
     handleTooltipClick() {
-        const modal = this.shadowRoot.querySelector('#tooltip-modal');
-        if (modal) {
-            modal.show();
+        if (this.modal) {
+            this.modal.setAttribute('open', '');
         }
     }
     
     handleModalClose() {
-        const modal = this.shadowRoot.querySelector('#tooltip-modal');
-        if (modal) {
-            modal.close();
+        if (this.modal) {
+            this.modal.removeAttribute('open');
         }
     }
     

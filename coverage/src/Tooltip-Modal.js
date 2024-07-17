@@ -1,6 +1,10 @@
 const modalTemplate = document.createElement('template');
 modalTemplate.innerHTML = `
   <style>
+    :host([open]) .modal {
+      display: block;
+    }
+
     .modal {
       display: none;
       position: fixed;
@@ -91,7 +95,7 @@ modalTemplate.innerHTML = `
         <span class="close-icon">&times;</span>
       </div>
       <div class="modal-body">
-        <slot name="body">
+        <slot name="content">
           <p>Default content...</p>
         </slot>
       </div>
@@ -116,29 +120,20 @@ class TooltipModal extends HTMLElement {
   
     addCloseEventListener() {
       this.closeIcon.addEventListener('click', () => {
-          this.close();
           this.dispatchEvent(new CustomEvent('close')); 
       });
+
       this.closeButton.addEventListener('click', () => {
-          this.close();
           this.dispatchEvent(new CustomEvent('close'));
       });
-    }
-  
-    connectedCallback() {
-      if (this.hasAttribute('open')) {
-        this.show();
-      }
-    }
-  
-    show() {
-      this.modal.style.display = 'block';
-    }
-  
-    close() {
-      this.modal.style.display = 'none';
+
+      this.modal.addEventListener('click', (event) => {
+        if (event.target === this.modal) {
+            this.dispatchEvent(new CustomEvent('close'));
+        }
+      });
     }
 }
 
-customElements.define('tooltip-modal', TooltipModal);
+customElements.define('iobio-modal', TooltipModal);
 export {TooltipModal};
