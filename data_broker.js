@@ -41,7 +41,7 @@ class DataBroker {
   }
   set bedUrl(_) {
     this._bedUrl = _;
-    this._tryUpdate(this._updateStats.bind(this));
+    this._tryUpdate(this._doUpdate.bind(this));
   }
 
 
@@ -50,7 +50,7 @@ class DataBroker {
   }
   set regions(_) {
     this._regions = _;
-    this._tryUpdate(this._updateStats.bind(this));
+    this._tryUpdate(this._doUpdate.bind(this));
   }
 
   emitEvent(eventName, data) {
@@ -130,46 +130,48 @@ class DataBroker {
       return;
     }
 
-    const parsedUrl = new URL(this.url);
+    if (!this._header) {
+      const parsedUrl = new URL(this.url);
 
-    const isCram = parsedUrl.pathname.endsWith(".cram"); 
+      const isCram = parsedUrl.pathname.endsWith(".cram"); 
 
-    const indexUrl = this._getIndexUrl();
+      const indexUrl = this._getIndexUrl();
 
-    const coverageEndpoint = isCram ? "/craiReadDepth" : "/baiReadDepth";
+      const coverageEndpoint = isCram ? "/craiReadDepth" : "/baiReadDepth";
 
-    const indexRes = await this._iobioRequest(coverageEndpoint, {
-      url: indexUrl,
-    });
-    const coverageTextPromise = indexRes.response;
+      const indexRes = await this._iobioRequest(coverageEndpoint, {
+        url: indexUrl,
+      });
+      const coverageTextPromise = indexRes.response;
 
-    const headerRes = await this._iobioRequest("/alignmentHeader", {
-      url: this.url,
-    });
-    const headerTextPromise = headerRes.response;
+      const headerRes = await this._iobioRequest("/alignmentHeader", {
+        url: this.url,
+      });
+      const headerTextPromise = headerRes.response;
 
-    let bedTextPromise;
-    if (this.bedUrl) {
-      bedTextPromise = fetch(this.bedUrl).then(res => res.text());
-    }
+      let bedTextPromise;
+      if (this.bedUrl) {
+        bedTextPromise = fetch(this.bedUrl).then(res => res.text());
+      }
 
-    const [ coverageTextRes, headerTextRes, bedText ] = await Promise.all([
-      coverageTextPromise,
-      headerTextPromise,
-      bedTextPromise,
-    ]);
+      const [ coverageTextRes, headerTextRes, bedText ] = await Promise.all([
+        coverageTextPromise,
+        headerTextPromise,
+        bedTextPromise,
+      ]);
 
-    const coverageText = await coverageTextRes.text();
-    const headerText = await headerTextRes.text();
+      const coverageText = await coverageTextRes.text();
+      const headerText = await headerTextRes.text();
 
-    this._readDepthData = parseReadDepthData(coverageText);
-    this.emitEvent('read-depth', this._readDepthData);
+      this._readDepthData = parseReadDepthData(coverageText);
+      this.emitEvent('read-depth', this._readDepthData);
 
-    this._header = parseBamHeaderData(headerText);
-    this.emitEvent('header', this._header);
+      this._header = parseBamHeaderData(headerText);
+      this.emitEvent('header', this._header);
 
-    if (bedText) {
-      this._bedData = parseBedFile(bedText, this._header);
+      if (bedText) {
+        this._bedData = parseBedFile(bedText, this._header);
+      }
     }
 
     this._updateStats();
