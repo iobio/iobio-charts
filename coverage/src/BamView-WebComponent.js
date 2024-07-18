@@ -1,7 +1,7 @@
 import { createBamView} from "./BamViewChart.js";
 import { getDataBroker, upgradeProperty } from '../../common.js';
 import { getValidRefs } from "./BamData.js";
-import { TooltipModal } from './Tooltip-Modal.js';
+import { TooltipModal } from '/modal.js';
 
 const template = document.createElement('template');
 template.innerHTML = `
