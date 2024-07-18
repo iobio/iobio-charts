@@ -207,7 +207,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
                 .attr('class', 'y-axis-label')
                 .attr('transform', `translate(${margin.left - 40}, ${margin.top + mainHeight / 2}) rotate(-90)`)
                 .attr('text-anchor', 'middle')
-                .text('Average Coverage')
+                .text('Coverage (rough estimate)')
                 .style('font-size', '12px');
 
             // Clip path
