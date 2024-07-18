@@ -1,8 +1,16 @@
-import { upgradeProperty } from './common.js';
-import { parseReadDepthData, parseBamHeaderData, getValidRefs } from './coverage/src/BamData.js';
+import { parseReadDepthData, parseBamHeaderData, parseBedFile, getValidRefs } from './coverage/src/BamData.js';
+import { sample } from './sampling.js';
+
+/**
+ * @typedef {object} Region
+ * @property {string} rname Reference sequence name
+ * @property {number} start Start index
+ * @property {number} end End index
+ */
+
 
 class DataBroker {
-  constructor(url, options) {
+  constructor(alignmentUrl, options) {
 
     this._server = "https://backend.iobio.io";
 
@@ -15,25 +23,41 @@ class DataBroker {
     this._callbacks = {};
     this._latestUpdates = {};
 
-    this.url = url;
+    this.alignmentUrl = alignmentUrl;
   }
 
-  get url() {
-    return this._url;
+  get alignmentUrl() {
+    return this._alignmentUrl;
   }
 
-  set url(_) {
-    this._url = _;
-    this._tryUpdate();
+  set alignmentUrl(_) {
+    this._alignmentUrl = _;
+    this._tryUpdate(this._doUpdate.bind(this));
   }
 
   get indexUrl() {
     return this._indexUrl;
   }
-
   set indexUrl(_) {
     this._indexUrl = _;
-    this._tryUpdate();
+    this._tryUpdate(this._doUpdate.bind(this));
+  }
+
+  get bedUrl() {
+    return this._bedUrl;
+  }
+  set bedUrl(_) {
+    this._bedUrl = _;
+    this._tryUpdate(this._doUpdate.bind(this));
+  }
+
+
+  get regions() {
+    return this._regions;
+  }
+  set regions(_) {
+    this._regions = _;
+    this._tryUpdate(this._doUpdate.bind(this));
   }
 
   emitEvent(eventName, data) {
@@ -58,21 +82,25 @@ class DataBroker {
   }
 
   async _iobioRequest(endpoint, params) {
-    const res = await fetch(`${this._server}${endpoint}`, {
+
+    const abortController = new AbortController();
+
+    const response = await fetch(`${this._server}${endpoint}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'text/plain',
       },
       body: JSON.stringify(params),
+      signal: abortController.signal,
     });
 
-    return res;
+    return { response, abortController };
   }
 
   // Using 0 timeout here to handle the case where the caller sets url and
   // indexUrl one right after the other. The goal is to prevent firing off two
   // updates.
-  async _tryUpdate() {
+  async _tryUpdate(func) {
 
     if (this._updateTimeout) {
       clearTimeout(this._updateTimeout);
@@ -80,23 +108,17 @@ class DataBroker {
     }
 
     this._updateTimeout = setTimeout(() => {
-      this._update();
+      //this._doUpdate();
+      func();
     }, 0);
-  }
+  } 
 
-  async _update() {
-
-    if (!this._url) {
-      return;
-    }
-
-    const decoder = new TextDecoder('utf8');
-
-    const parsedUrl = new URL(this.url);
-
+  _getIndexUrl() {
+    const parsedUrl = new URL(this.alignmentUrl);
     const isCram = parsedUrl.pathname.endsWith(".cram"); 
 
     let indexUrl;
+
     if (this.indexUrl) {
       indexUrl = this.indexUrl;
     }
@@ -106,49 +128,107 @@ class DataBroker {
       indexUrl = parsedUrl.href;
     }
 
-    let coverageTextPromise;
-    if (isCram) {
-      coverageTextPromise = this._iobioRequest("/craiReadDepth", {
-        url: indexUrl,
-      });
-    }
-    else {
-      coverageTextPromise = this._iobioRequest("/baiReadDepth", {
-        url: indexUrl,
-      });
+    return indexUrl;
+  }
+
+  async _doUpdate() {
+
+    if (!this.alignmentUrl) {
+      return;
     }
 
-    const headerTextPromise = this._iobioRequest("/alignmentHeader", {
-      url: this.url,
-    });
+    if (!this._header) {
+      const parsedUrl = new URL(this.alignmentUrl);
 
-    const [ coverageTextRes, headerTextRes ] = await Promise.all([
-      coverageTextPromise,
-      headerTextPromise
-    ]);
+      const isCram = parsedUrl.pathname.endsWith(".cram"); 
 
-    const coverageText = await coverageTextRes.text();
-    const headerText = await headerTextRes.text();
+      const indexUrl = this._getIndexUrl();
 
-    const readDepthData = parseReadDepthData(coverageText);
-    this.emitEvent('read-depth', readDepthData);
+      const coverageEndpoint = isCram ? "/craiReadDepth" : "/baiReadDepth";
 
-    const header = parseBamHeaderData(headerText);
-    this.emitEvent('header', header);
+      const indexRes = await this._iobioRequest(coverageEndpoint, {
+        url: indexUrl,
+      });
+      const coverageTextPromise = indexRes.response;
 
-    const validRefs = getValidRefs(header, readDepthData);
+      const headerRes = await this._iobioRequest("/alignmentHeader", {
+        url: this.alignmentUrl,
+      });
+      const headerTextPromise = headerRes.response;
 
-    const regions = sample(validRefs);
+      let bedTextPromise;
+      if (this.bedUrl) {
+        bedTextPromise = fetch(this.bedUrl).then(res => res.text());
+      }
 
-    const res = await this._iobioRequest("/alignmentStatsStream", {
-      url: this.url,
-      indexUrl,
+      const [ coverageTextRes, headerTextRes, bedText ] = await Promise.all([
+        coverageTextPromise,
+        headerTextPromise,
+        bedTextPromise,
+      ]);
+
+      const coverageText = await coverageTextRes.text();
+      const headerText = await headerTextRes.text();
+
+      this._readDepthData = parseReadDepthData(coverageText);
+      this.emitEvent('read-depth', this._readDepthData);
+
+      this._header = parseBamHeaderData(headerText);
+      this.emitEvent('header', this._header);
+
+      if (bedText) {
+        this._bedData = parseBedFile(bedText, this._header);
+      }
+    }
+
+    this._updateStats();
+  }
+
+  async _updateStats() {
+
+    const validRegions = this.regions ? this.regions : getValidRefs(this._header, this._readDepthData);
+
+    let allRegions = validRegions;
+    if (this._bedData) {
+      allRegions = filterRegions(this._bedData.regions, validRegions);
+    }
+
+    const regions = sample(allRegions);
+
+    const { response, abortController } = await this._iobioRequest("/alignmentStatsStream", {
+      url: this.alignmentUrl,
+      indexUrl: this._getIndexUrl(),
       regions,
     });
 
+    if (this._abortController) {
+      this._abortController.abort();
+    }
+
+    this._abortController = abortController;
+
     let prevUpdate = {};
     let remainder = "";
-    for await (const chunk of res.body) {
+
+    const decoder = new TextDecoder('utf8');
+
+    const reader = response.body.getReader();
+    while (true) {
+      let chunk;
+      try {
+        const { done, value } = await reader.read();
+        if (done) {
+          break;
+        }
+        chunk = value;
+      }
+      catch (e) {
+        if (e.name !== 'AbortError') {
+          console.error(e);
+        }
+        break;
+      }
+
       const messages = decoder.decode(chunk).split(";");
 
       if (remainder !== "") {
@@ -189,102 +269,42 @@ class DataBroker {
   }
 }
 
-function sample(SQs) {
+/**
+ * Takes an array of regions and returns an array of only those regions that
+ * completely lie within a second array of regions.
+ * @param allRegions {Region[]} Region array to be filtered
+ * @param filterRegs {Region[]} Region array to be applied as a filter
+ * @returns {Region[]} Filtered regions
+ */
+function filterRegions(allRegions, filterRegs) {
 
-  const options = {
-    start: 0,
-    binSize: 10000,
-    binNumber: 20,
-  };
+  if (!filterRegs) {
+    return [...allRegions];
+  }
 
-  var regions = [];
-  var bedRegions;
-  var sqStart = options.start;
-  // TODO: using length+1 for end because the old bam.iobio.io parsing did so.
-  const sq0End = SQs[0].length + 1;
-  var length = SQs.length == 1 ? sq0End - sqStart : null;
-  if (length && length < options.binSize * options.binNumber) {
-    SQs[0].start = sqStart;
-    regions.push(SQs[0])
-  } else {
-    // create random reference coordinates
-    var regions = [];
-    for (var i = 0; i < options.binNumber; i++) {
-      var seq = SQs[Math.floor(Math.random() * SQs.length)]; // randomly grab one seq
-      // TODO: using length+1 for end because the old bam.iobio.io parsing did so.
-      const end = seq.length + 1;
-      length = end - sqStart;
-      var s = sqStart + parseInt(Math.random() * length);
-      regions.push({
-        'name': seq.sn,
-        'start': s,
-        'end': s + options.binSize
-      });
+  const startTime = performance.now();
+
+  let numIter = 0;
+  const result = allRegions.filter((r) => {
+    for (let i=0; i<filterRegs.length; i++) {
+      numIter++;
+      const fr = filterRegs[i];
+      if (r.rname === fr.rname && r.start >= fr.start && r.end <= fr.end) {
+        return true;
+      }
     }
-    // sort by start value
-    regions = regions.sort(function (a, b) {
-      if (a.name == b.name)
-        return ((a.start < b.start) ? -1 : ((a.start > b.start) ? 1 : 0));
-      else
-        return ((a.name < b.name) ? -1 : ((a.name > b.name) ? 1 : 0));
-    });
+    return false;
+  });
+
+  const elapsedMs = performance.now() - startTime;
+
+  if (elapsedMs > 100) {
+    console.error("Filtering is taking too long");
   }
 
-  return regions;
+  return result;
 }
-
-class DataBrokerElement extends HTMLElement {
-
-  constructor() {
-    super();
-
-    upgradeProperty(this, 'alignmentUrl');
-    upgradeProperty(this, 'indexUrl');
-    upgradeProperty(this, 'server');
-  }
-
-  get broker() {
-    return this._broker
-  }
-
-  get alignmentUrl() {
-    return this.getAttribute('alignment-url');
-  }
-  set alignmentUrl(_) {
-    this.broker.url = _;
-    this.setAttribute('alignment-url', _);
-  }
-
-  get indexUrl() {
-    return this.getAttribute('index-url');
-  }
-  set indexUrl(_) {
-    this.broker.indexUrl = _;
-    this.setAttribute('index-url', _);
-  }
-
-  get server() {
-    return this.getAttribute('server');
-  }
-  set server(_) {
-    this.setAttribute('server', _);
-  }
-
-  connectedCallback() {
-
-    const options = {};
-
-    if (this.server) {
-      options.server = this.server;
-    }
-
-    this._broker = new DataBroker(this.alignmentUrl, options);
-  }
-}
-
-customElements.define('iobio-data-broker', DataBrokerElement);
 
 export {
   DataBroker,
-  DataBrokerElement,
 };

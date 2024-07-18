@@ -83,7 +83,9 @@
 
     <main>
       <div class='read-depth-container'>
-        <iobio-coverage-depth></iobio-coverage-depth>
+        <iobio-coverage-depth
+          label="Read Coverage">
+        </iobio-coverage-depth>
       </div>
 
       <div class='bottom-container'>
@@ -171,6 +173,8 @@
     <script type='module' src='./index.js'></script>
     <script type='module'>
 
+      import { parseBedFile } from './coverage/src/BamData.js';
+
       const urlParams = new URLSearchParams(window.location.search);
 
 
@@ -178,6 +182,7 @@
 
       let alignmentUrl;
       let indexUrl;
+      let bedUrl;
 
       if (source) {
         // Mosaic integration
@@ -192,24 +197,37 @@
 
         const alignmentFile = files.data.filter(f => (f.type == 'bam' || f.type == 'cram'))[0];
         const indexFile = files.data.filter(f => (f.type == 'bai' || f.type == 'crai'))[0];
+        const bedFile = files.data.filter(f => (f.type == 'bam-bed'))[0];
 
-        const [ alignmentUrlRes, indexUrlRes ] = await Promise.all([
+        const promises = [
           mosaicRequest(`/files/${alignmentFile.id}/url`),
           mosaicRequest(`/files/${indexFile.id}/url`),
-        ]);
+        ];
+
+        if (bedFile) {
+          promises.push(mosaicRequest(`/files/${bedFile.id}/url`));
+        }
+
+        const [ alignmentUrlRes, indexUrlRes, bedUrlRes ] = await Promise.all(promises);
 
         alignmentUrl = alignmentUrlRes.url
         indexUrl = indexUrlRes.url;
+        bedUrl = bedUrlRes.url;
       }
       else {
         alignmentUrl = urlParams.get("alignment-url");
         indexUrl = urlParams.get("index-url");
+        bedUrl = urlParams.get("bed-url");
       }
 
       const broker = document.querySelector('iobio-data-broker');
 
       broker.alignmentUrl = alignmentUrl;
       broker.indexUrl = indexUrl;
+
+      if (bedUrl) {
+        broker.bedUrl = bedUrl;
+      }
 
 
       function mosaicRequesterForProject(server, projectId, token) {
@@ -229,12 +247,9 @@
         return request;
       }
 
-      document.addEventListener('region-change', (event) => {
-        console.log('Chromosome selected:', event.detail);
-        // do something with the selected chromosome
+      document.addEventListener('selected-regions-change', (event) => {
+        broker.regions = event.detail;
       });
-
-
 
     </script>
   </body>
