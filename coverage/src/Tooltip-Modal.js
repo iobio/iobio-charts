@@ -1,27 +1,13 @@
 const modalTemplate = document.createElement('template');
 modalTemplate.innerHTML = `
   <style>
-    :host([open]) .modal {
-      display: block;
-    }
-
     .modal {
-      display: none;
-      position: fixed;
-      z-index: 1;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.4);
-    }
-
-    .modal-content {
       background-color: #fefefe;
       margin: 15% auto;
       border: 1px solid #888;
       width: 70%;
       border-radius: 10px;
+      padding: 0;
     }
 
     .modal-header,
@@ -57,6 +43,10 @@ modalTemplate.innerHTML = `
       line-height: 1.5;
     }
 
+    ::backdrop {
+      background-color: rgba(0, 0, 0, 0.4);
+    }
+
     .close-icon {
       color: #aaa;
       float: right;
@@ -78,6 +68,7 @@ modalTemplate.innerHTML = `
       padding: 5px 15px;
       border-radius: 20px; 
       cursor: pointer;
+      outline: none;
     }
     
     button:hover {
@@ -86,8 +77,7 @@ modalTemplate.innerHTML = `
     }
 
   </style>
-  <div class="modal">
-    <div class="modal-content">
+    <dialog class="modal">
       <div class="modal-header">
         <slot name="header">
           <h4>Default Title</h4>
@@ -102,8 +92,7 @@ modalTemplate.innerHTML = `
       <div class="modal-footer">
         <button class="close-button">Close</button>
       </div>
-    </div>
-  </div>
+    </dialog>
 `;
 
 class TooltipModal extends HTMLElement {
@@ -132,6 +121,14 @@ class TooltipModal extends HTMLElement {
             this.dispatchEvent(new CustomEvent('close'));
         }
       });
+    }
+
+    showModal() {
+      this.modal.showModal();
+    }
+
+    close() {
+      this.modal.close();
     }
 }
 

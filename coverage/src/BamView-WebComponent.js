@@ -213,7 +213,7 @@ button:hover {
         </div>
     </div>
 </div>
-<iobio-modal id="tooltip-modal">
+<iobio-modal id="modal">
   <div slot="header">
     <h4>Read Coverage</h4>
   </div>
@@ -263,7 +263,7 @@ class BamViewChart extends HTMLElement {
         this.goButton = this.shadowRoot.querySelector('#bamview-controls-go');
         this.searchButton = this.shadowRoot.querySelector('#gene-search-button');
         this.tooltipButton = this.shadowRoot.querySelector('.tooltip-button');
-        this.modal = this.shadowRoot.querySelector('#tooltip-modal');
+        this.modal = this.shadowRoot.querySelector('#modal');
     }
 
     async connectedCallback() {
@@ -285,12 +285,9 @@ class BamViewChart extends HTMLElement {
             this.goButton.addEventListener("click", () => this.handleGoClick());
             this.searchButton.addEventListener("click", () => this.handleSearchClick());
             this.setupResizeObserver();
-            this.tooltipButton.addEventListener('click', () => this.handleTooltipClick());
-            if (this.modal) {
-                this.modal.addEventListener('close', () => {
-                    this.modal.removeAttribute('open');
-                });
-            }
+            this.tooltipButton.addEventListener('click', () => this.modal.showModal());
+            this.modal.addEventListener('close', () => this.modal.close());
+            
 
             if (this.label) {
                 this.shadowRoot.querySelector('#title-text').innerText = this.label;
@@ -407,18 +404,6 @@ class BamViewChart extends HTMLElement {
             return false;
         }
         return true;
-    }
-
-    handleTooltipClick() {
-        if (this.modal) {
-            this.modal.setAttribute('open', '');
-        }
-    }
-    
-    handleModalClose() {
-        if (this.modal) {
-            this.modal.removeAttribute('open');
-        }
     }
     
 }
