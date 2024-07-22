@@ -41,16 +41,16 @@ class HistogramElement extends HTMLElement {
 
     this.attachShadow({ mode: 'open' });
 
-    upgradeProperty(this, 'title');
+    upgradeProperty(this, 'label');
     upgradeProperty(this, 'broker-key');
     upgradeProperty(this, 'ignore-outliers');
   }
 
-  get title() {
-    return this.getAttribute('title');
+  get label() {
+    return this.getAttribute('label');
   }
-  set title(_) {
-    this.setAttribute('title', _);
+  set label(_) {
+    this.setAttribute('label', _);
   }
 
   get ignoreOutliers() {
@@ -70,7 +70,7 @@ class HistogramElement extends HTMLElement {
   connectedCallback() {
 
     this._histo = core({
-      title: this.title,
+      title: this.label,
     });
     
     this.shadowRoot.appendChild(this._histo.el);
