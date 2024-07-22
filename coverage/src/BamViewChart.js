@@ -229,9 +229,11 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
 
             const barWidth = 1; // Fixed bar width with 1 pixel
             const numBins = innerWidth; // Number of bins based on inner width
+            const start = 0;
+            const end = totalLength;
 
             // Aggregate data into bins
-            const aggregatedData = aggregateDataIntoBins(totalLength, aggregatedDataArray, numBins, getChromosomeStart);
+            const aggregatedData = aggreateDataIntoBins(aggregatedDataArray, start, end, numBins, getChromosomeStart);
 
             // Main bars
             main.selectAll('.bar')
@@ -335,10 +337,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
                     if (endIndex === -1) {
                         endIndex = aggregatedData.length - 1;
                     }
-
-                     // Update mean coverage based on the brushed area
                     const brushedData = aggregatedData.slice(startIndex, endIndex + 1);
-                    const selectedMeanCoverage = d3.mean(brushedData, d => d.avgCoverage);
 
                     // Get the brushed bin data in navigation chart to update the main chart bars
                     const brushedBinData = aggregatedDataArray.filter(d => {
@@ -352,22 +351,36 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
 
                     xScale.domain([x0, x1]);
 
+                    const aggregatedBinData = aggreateDataIntoBins(brushedBinData, x0, x1, numBins, getChromosomeStart);
+
                     // remove existing bars
                     main.selectAll('.bar').remove();
 
-                    // Update the bars
-                    main.selectAll('.bar')
-                        .data(brushedBinData)
-                        .enter().append('rect')
-                        .attr('class', 'bar')
-                        .attr('x', d => xScale(getChromosomeStart(d.group) + d.offset))
-                        .attr('width', d => {
-                            const startX = xScale(getChromosomeStart(d.group) + d.offset);
-                            const endX = xScale(getChromosomeStart(d.group) + d.offset + d.chunkLength * 16384);
-                            return endX - startX;
-                        })
-                        .attr('y', d => yScale(d.avgCoverage))
-                        .attr('height', d => mainHeight - yScale(d.avgCoverage));
+                    // Update main chart bars for the brushed area more than the number of bins
+                    if (brushedBinData.length > numBins) {
+                        main.selectAll('.bar')
+                            .data(aggregatedBinData)
+                            .enter().append('rect')
+                            .attr('class', 'bar')
+                            .attr('x', d => xScale(d.binStart))
+                            .attr('y', d => yScale(d.avgCoverage))
+                            .attr('width', barWidth)
+                            .attr('height', d => mainHeight - yScale(d.avgCoverage)); 
+                    } else {
+                        // Update the bars for the brushed area less than the number of bins
+                        main.selectAll('.bar')
+                            .data(brushedBinData)
+                            .enter().append('rect')
+                            .attr('class', 'bar')
+                            .attr('x', d => xScale(getChromosomeStart(d.group) + d.offset))
+                            .attr('width', d => {
+                                const startX = xScale(getChromosomeStart(d.group) + d.offset);
+                                const endX = xScale(getChromosomeStart(d.group) + d.offset + d.chunkLength * 16384);
+                                return endX - startX;
+                            })
+                            .attr('y', d => yScale(d.avgCoverage))
+                            .attr('height', d => mainHeight - yScale(d.avgCoverage));
+                    }
                 } else {
                     xScale.domain([0, totalLength]);
                     yScale.domain([0, 2 * average]);
@@ -443,9 +456,11 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
 
         const barWidth = 1; // Fixed bar width in pixels
         const numBins = innerWidth; // Number of bins based on inner width
+        const chromStart = 0;
+        const chromEnd = chromosomeEnd;
 
         // Aggregate data into bins
-        const aggregatedData = aggregateDataIntoBins(chromosomeEnd, selectedChromosomeData, numBins, null);
+        const aggregatedData = aggreateDataIntoBins(selectedChromosomeData, chromStart, chromEnd, numBins, null);
 
         // Update the bars for the selected chromosome in the main and navigation charts
         main.selectAll('.bar')
@@ -496,37 +511,45 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
             if (event.selection) {
                 const [x0, x1] = event.selection.map(xNavScale.invert);
                 xScale.domain([x0, x1]);
-        
-                // Update mean coverage based on the brushed area
+
                 const brushedData = selectedChromosomeData.filter(d => d.offset >= x0 && d.offset + 16384 <= x1);
-                const meanCoverageBrushed = d3.mean(brushedData, d => d.avgCoverage);
 
                 // Handle the case where there is no data in the brushed area
                 if (brushedData.length === 0) {
                     return;
                 }
 
+                const aggreatedData = aggreateDataIntoBins(brushedData, x0, x1, numBins, null);
+
                 // remove existing bars
                 main.selectAll('.bar').remove();
 
-                 // Update main chart bars
-                main.selectAll('.bar')
-                    .data(brushedData)
-                    .enter().append('rect')
-                    .attr('class', 'bar')
-                    .attr('x', d => xScale(d.offset))
-                    .attr('y', d => yScale(d.avgCoverage))
-                    .attr('width', d => xScale(d.offset + 16384) - xScale(d.offset))
-                    .attr('height', d => mainHeight - yScale(d.avgCoverage));
-                
-                // Update the mean line and label to reflect new mean coverage
-                svg.selectAll('.mean-line-group .mean-line')
-                    .attr('y1', yScale(meanCoverageBrushed))
-                    .attr('y2', yScale(meanCoverageBrushed));
-                
-                svg.selectAll('.mean-line-group .mean-label')
-                    .text(`${meanCoverageBrushed.toFixed(2)}x`)
-                    .attr('y', yScale(meanCoverageBrushed));
+                // Update main chart bars for the brushed area more than the number of bins
+                if (brushedData.length > numBins) {
+                    main.selectAll('.bar')
+                        .data(aggreatedData)
+                        .enter().append('rect')
+                        .attr('class', 'bar')
+                        .attr('x', d => xScale(d.binStart))
+                        .attr('y', d => yScale(d.avgCoverage))
+                        .attr('width', barWidth)
+                        .attr('height', d => mainHeight - yScale(d.avgCoverage));
+
+                } else {
+                    // Update main chart bars for the brushed area less than the number of bins
+                    main.selectAll('.bar')
+                        .data(brushedData)
+                        .enter().append('rect')
+                        .attr('class', 'bar')
+                        .attr('x', d => xScale(d.offset))
+                        .attr('y', d => yScale(d.avgCoverage))
+                        .attr('width', d => {
+                            const endX = xScale(d.offset + 16384);
+                            const startX = xScale(d.offset);
+                            return endX - startX;
+                        })
+                        .attr('height', d => mainHeight - yScale(d.avgCoverage));
+                }
 
                 // Update the chromosome label to show the selected region
                 svg.selectAll('.chromosome-label')
@@ -552,15 +575,6 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
                     .attr('y', d => yScale(d.avgCoverage))
                     .attr('width', barWidth)
                     .attr('height', d => mainHeight - yScale(d.avgCoverage));
-        
-                // Reset the mean line and label to the overall mean
-                svg.selectAll('.mean-line-group .mean-line')
-                    .attr('y1', yScale(meanCoverage))
-                    .attr('y2', yScale(meanCoverage));
-                
-                svg.selectAll('.mean-line-group .mean-label')
-                    .text(`${meanCoverage.toFixed(2)}x`)
-                    .attr('y', yScale(meanCoverage));
 
                 // Reset the chromosome label to show the full chromosome region
                 svg.selectAll('.chromosome-label')
@@ -652,9 +666,11 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
 
         const barWidth = 1; // Fixed bar width with 1 pixel
         const numBins = innerWidth; // Number of bins based on inner width
+        const chromStart = 0;
+        const chromEnd = chromosomeEnd;
 
         // Aggregate data into bins
-        const aggregatedData = aggregateDataIntoBins(chromosomeEnd, selectedChromosomeData, numBins, null);
+        const aggregatedData = aggreateDataIntoBins(selectedChromosomeData, chromStart, chromEnd, numBins, null);
 
         // Update the bars for the selected chromosome in the main and navigation charts
         main.selectAll('.bar')
@@ -704,15 +720,13 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
             if (event.selection) {
                 const [x0, x1] = event.selection.map(xNavScale.invert);
                 xScale.domain([x0, x1]);
-        
-                // Update mean coverage based on the brushed area
-                const brushedData = selectedChromosomeData.filter(d => d.offset >= x0 && d.offset + 16384 <= x1);
+                
+                const brushedData = selectedChromosomeData.filter(d => d.offset >= x0 && d.offset <= x1);
 
                 // Handle the case where there is no data in the brushed area
                 if (brushedData.length === 0) {
                     return;
                 }
-                const meanCoverageBrushed = d3.mean(brushedData, d => d.avgCoverage);
 
                 if (geneName != null) {
                     drawGeneRegion(xScale, margin, svg, originStart, originEnd, geneName, orgChromosome);
@@ -721,28 +735,36 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
                     svg.selectAll(".gene-region-highlight, .gene-region-label").remove();
                 }
 
+                const aggreatedData = aggreateDataIntoBins(brushedData, x0, x1, numBins, null);
+
                 // remove existing bars
                 main.selectAll('.bar').remove();
 
-                 // Update main chart bars
-                main.selectAll('.bar')
-                    .data(brushedData)
-                    .enter().append('rect')
-                    .attr('class', 'bar')
-                    .attr('x', d => xScale(d.offset))
-                    .attr('y', d => yScale(d.avgCoverage))
-                    .attr('width', d => xScale(d.offset + 16384) - xScale(d.offset))
-                    .attr('height', d => mainHeight - yScale(d.avgCoverage));
-
-
-                // Update the mean line and label to reflect new mean coverage
-                svg.selectAll('.mean-line-group .mean-line')
-                    .attr('y1', yScale(meanCoverageBrushed))
-                    .attr('y2', yScale(meanCoverageBrushed));
-                
-                svg.selectAll('.mean-line-group .mean-label')
-                    .text(`${meanCoverageBrushed.toFixed(2)}x`)
-                    .attr('y', yScale(meanCoverageBrushed));
+                // Update main chart bars for the brushed area more than the number of bins
+                if (brushedData.length > numBins) {
+                    main.selectAll('.bar')
+                        .data(aggreatedData)
+                        .enter().append('rect')
+                        .attr('class', 'bar')
+                        .attr('x', d => xScale(d.binStart))
+                        .attr('y', d => yScale(d.avgCoverage))
+                        .attr('width', barWidth)
+                        .attr('height', d => mainHeight - yScale(d.avgCoverage));
+                } else {
+                    // Update main chart bars for the brushed area less than the number of bins
+                    main.selectAll('.bar')
+                        .data(brushedData)
+                        .enter().append('rect')
+                        .attr('class', 'bar')
+                        .attr('x', d => xScale(d.offset))
+                        .attr('y', d => yScale(d.avgCoverage))
+                        .attr('width', d => {
+                            const endX = xScale(d.offset + 16384);
+                            const startX = xScale(d.offset);
+                            return endX - startX;
+                        })
+                        .attr('height', d => mainHeight - yScale(d.avgCoverage));
+                }
 
                 // Update the chromosome label to show the selected region
                 svg.selectAll('.chromosome-label')
@@ -844,18 +866,19 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
             .attr('font-size', '8px');
     }
 
-
-    function aggregateDataIntoBins(chromosomeLength, selectedChromosomeData, numBins, getChromosomeStart) {
+    function aggreateDataIntoBins(data, start, end, numBins, getChromosomeStart) {
+        const brushedRange = end - start;
+        const aggregationfactor =  brushedRange / numBins;
         return new Array(numBins).fill(0).map((_, i) => {
-            const start = i * chromosomeLength / numBins;
-            const end = start + chromosomeLength / numBins;
-            const binData = selectedChromosomeData.filter(d => {
+            const binStart = start + i * aggregationfactor;
+            const binEnd = binStart + aggregationfactor;
+            const binData = data.filter(d => {
                 const position = getChromosomeStart ? getChromosomeStart(d.group) + d.offset : d.offset;
-                return position >= start && position < end;
+                return position >= binStart && position <= binEnd;
             });
             const avgCoverage = d3.mean(binData, d => d.avgCoverage) || 0;
             return {
-                binStart: start,
+                binStart: binStart,
                 avgCoverage: avgCoverage
             };
         });
