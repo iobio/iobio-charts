@@ -16,7 +16,7 @@ function parseReadDepthData(rawData) {
           groupedData[currentGroup].push({
               offset,
               reads,
-              avgCoverage_16kbp: Math.round(reads / 16384),
+              avgCoverage: Math.round(reads / 16384),
           });
       }
   }
