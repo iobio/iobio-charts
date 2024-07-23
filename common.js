@@ -5,6 +5,7 @@ const commonCss = `
     width: 100%;
     height: 100%;
     --data-color: var(--iobio-data-color, #2d8fc1);
+    --data-color-secondary: var(--iobio-data-color-secondary, rgba(45,143,193,0.2));
   }
 
   *, *::before, *::after {
@@ -13,6 +14,10 @@ const commonCss = `
 
   .iobio-data {
     fill: var(--data-color);
+  }
+
+  .iobio-data-secondary {
+    fill: var(--data-color-secondary);
   }
 
   .iobio-panel > .iobio-title {

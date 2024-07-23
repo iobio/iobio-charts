@@ -132,8 +132,7 @@ function core(opt) {
 
   const chart = iobioviz.pie()
     .radius(61)
-    .innerRadius(50)
-    .color( function(d,i) { if (i==0) return '#2d8fc1'; else return 'rgba(45,143,193,0.2)'; });
+    .innerRadius(50);
 
   if (!templateEl) {
     templateEl = document.createElement('template');
