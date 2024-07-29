@@ -151,6 +151,19 @@ button:hover {
     fill: var(--data-color);
 }
 
+.loader-container {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.loader-text {
+    margin-top: 70px; 
+    color: var(--data-color);
+}
+
 .loader {
     border: 8px solid #f3f3f3; 
     border-top: 8px solid #3498db;
@@ -209,7 +222,10 @@ button:hover {
             <span id="title-text"></span>
         </div>
         <div id="chart-container">
-            <div class="loader"></div>
+            <div class="loader-container">
+                <div class="loader"></div>
+                <div class="loader-text">Initializing data</div>
+            </div>
         </div>
     </div>
 </div>
@@ -281,7 +297,7 @@ class BamViewChart extends HTMLElement {
             this.validBamHeader = getValidRefs(this.bamHeader, this.bamReadDepth);
             this.validBamReadDepth = this.getBamReadDepthByValidRefs(this.validBamHeader, this.bamReadDepth);
             this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, this.bamViewControls, this.broker);
-            this.shadowRoot.querySelector(".loader").style.display = 'none';
+            this.shadowRoot.querySelector(".loader-container").style.display = 'none';
             this.goButton.addEventListener("click", () => this.handleGoClick());
             this.searchButton.addEventListener("click", () => this.handleSearchClick());
             this.setupResizeObserver();

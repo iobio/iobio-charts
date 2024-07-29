@@ -29,6 +29,9 @@ function genHtml(styles) {
 
     <div class='iobio-percent-box'>
       <div class='iobio-panel'>
+        <div class="samplingLoader">
+          Sampling <img src="../../../images/loading_dots.gif"/>
+        </div>
         <div class='iobio-percent-box-svg-container'>
         </div>
       </div>
@@ -85,18 +88,39 @@ class PercentBoxElement extends HTMLElement {
 
     const sheet = new CSSStyleSheet();
     this.shadowRoot.appendChild(this._pbox.el);
-
     const broker = getDataBroker(this);
+
+    const loader = this.shadowRoot.querySelector('.samplingLoader');
+
+    broker.onEvent('data-request-start', () => {
+      loader.style.display = 'block';
+      this._pbox.update([0, 0]);
+    });
+
+    broker.onEvent('data-streaming-start', () => {
+        loader.style.display = 'none';
+    });
+
     if (broker) {
-      let data = [1,1];
+      let data = [0, 0];
       this._pbox.update(data);
       broker.onEvent(this.percentKey, (val) => {
+        if (loader.style.display === 'block') {
+          // Don't update if loader is showing 
+          return;
+        } else {
         data = [ val, data[1] - val ];
         this._pbox.update(data);
+        }
       });
       broker.onEvent(this.totalKey, (val) => {
+        if (loader.style.display === 'block') {
+          // Don't update if loader is showing 
+          return;
+        } else {
         data = [ data[0], val - data[0] ];
         this._pbox.update(data);
+        }
       });
     }
     else {

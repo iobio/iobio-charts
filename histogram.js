@@ -28,6 +28,9 @@ function genHtml(styles) {
 
     <div class='iobio-histogram'>
       <div class='iobio-panel'>
+        <div class="samplingLoader">
+          Sampling <img src="../../../images/loading_dots.gif"/>
+        </div>
         <div class='iobio-histogram-svg-container'>
         </div>
       </div>
@@ -72,27 +75,39 @@ class HistogramElement extends HTMLElement {
     this._histo = core({
       title: this.label,
     });
-    
     this.shadowRoot.appendChild(this._histo.el);
-
     const broker = getDataBroker(this);
+
+    const loader = this.shadowRoot.querySelector('.samplingLoader');
+
+    broker.onEvent('data-request-start', () => {
+      loader.style.display = 'block';
+      this._histo.update([]);
+    });
+
+    broker.onEvent('data-streaming-start', () => {
+        loader.style.display = 'none';
+    });
+
     if (broker) {
       let data = [];
       this._histo.update(data);
-
       broker.onEvent(this.brokerKey, (data) => {
+        if (loader.style.display === 'block') {
+          // Don't update if loader is showing 
+          return;
+        } else {
+          var d = Object.keys(data).filter(function (i) {
+            return data[i] != "0"
+          }).map(function (k) {
+            return [+k, +data[k]]
+          });
 
-        var d = Object.keys(data).filter(function (i) {
-          return data[i] != "0"
-        }).map(function (k) {
-          return [+k, +data[k]]
-        });
-
-        if (this.ignoreOutliers) {
-          d = iobioviz.layout.outlier()(d);
+          if (this.ignoreOutliers) {
+            d = iobioviz.layout.outlier()(d);
+          }
+          this._histo.update(d);
         }
-
-        this._histo.update(d);
       });
     }
     else {

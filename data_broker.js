@@ -185,7 +185,6 @@ class DataBroker {
   }
 
   async _updateStats() {
-
     const validRegions = this.regions ? this.regions : getValidRefs(this._header, this._readDepthData);
 
     let allRegions = validRegions;
@@ -195,12 +194,13 @@ class DataBroker {
 
     const regions = sample(allRegions);
 
+    this.emitEvent('data-request-start', null);
+
     const { response, abortController } = await this._iobioRequest("/alignmentStatsStream", {
       url: this.alignmentUrl,
       indexUrl: this._getIndexUrl(),
       regions,
     });
-
     if (this._abortController) {
       this._abortController.abort();
     }
@@ -209,10 +209,12 @@ class DataBroker {
 
     let prevUpdate = {};
     let remainder = "";
-
     const decoder = new TextDecoder('utf8');
 
     const reader = response.body.getReader();
+
+    this.emitEvent('data-streaming-start', null);
+
     while (true) {
       let chunk;
       try {
