@@ -12,6 +12,10 @@ template.innerHTML = `
     --data-color: var(--iobio-data-color, #2d8fc1);
 }
 
+rect {
+    shape-rendering: crispEdges;
+}
+
 #bamview {
     display: flex;
     flex-direction: column;

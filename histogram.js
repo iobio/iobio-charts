@@ -10,6 +10,10 @@ function genHtml(styles) {
     <style>
       ${commonCss}
 
+      .iobio-data {
+        shape-rendering: crispEdges;
+      }
+
       .iobio-histogram {
         width: 100%;
         height: 100%;
