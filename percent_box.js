@@ -89,10 +89,10 @@ class PercentBoxElement extends HTMLElement {
     const sheet = new CSSStyleSheet();
     this.shadowRoot.appendChild(this._pbox.el);
     const broker = getDataBroker(this);
-
+    
     function toggleSVGAndLoader(svgDisplay, loaderDisplay) {
       const loader = this.shadowRoot.querySelector('.samplingLoader');
-      const svgElements = this.shadowRoot.querySelectorAll('svg');
+      const svgElements = this.shadowRoot.querySelectorAll('.iobio-container');
       svgElements.forEach(svg => {
         svg.style.display = svgDisplay;
       });
@@ -107,7 +107,7 @@ class PercentBoxElement extends HTMLElement {
       toggleSVGAndLoader.call(this, 'block', 'none');
     });
 
-
+    
     if (broker) {
       let data = [0, 0];
       this._pbox.update(data);

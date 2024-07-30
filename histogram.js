@@ -80,7 +80,7 @@ class HistogramElement extends HTMLElement {
 
     function toggleSVGAndLoader(svgDisplay, loaderDisplay) {
       const loader = this.shadowRoot.querySelector('.samplingLoader');
-      const svgElements = this.shadowRoot.querySelectorAll('svg');
+      const svgElements = this.shadowRoot.querySelectorAll('.iobio-container');
       svgElements.forEach(svg => {
         svg.style.display = svgDisplay;
       });
