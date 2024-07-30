@@ -78,27 +78,25 @@ class HistogramElement extends HTMLElement {
     this.shadowRoot.appendChild(this._histo.el);
     const broker = getDataBroker(this);
 
-    function toggleSVGAndLoader(svgVisibility, indicatorDisplay) {
+    function toggleSVGContainerAndIndicator(svgVisibility, indicatorDisplay) {
       const indicator = this.shadowRoot.querySelector('.loading-indicator');
-      const svgContainers = this.shadowRoot.querySelectorAll('.iobio-histogram-svg-container');
-      svgContainers.forEach(svgContainer => {
-        svgContainer.style.visibility = svgVisibility;
-      });
+      const svgContainer = this.shadowRoot.querySelector('.iobio-histogram-svg-container');
+      svgContainer.style.visibility = svgVisibility;
       indicator.style.display = indicatorDisplay;
     }
     
     broker.onEvent('data-request-start', () => {
-      toggleSVGAndLoader.call(this, 'hidden', 'block');
+      toggleSVGContainerAndIndicator.call(this, 'hidden', 'block');
     });
     
     broker.onEvent('data-streaming-start', () => {
-      toggleSVGAndLoader.call(this, 'visible', 'none');
+      toggleSVGContainerAndIndicator.call(this, 'visible', 'none');
     });
 
     if (broker) {
       let data = [];
       this._histo.update(data);
-      toggleSVGAndLoader.call(this, 'hidden', 'block');
+      toggleSVGContainerAndIndicator.call(this, 'hidden', 'block');
       broker.onEvent(this.brokerKey, (data) => {
           var d = Object.keys(data).filter(function (i) {
             return data[i] != "0"

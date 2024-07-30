@@ -90,28 +90,26 @@ class PercentBoxElement extends HTMLElement {
     this.shadowRoot.appendChild(this._pbox.el);
     const broker = getDataBroker(this);
     
-    function toggleSVGAndLoader(svgVisibility, indicatorDisplay) {
+    function toggleSVGContainerAndIndicator(svgVisibility, indicatorDisplay) {
       const indicator = this.shadowRoot.querySelector('.loading-indicator');
-      const svgContainers = this.shadowRoot.querySelectorAll('.iobio-percent-box-svg-container');
-      svgContainers.forEach(svgContainer => {
-        svgContainer.style.visibility = svgVisibility;
-      });
+      const svgContainer = this.shadowRoot.querySelector('.iobio-percent-box-svg-container');
+      svgContainer.style.visibility = svgVisibility;
       indicator.style.display = indicatorDisplay;
     }
     
     broker.onEvent('data-request-start', () => {
-      toggleSVGAndLoader.call(this, 'hidden', 'block');
+      toggleSVGContainerAndIndicator.call(this, 'hidden', 'block');
     });
     
     broker.onEvent('data-streaming-start', () => {
-      toggleSVGAndLoader.call(this, 'visible', 'none');
+      toggleSVGContainerAndIndicator.call(this, 'visible', 'none');
     });
 
     
     if (broker) {
       let data = [0, 0];
       this._pbox.update(data);
-      toggleSVGAndLoader.call(this, 'hidden', 'block')
+      toggleSVGContainerAndIndicator.call(this, 'hidden', 'block')
       broker.onEvent(this.percentKey, (val) => {
         data = [ val, data[1] - val ];
         this._pbox.update(data);
