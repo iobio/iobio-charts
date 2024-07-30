@@ -37,7 +37,7 @@ const commonCss = `
     position: relative;
   }
 
-  .samplingLoader {
+  .loading-indicator {
     font-size: 14px;
     color: #2687BE;
     position: absolute;
@@ -47,7 +47,7 @@ const commonCss = `
     z-index: 10; 
   }
 
-  .samplingLoader img {
+  .loading-indicator img {
     height:9px;
     vertical-align: middle;
   }

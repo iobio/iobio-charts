@@ -29,7 +29,7 @@ function genHtml(styles) {
 
     <div class='iobio-percent-box'>
       <div class='iobio-panel'>
-        <div class="samplingLoader">
+        <div class="loading-indicator">
           Sampling <img src="../../../images/loading_dots.gif"/>
         </div>
         <div class='iobio-percent-box-svg-container'>
@@ -90,28 +90,28 @@ class PercentBoxElement extends HTMLElement {
     this.shadowRoot.appendChild(this._pbox.el);
     const broker = getDataBroker(this);
     
-    function toggleSVGAndLoader(svgDisplay, loaderDisplay) {
-      const loader = this.shadowRoot.querySelector('.samplingLoader');
-      const svgElements = this.shadowRoot.querySelectorAll('.iobio-container');
-      svgElements.forEach(svg => {
-        svg.style.display = svgDisplay;
+    function toggleSVGAndLoader(svgVisibility, indicatorDisplay) {
+      const indicator = this.shadowRoot.querySelector('.loading-indicator');
+      const svgContainers = this.shadowRoot.querySelectorAll('.iobio-percent-box-svg-container');
+      svgContainers.forEach(svgContainer => {
+        svgContainer.style.visibility = svgVisibility;
       });
-      loader.style.display = loaderDisplay;
+      indicator.style.display = indicatorDisplay;
     }
     
     broker.onEvent('data-request-start', () => {
-      toggleSVGAndLoader.call(this, 'none', 'block');
+      toggleSVGAndLoader.call(this, 'hidden', 'block');
     });
     
     broker.onEvent('data-streaming-start', () => {
-      toggleSVGAndLoader.call(this, 'block', 'none');
+      toggleSVGAndLoader.call(this, 'visible', 'none');
     });
 
     
     if (broker) {
       let data = [0, 0];
       this._pbox.update(data);
-      toggleSVGAndLoader.call(this, 'none', 'block')
+      toggleSVGAndLoader.call(this, 'hidden', 'block')
       broker.onEvent(this.percentKey, (val) => {
         data = [ val, data[1] - val ];
         this._pbox.update(data);
