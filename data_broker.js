@@ -26,6 +26,14 @@ class DataBroker {
     this.alignmentUrl = alignmentUrl;
   }
 
+  get apiUrl() {
+    return this._server;
+  }
+  set apiUrl(_) {
+    this._server = _;
+    this._tryUpdate(this._doUpdate.bind(this));
+  }
+
   get alignmentUrl() {
     return this._alignmentUrl;
   }
@@ -85,7 +93,7 @@ class DataBroker {
 
     const abortController = new AbortController();
 
-    const response = await fetch(`${this._server}${endpoint}`, {
+    const response = await fetch(`${this.apiUrl}${endpoint}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'text/plain',
