@@ -197,7 +197,7 @@ button:hover {
         </div>
         <div id="chart-container">
             <div class="loading-indicator">
-                Initializing data <img src="../../../images/loading_dots.gif"/>
+                Initializing data <img src="images/loading_dots.gif"/>
             </div>
         </div>
     </div>

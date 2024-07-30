@@ -33,7 +33,7 @@ function genHtml(styles) {
     <div class='iobio-histogram'>
       <div class='iobio-panel'>
         <div class="loading-indicator">
-          Sampling <img src="../../../images/loading_dots.gif"/>
+          Sampling <img src="images/loading_dots.gif"/>
         </div>
         <div class='iobio-histogram-svg-container'>
         </div>
