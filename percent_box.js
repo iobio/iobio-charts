@@ -29,6 +29,9 @@ function genHtml(styles) {
 
     <div class='iobio-percent-box'>
       <div class='iobio-panel'>
+        <div class="loading-indicator">
+          Sampling <img src="../../../images/loading_dots.gif"/>
+        </div>
         <div class='iobio-percent-box-svg-container'>
         </div>
       </div>
@@ -85,11 +88,28 @@ class PercentBoxElement extends HTMLElement {
 
     const sheet = new CSSStyleSheet();
     this.shadowRoot.appendChild(this._pbox.el);
-
     const broker = getDataBroker(this);
+    
+    function toggleSVGContainerAndIndicator(svgVisibility, indicatorDisplay) {
+      const indicator = this.shadowRoot.querySelector('.loading-indicator');
+      const svgContainer = this.shadowRoot.querySelector('.iobio-percent-box-svg-container');
+      svgContainer.style.visibility = svgVisibility;
+      indicator.style.display = indicatorDisplay;
+    }
+    
+    broker.onEvent('data-request-start', () => {
+      toggleSVGContainerAndIndicator.call(this, 'hidden', 'block');
+    });
+    
+    broker.onEvent('data-streaming-start', () => {
+      toggleSVGContainerAndIndicator.call(this, 'visible', 'none');
+    });
+
+    
     if (broker) {
-      let data = [1,1];
+      let data = [0, 0];
       this._pbox.update(data);
+      toggleSVGContainerAndIndicator.call(this, 'hidden', 'block')
       broker.onEvent(this.percentKey, (val) => {
         data = [ val, data[1] - val ];
         this._pbox.update(data);

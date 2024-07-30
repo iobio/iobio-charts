@@ -32,6 +32,9 @@ function genHtml(styles) {
 
     <div class='iobio-histogram'>
       <div class='iobio-panel'>
+        <div class="loading-indicator">
+          Sampling <img src="../../../images/loading_dots.gif"/>
+        </div>
         <div class='iobio-histogram-svg-container'>
         </div>
       </div>
@@ -76,27 +79,39 @@ class HistogramElement extends HTMLElement {
     this._histo = core({
       title: this.label,
     });
-    
     this.shadowRoot.appendChild(this._histo.el);
-
     const broker = getDataBroker(this);
+
+    function toggleSVGContainerAndIndicator(svgVisibility, indicatorDisplay) {
+      const indicator = this.shadowRoot.querySelector('.loading-indicator');
+      const svgContainer = this.shadowRoot.querySelector('.iobio-histogram-svg-container');
+      svgContainer.style.visibility = svgVisibility;
+      indicator.style.display = indicatorDisplay;
+    }
+    
+    broker.onEvent('data-request-start', () => {
+      toggleSVGContainerAndIndicator.call(this, 'hidden', 'block');
+    });
+    
+    broker.onEvent('data-streaming-start', () => {
+      toggleSVGContainerAndIndicator.call(this, 'visible', 'none');
+    });
+
     if (broker) {
       let data = [];
       this._histo.update(data);
-
+      toggleSVGContainerAndIndicator.call(this, 'hidden', 'block');
       broker.onEvent(this.brokerKey, (data) => {
+          var d = Object.keys(data).filter(function (i) {
+            return data[i] != "0"
+          }).map(function (k) {
+            return [+k, +data[k]]
+          });
 
-        var d = Object.keys(data).filter(function (i) {
-          return data[i] != "0"
-        }).map(function (k) {
-          return [+k, +data[k]]
-        });
-
-        if (this.ignoreOutliers) {
-          d = iobioviz.layout.outlier()(d);
-        }
-
-        this._histo.update(d);
+          if (this.ignoreOutliers) {
+            d = iobioviz.layout.outlier()(d);
+          }
+          this._histo.update(d);
       });
     }
     else {
@@ -156,7 +171,7 @@ function core(opt) {
 
   function render() {
     const dim = getDimensions(chartEl);
-    //console.log(dim);
+    // console.log(dim);
 
     chart.width(dim.contentWidth);
     chart.height(dim.contentHeight);

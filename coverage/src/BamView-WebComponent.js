@@ -1,11 +1,12 @@
 import { createBamView} from "./BamViewChart.js";
-import { getDataBroker, upgradeProperty } from '../../common.js';
+import { getDataBroker, upgradeProperty, commonCss} from '../../common.js';
 import { getValidRefs } from "./BamData.js";
 import { TooltipModal } from '../../modal.js';
 
 const template = document.createElement('template');
 template.innerHTML = `
 <style>
+${commonCss}
 :host {
     width: 100%;
     height: 100%;
@@ -154,24 +155,6 @@ button:hover {
 .bar, .circle {
     fill: var(--data-color);
 }
-
-.loader {
-    border: 8px solid #f3f3f3; 
-    border-top: 8px solid #3498db;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    animation: spin 2s linear infinite;
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-}
-
-@keyframes spin {
-    0% { transform: translate(-50%, -50%) rotate(0deg); }
-    100% { transform: translate(-50%, -50%) rotate(360deg); }
-}
 </style>
 <div id="bamview">
     <div id="bamview-controls">
@@ -213,7 +196,9 @@ button:hover {
             <span id="title-text"></span>
         </div>
         <div id="chart-container">
-            <div class="loader"></div>
+            <div class="loading-indicator">
+                Initializing data <img src="../../../images/loading_dots.gif"/>
+            </div>
         </div>
     </div>
 </div>
@@ -285,7 +270,7 @@ class BamViewChart extends HTMLElement {
             this.validBamHeader = getValidRefs(this.bamHeader, this.bamReadDepth);
             this.validBamReadDepth = this.getBamReadDepthByValidRefs(this.validBamHeader, this.bamReadDepth);
             this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, this.bamViewControls, this.broker);
-            this.shadowRoot.querySelector(".loader").style.display = 'none';
+            this.shadowRoot.querySelector(".loading-indicator").style.display = 'none';
             this.goButton.addEventListener("click", () => this.handleGoClick());
             this.searchButton.addEventListener("click", () => this.handleSearchClick());
             this.setupResizeObserver();

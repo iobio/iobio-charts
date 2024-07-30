@@ -34,6 +34,22 @@ const commonCss = `
     border: 1px solid rgb(230,230,230);
     border-radius: 2pt;
     text-align: center;
+    position: relative;
+  }
+
+  .loading-indicator {
+    font-size: 14px;
+    color: #2687BE;
+    position: absolute;
+    top: 50%; 
+    left: 50%; 
+    transform: translate(-50%, -50%); 
+    z-index: 10; 
+  }
+
+  .loading-indicator img {
+    height:9px;
+    vertical-align: middle;
   }
 `;
 
