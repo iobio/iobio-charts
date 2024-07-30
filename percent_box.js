@@ -90,37 +90,35 @@ class PercentBoxElement extends HTMLElement {
     this.shadowRoot.appendChild(this._pbox.el);
     const broker = getDataBroker(this);
 
-    const loader = this.shadowRoot.querySelector('.samplingLoader');
-
+    function toggleSVGAndLoader(svgDisplay, loaderDisplay) {
+      const loader = this.shadowRoot.querySelector('.samplingLoader');
+      const svgElements = this.shadowRoot.querySelectorAll('svg');
+      svgElements.forEach(svg => {
+        svg.style.display = svgDisplay;
+      });
+      loader.style.display = loaderDisplay;
+    }
+    
     broker.onEvent('data-request-start', () => {
-      loader.style.display = 'block';
-      this._pbox.update([0, 0]);
+      toggleSVGAndLoader.call(this, 'none', 'block');
+    });
+    
+    broker.onEvent('data-streaming-start', () => {
+      toggleSVGAndLoader.call(this, 'block', 'none');
     });
 
-    broker.onEvent('data-streaming-start', () => {
-        loader.style.display = 'none';
-    });
 
     if (broker) {
       let data = [0, 0];
       this._pbox.update(data);
+      toggleSVGAndLoader.call(this, 'none', 'block')
       broker.onEvent(this.percentKey, (val) => {
-        if (loader.style.display === 'block') {
-          // Don't update if loader is showing 
-          return;
-        } else {
         data = [ val, data[1] - val ];
         this._pbox.update(data);
-        }
       });
       broker.onEvent(this.totalKey, (val) => {
-        if (loader.style.display === 'block') {
-          // Don't update if loader is showing 
-          return;
-        } else {
         data = [ data[0], val - data[0] ];
         this._pbox.update(data);
-        }
       });
     }
     else {

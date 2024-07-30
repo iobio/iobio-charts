@@ -78,25 +78,28 @@ class HistogramElement extends HTMLElement {
     this.shadowRoot.appendChild(this._histo.el);
     const broker = getDataBroker(this);
 
-    const loader = this.shadowRoot.querySelector('.samplingLoader');
-
+    function toggleSVGAndLoader(svgDisplay, loaderDisplay) {
+      const loader = this.shadowRoot.querySelector('.samplingLoader');
+      const svgElements = this.shadowRoot.querySelectorAll('svg');
+      svgElements.forEach(svg => {
+        svg.style.display = svgDisplay;
+      });
+      loader.style.display = loaderDisplay;
+    }
+    
     broker.onEvent('data-request-start', () => {
-      loader.style.display = 'block';
-      this._histo.update([]);
+      toggleSVGAndLoader.call(this, 'none', 'block');
     });
-
+    
     broker.onEvent('data-streaming-start', () => {
-        loader.style.display = 'none';
+      toggleSVGAndLoader.call(this, 'block', 'none');
     });
 
     if (broker) {
       let data = [];
       this._histo.update(data);
+      toggleSVGAndLoader.call(this, 'none', 'block');
       broker.onEvent(this.brokerKey, (data) => {
-        if (loader.style.display === 'block') {
-          // Don't update if loader is showing 
-          return;
-        } else {
           var d = Object.keys(data).filter(function (i) {
             return data[i] != "0"
           }).map(function (k) {
@@ -107,7 +110,6 @@ class HistogramElement extends HTMLElement {
             d = iobioviz.layout.outlier()(d);
           }
           this._histo.update(d);
-        }
       });
     }
     else {
@@ -167,7 +169,7 @@ function core(opt) {
 
   function render() {
     const dim = getDimensions(chartEl);
-    //console.log(dim);
+    // console.log(dim);
 
     chart.width(dim.contentWidth);
     chart.height(dim.contentHeight);
