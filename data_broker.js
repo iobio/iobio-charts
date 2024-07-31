@@ -26,6 +26,14 @@ class DataBroker {
     this.alignmentUrl = alignmentUrl;
   }
 
+  get apiUrl() {
+    return this._server;
+  }
+  set apiUrl(_) {
+    this._server = _;
+    this._tryUpdate(this._doUpdate.bind(this));
+  }
+
   get alignmentUrl() {
     return this._alignmentUrl;
   }
@@ -85,7 +93,7 @@ class DataBroker {
 
     const abortController = new AbortController();
 
-    const response = await fetch(`${this._server}${endpoint}`, {
+    const response = await fetch(`${this.apiUrl}${endpoint}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'text/plain',
@@ -185,7 +193,6 @@ class DataBroker {
   }
 
   async _updateStats() {
-
     const validRegions = this.regions ? this.regions : getValidRefs(this._header, this._readDepthData);
 
     let allRegions = validRegions;
@@ -195,12 +202,13 @@ class DataBroker {
 
     const regions = sample(allRegions);
 
+    this.emitEvent('data-request-start', null);
+
     const { response, abortController } = await this._iobioRequest("/alignmentStatsStream", {
       url: this.alignmentUrl,
       indexUrl: this._getIndexUrl(),
       regions,
     });
-
     if (this._abortController) {
       this._abortController.abort();
     }
@@ -209,10 +217,12 @@ class DataBroker {
 
     let prevUpdate = {};
     let remainder = "";
-
     const decoder = new TextDecoder('utf8');
 
     const reader = response.body.getReader();
+
+    this.emitEvent('data-streaming-start', null);
+
     while (true) {
       let chunk;
       try {

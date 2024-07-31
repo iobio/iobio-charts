@@ -202,12 +202,20 @@
 
       const source = urlParams.get("source");
 
+      let apiUrl;
       let alignmentUrl;
       let indexUrl;
       let bedUrl;
 
       if (source) {
         // Mosaic integration
+
+        const backendMap = {
+          "https://mosaic.chpc.utah.edu": "https://mosaic.chpc.utah.edu/gru/api/v1",
+          "https://mosaic-staging.chpc.utah.edu": "https://mosaic-staging.chpc.utah.edu/gru/api/v1",
+        };
+
+        apiUrl = backendMap[source];
 
         const token = urlParams.get("access_token");
         const project_id = urlParams.get("project_id");
@@ -243,6 +251,10 @@
       }
 
       const broker = document.querySelector('iobio-data-broker');
+
+      if (apiUrl) {
+        broker.apiUrl = apiUrl;
+      }
 
       broker.alignmentUrl = alignmentUrl;
       broker.indexUrl = indexUrl;

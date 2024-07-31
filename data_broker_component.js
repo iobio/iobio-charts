@@ -16,6 +16,14 @@ class DataBrokerElement extends HTMLElement {
     return this._broker
   }
 
+  get apiUrl() {
+    return this.getAttribute('api-url');
+  }
+  set apiUrl(_) {
+    this.broker.apiUrl = _;
+    this.setAttribute('api-url', _);
+  }
+
   get alignmentUrl() {
     return this.getAttribute('alignment-url');
   }
