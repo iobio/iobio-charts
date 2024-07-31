@@ -28,10 +28,8 @@ function genHtml(styles) {
     </style>
 
     <div class='iobio-percent-box'>
-      <div class='iobio-panel'>
         <div class='iobio-percent-box-svg-container'>
         </div>
-      </div>
     </div>
   `;
 }
@@ -141,7 +139,7 @@ function core(opt) {
 
   const docFrag = templateEl.content.cloneNode(true);
 
-  const panelEl = docFrag.querySelector('.iobio-panel');
+  const boxEl = docFrag.querySelector('.iobio-percent-box');
 
   const chartEl = docFrag.querySelector('.iobio-percent-box-svg-container');
 
@@ -149,7 +147,7 @@ function core(opt) {
     const titleEl = document.createElement('div');
     titleEl.classList.add('iobio-percent-box-title');
     titleEl.innerText = opt.title;
-    panelEl.insertBefore(titleEl, chartEl);
+    boxEl.insertBefore(titleEl, chartEl);
   }
 
   const d3Pie = d3.pie()

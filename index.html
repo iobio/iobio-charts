@@ -51,6 +51,10 @@
         gap: 20px;
       }
 
+      iobio-tabs {
+        height: 256px; 
+      }
+
       iobio-histogram {
         height: 256px;
       }
@@ -92,72 +96,89 @@
       <div class='bottom-container'>
         <div class="percent-row">
 
-          <iobio-percent-box
-            label="Mapped Reads"
-            percent-key="mapped_reads"
-            total-key="total_reads">
-          </iobio-percent-box>
+          <iobio-panel>
+            <iobio-percent-box
+              label="Mapped Reads"
+              percent-key="mapped_reads"
+              total-key="total_reads">
+            </iobio-percent-box>
+          </iobio-panel>
+          
+          <iobio-panel>
+            <iobio-percent-box
+              label="Forward Strands"
+              percent-key="forward_strands"
+              total-key="total_reads">
+            </iobio-percent-box>
+          </iobio-panel>
 
-          <iobio-percent-box
-            label="Forward Strands"
-            percent-key="forward_strands"
-            total-key="total_reads">
-          </iobio-percent-box>
+          <iobio-panel>
+            <iobio-percent-box
+              label="Proper Pairs"
+              percent-key="proper_pairs"
+              total-key="total_reads">
+            </iobio-percent-box>
+          </iobio-panel>
 
-          <iobio-percent-box
-            label="Proper Pairs"
-            percent-key="proper_pairs"
-            total-key="total_reads">
-          </iobio-percent-box>
+          <iobio-panel>
+            <iobio-percent-box
+              label="Singletons"
+              percent-key="singletons"
+              total-key="total_reads">
+            </iobio-percent-box>
+          </iobio-panel>
 
-          <iobio-percent-box
-            label="Singletons"
-            percent-key="singletons"
-            total-key="total_reads">
-          </iobio-percent-box>
-
-          <iobio-percent-box
-            label="Both Mates Mapped"
-            percent-key="both_mates_mapped"
-            total-key="total_reads">
-          </iobio-percent-box>
-
-          <iobio-percent-box
-            label="Duplicates"
-            percent-key="duplicates"
-            total-key="total_reads">
-          </iobio-percent-box>
+          <iobio-panel>
+            <iobio-percent-box
+              label="Both Mates Mapped"
+              percent-key="both_mates_mapped"
+              total-key="total_reads">
+            </iobio-percent-box>
+          </iobio-panel>
+         
+          <iobio-panel>
+            <iobio-percent-box
+              label="Duplicates"
+              percent-key="duplicates"
+              total-key="total_reads">
+            </iobio-percent-box>
+          </iobio-panel>
 
         </div>
 
         <div class='histogram-column'>
+          <iobio-panel>
+            <iobio-histogram
+              label="Read Coverage Distribution"
+              broker-key="coverage_hist">
+            </iobio-histogram>
+          </iobio-panel>
 
-          <iobio-histogram
-            label="Read Coverage Distribution"
-            broker-key="coverage_hist">
-          </iobio-histogram>
+          <iobio-panel>
+            <iobio-tabs label-1="Fragment Length" label-2="Read Length">
+              <iobio-histogram
+                broker-key="frag_hist"
+                ignore-outliers>
+              </iobio-histogram>
 
-          <iobio-histogram
-            label="Fragment Length"
-            broker-key="frag_hist"
-            ignore-outliers>
-          </iobio-histogram>
+              <iobio-histogram
+                broker-key="length_hist"
+                ignore-outliers>
+              </iobio-histogram>
+            </iobio-tabs>
+          </iobio-panel>
 
-          <iobio-histogram
-            label="Read Length"
-            broker-key="length_hist"
-            ignore-outliers>
-          </iobio-histogram>
+          <iobio-panel>
+            <iobio-tabs label-1="Mapping Quality" label-2="Base Quality">
+              <iobio-histogram
+                broker-key="mapq_hist">
+              </iobio-histogram>
 
-          <iobio-histogram
-            label="Mapping Quality"
-            broker-key="mapq_hist">
-          </iobio-histogram>
-
-          <iobio-histogram
-            label="Base Quality"
-            broker-key="baseq_hist">
-          </iobio-histogram>
+              <iobio-histogram
+                broker-key="baseq_hist">
+              </iobio-histogram>
+            </iobio-tabs>
+          </iobio-panel>
 
         </div>
       </div>

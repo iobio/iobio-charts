@@ -27,10 +27,8 @@ function genHtml(styles) {
     </style>
 
     <div class='iobio-histogram'>
-      <div class='iobio-panel'>
         <div class='iobio-histogram-svg-container'>
         </div>
-      </div>
     </div>
   `;
 }
@@ -125,7 +123,7 @@ function core(opt) {
 
   const docFrag = templateEl.content.cloneNode(true);
 
-  const panelEl = docFrag.querySelector('.iobio-panel');
+  const histoEl = docFrag.querySelector('.iobio-histogram');
 
   const chartEl = docFrag.querySelector('.iobio-histogram-svg-container');
 
@@ -133,7 +131,7 @@ function core(opt) {
     const titleEl = document.createElement('div');
     titleEl.classList.add('iobio-histogram-title');
     titleEl.innerText = opt.title;
-    panelEl.insertBefore(titleEl, chartEl);
+    histoEl.insertBefore(titleEl, chartEl);
   }
 
   const chart = iobioviz.barViewer()
