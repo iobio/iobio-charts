@@ -1,3 +1,4 @@
+import { getDataBroker } from "./common.js";
 const tabsTemplate = document.createElement('template');
 tabsTemplate.innerHTML = `
 <style>
@@ -51,40 +52,54 @@ class IobioTabs extends HTMLElement {
         super();
         this.attachShadow({ mode: 'open' });
         this.shadowRoot.appendChild(tabsTemplate.content.cloneNode(true));
+        
     }
   
     connectedCallback() {
-        const label1 = this.getAttribute('label-1');
-        const label2 = this.getAttribute('label-2');
-        const tab1 = this.shadowRoot.querySelector('.tab1');
-        const tab2 = this.shadowRoot.querySelector('.tab2');
-        tab1.textContent = label1;
-        tab2.textContent = label2;
+        this.broker = getDataBroker(this);
+        this.initDOMElements();
+        this.initializeTabs();
+        // show default histogram 
+        this.showChart(0);
+    }
+
+    initDOMElements() {
+        this.tab1 = this.shadowRoot.querySelector('.tab1');
+        this.tab2 = this.shadowRoot.querySelector('.tab2');
         this.tabs = this.shadowRoot.querySelectorAll('.tab');
         this.histograms = Array.from(this.querySelectorAll('iobio-histogram'));
+    }
+
+    initializeTabs() {
+        this.tab1.textContent = this.getAttribute('label-1');
+        this.tab2.textContent = this.getAttribute('label-2');
 
         this.tabs.forEach((tab, index) => {
             tab.addEventListener('click', () => {
                 this.showChart(index);
+                this.updateHistogramVisibility(index);
             });
         });
-        this.showChart(0);
     }
 
     showChart(index) {
-        this.tabs.forEach((tab, tabIndex) => {
-            if (tabIndex === index) {
-                tab.classList.add('active');
-            } else {
-                tab.classList.remove('active');
-            }
+        this.updateTabStyles(index);
+
+        this.broker.onEvent('data-streaming-start', () => {
+            this.updateHistogramVisibility(index);
         });
-        this.histograms.forEach((histogram, histIndex) => {
-            if (histIndex === index) {
-                histogram.style.visibility = 'visible';
-            } else {
-                histogram.style.visibility = 'hidden';
-            }
+    }
+
+    updateTabStyles(activeIndex) {
+        this.tabs.forEach((tab, index) => {
+            tab.classList.toggle('active', index === activeIndex);
+        });
+    }
+
+    updateHistogramVisibility(activeIndex) {
+        this.histograms.forEach((histogram, index) => {
+            const svgContainer = histogram.shadowRoot.querySelector('.iobio-histogram-svg-container');
+            svgContainer.style.visibility = index === activeIndex ? 'visible' : 'hidden';
         });
     }
 }

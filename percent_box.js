@@ -28,11 +28,11 @@ function genHtml(styles) {
     </style>
 
     <div class='iobio-percent-box'>
-        <div class="loading-indicator">
-          Sampling <img src="../../../images/loading_dots.gif"/>
-        </div>
-        <div class='iobio-percent-box-svg-container'>
-        </div>
+      <div class="loading-indicator">
+        Sampling <img src="../../../images/loading_dots.gif"/>
+      </div>
+      <div class='iobio-percent-box-svg-container'>
+      </div>
     </div>
   `;
 }

@@ -31,11 +31,11 @@ function genHtml(styles) {
     </style>
 
     <div class='iobio-histogram'>
-        <div class="loading-indicator">
-          Sampling <img src="../../../images/loading_dots.gif"/>
-        </div>
-        <div class='iobio-histogram-svg-container'>
-        </div>
+      <div class="loading-indicator">
+        Sampling <img src="../../../images/loading_dots.gif"/>
+      </div>
+      <div class='iobio-histogram-svg-container'>
+      </div>
     </div>
   `;
 }

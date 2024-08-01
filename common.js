@@ -20,23 +20,6 @@ const commonCss = `
     fill: var(--data-color-secondary);
   }
 
-  .iobio-panel > .iobio-title {
-    font-size: 30px
-  }
-
-  .iobio-panel {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    background-color: var(--iobio-background-color);
-    padding: 5px;
-    border: 1px solid rgb(230,230,230);
-    border-radius: 2pt;
-    text-align: center;
-    position: relative;
-  }
-
   .loading-indicator {
     font-size: 14px;
     color: #2687BE;

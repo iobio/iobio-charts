@@ -11,6 +11,7 @@ panelTemplate.innerHTML = `
     border: 1px solid rgb(230,230,230);
     border-radius: 2pt;
     text-align: center;
+    position: relative;
     box-sizing: border-box;
 }
 </style>
