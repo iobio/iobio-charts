@@ -37,6 +37,21 @@ const commonCss = `
     position: relative;
   }
 
+  /* Tooltip */
+  .iobio-tooltip {   
+    position: fixed; 
+    top:0px;            
+    text-align: center;           
+    z-index:20;
+    color:white;
+    padding: 4px 6px 4px 6px;             
+    font: 11px arial;        
+    background: rgb(80,80,80);   
+    border: 0px;      
+    border-radius: 4px;           
+    pointer-events: none;         
+  }
+
   .loading-indicator {
     font-size: 14px;
     color: #2687BE;
