@@ -72,6 +72,13 @@ class HistogramElement extends HTMLElement {
     this.setAttribute('broker-key', _);
   }
 
+  handleVisibilityChange(event) {
+    const svgContainer = this.shadowRoot.querySelector('.iobio-histogram-svg-container');
+    if (svgContainer) {
+        svgContainer.style.visibility = event.detail.isVisible ? 'visible' : 'hidden';
+    }
+  }
+
   connectedCallback() {
 
     this._histo = core({
@@ -94,6 +101,8 @@ class HistogramElement extends HTMLElement {
     broker.onEvent('data-streaming-start', () => {
       toggleSVGContainerAndIndicator.call(this, 'visible', 'none');
     });
+
+    this.addEventListener('element-visibility-change', this.handleVisibilityChange);
 
     if (broker) {
       let data = [];

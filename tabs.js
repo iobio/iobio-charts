@@ -68,7 +68,7 @@ class Tabs extends HTMLElement {
         this.tab2_label = this.shadowRoot.querySelector('.tab2-label');
         this.tabs = this.shadowRoot.querySelectorAll('.tab');
         const slot = this.shadowRoot.querySelector('slot');
-        this.histograms = Array.from(slot.assignedElements());
+        this.slottedElements = Array.from(slot.assignedElements());
     }
 
     initializeTabs() {
@@ -78,7 +78,7 @@ class Tabs extends HTMLElement {
         this.tabs.forEach((tab, index) => {
             tab.addEventListener('click', () => {
                 this.showChart(index);
-                this.updateHistogramVisibility(index);
+                this.updateElementVisibility(index);
             });
         });
     }
@@ -87,7 +87,7 @@ class Tabs extends HTMLElement {
         this.updateTabStyles(index);
 
         this.broker.onEvent('data-streaming-start', () => {
-            this.updateHistogramVisibility(index);
+            this.updateElementVisibility(index);
         });
     }
 
@@ -97,10 +97,15 @@ class Tabs extends HTMLElement {
         });
     }
 
-    updateHistogramVisibility(activeIndex) {
-        this.histograms.forEach((histogram, index) => {
-            const svgContainer = histogram.shadowRoot.querySelector('.iobio-histogram-svg-container');
-            svgContainer.style.visibility = index === activeIndex ? 'visible' : 'hidden';
+    updateElementVisibility(activeIndex) {
+        this.slottedElements.forEach((element, index) => {
+            // Dispatch a custom event to each slotted element
+            const event = new CustomEvent('element-visibility-change', {
+                detail: { isVisible: index === activeIndex },
+                bubbles: true,
+                composed: true
+            });
+            element.dispatchEvent(event);
         });
     }
 }

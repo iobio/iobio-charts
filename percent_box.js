@@ -78,6 +78,13 @@ class PercentBoxElement extends HTMLElement {
     this._broker = _;
   }
 
+  handleVisibilityChange(event) {
+    const svgContainer = this.shadowRoot.querySelector('.iobio-percent-box-svg-container');
+    if (svgContainer) {
+        svgContainer.style.visibility = event.detail.isVisible ? 'visible' : 'hidden';
+    }
+  }
+
   connectedCallback() {
 
     this._pbox = core({
@@ -103,6 +110,7 @@ class PercentBoxElement extends HTMLElement {
       toggleSVGContainerAndIndicator.call(this, 'visible', 'none');
     });
 
+    this.addEventListener('element-visibility-change', this.handleVisibilityChange);
     
     if (broker) {
       let data = [0, 0];
