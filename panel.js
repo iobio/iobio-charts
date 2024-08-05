@@ -20,7 +20,7 @@ panelTemplate.innerHTML = `
     </div> 
 `;
 
-class IobioPanel extends HTMLElement {
+class Panel extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
@@ -29,5 +29,5 @@ class IobioPanel extends HTMLElement {
   
 }
 
-customElements.define('iobio-panel', IobioPanel);
-export {IobioPanel};
+customElements.define('iobio-panel', Panel);
+export {Panel};

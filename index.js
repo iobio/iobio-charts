@@ -3,8 +3,8 @@ import { HistogramElement, createHistogram } from './histogram.js';
 import { DataBroker } from './data_broker.js';
 import { DataBrokerElement } from './data_broker_component.js';
 import './coverage/src/BamView-WebComponent.js';
-import { IobioPanel } from './panel.js';
-import {IobioTabs} from './iobio_tabs.js';
+import { Panel } from './panel.js';
+import {Tabs} from './tabs.js';
 
 
 
@@ -15,6 +15,6 @@ export default {
   createHistogram,
   DataBroker,
   DataBrokerElement,
-  IobioTabs,
-  IobioPanel
+  Tabs,
+  Panel
 };

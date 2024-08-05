@@ -30,7 +30,7 @@ tabsTemplate.innerHTML = `
     height: 100%;
 }
 
-::slotted(iobio-histogram) {
+::slotted(*) {
     position: absolute;
     width: 100%;
     height: 100%;
@@ -38,8 +38,8 @@ tabsTemplate.innerHTML = `
 </style>
     <div class="iobio-tabs">
         <div class="tabs">
-            <span class="tab tab1"></span>  |
-            <span class="tab tab2"></span>
+            <span class="tab tab1-label"></span>  |
+            <span class="tab tab2-label"></span>
         </div>
         <div class="content-container">
             <slot></slot>
@@ -47,7 +47,7 @@ tabsTemplate.innerHTML = `
     </div> 
 `;
 
-class IobioTabs extends HTMLElement {
+class Tabs extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
@@ -64,15 +64,16 @@ class IobioTabs extends HTMLElement {
     }
 
     initDOMElements() {
-        this.tab1 = this.shadowRoot.querySelector('.tab1');
-        this.tab2 = this.shadowRoot.querySelector('.tab2');
+        this.tab1_label = this.shadowRoot.querySelector('.tab1-label');
+        this.tab2_label = this.shadowRoot.querySelector('.tab2-label');
         this.tabs = this.shadowRoot.querySelectorAll('.tab');
-        this.histograms = Array.from(this.querySelectorAll('iobio-histogram'));
+        const slot = this.shadowRoot.querySelector('slot');
+        this.histograms = Array.from(slot.assignedElements());
     }
 
     initializeTabs() {
-        this.tab1.textContent = this.getAttribute('label-1');
-        this.tab2.textContent = this.getAttribute('label-2');
+        this.tab1_label.textContent = this.getAttribute('label-1');
+        this.tab2_label.textContent = this.getAttribute('label-2');
 
         this.tabs.forEach((tab, index) => {
             tab.addEventListener('click', () => {
@@ -104,5 +105,5 @@ class IobioTabs extends HTMLElement {
     }
 }
 
-customElements.define('iobio-tabs', IobioTabs);
-export {IobioTabs};
+customElements.define('iobio-tabs', Tabs);
+export {Tabs};
