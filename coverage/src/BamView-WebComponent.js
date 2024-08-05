@@ -229,7 +229,6 @@ class BamViewChart extends HTMLElement {
         this.bamHeader = null;
         this.validBamHeader = null;
         this.validBamReadDepth = null;
-        this.broker = getDataBroker(this);
         upgradeProperty(this, 'label');
 
     }
@@ -256,6 +255,9 @@ class BamViewChart extends HTMLElement {
     }
 
     async connectedCallback() {
+
+        this.broker = getDataBroker(this);
+
         if (this.broker) {
             const readDepthPromise = new Promise((resolve, reject) => {
               this.broker.onEvent('read-depth', resolve);

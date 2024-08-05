@@ -20,6 +20,38 @@ const commonCss = `
     fill: var(--data-color-secondary);
   }
 
+  .iobio-panel > .iobio-title {
+    font-size: 30px
+  }
+
+  .iobio-panel {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--iobio-background-color);
+    padding: 5px;
+    border: 1px solid rgb(230,230,230);
+    border-radius: 2pt;
+    text-align: center;
+    position: relative;
+  }
+
+  /* Tooltip */
+  .iobio-tooltip {   
+    position: fixed; 
+    top:0px;            
+    text-align: center;           
+    z-index:20;
+    color:white;
+    padding: 4px 6px 4px 6px;             
+    font: 11px arial;        
+    background: rgb(80,80,80);   
+    border: 0px;      
+    border-radius: 4px;           
+    pointer-events: none;         
+  }
+
   .loading-indicator {
     font-size: 14px;
     color: #2687BE;
