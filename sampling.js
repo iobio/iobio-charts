@@ -1,9 +1,12 @@
-// Bin Size and num_samples could be dynamic depending on file (size, genome type, etc)
+// Bin Size and num_samples could be dynamic
+// Either derived from file data (size, genome type, etc) or defined by user input (config file, env values)
 const TARGET_BIN_SIZE = 10000;
 const SECONDARY_BIN_SIZE = 5000;
 const TERTIARY_BIN_SIZE = 2500;
 const NUM_SAMPLES = 20;
 
+// Confirm if inRegions can be narrowed to a specific region
+// Otherwise regions code is unchanged
 function sample(inRegions) {
 	let idealRegions = [];
 	const secondaryRegions = [];
@@ -20,6 +23,7 @@ function sample(inRegions) {
 			tertiaryRegions.push(region);
 		}
 	}
+	// ... regions code ...
 
 	if (idealRegions.length < NUM_SAMPLES) {
 		const expanded = expandRegions(idealRegions);
@@ -129,7 +133,7 @@ function staticSampleRegions(inRegions, numSamples, binSize) {
 	const regions = [...inRegions];
 
 	const sampledRegions = [];
-
+	// Obtain a sample from every region (or specified # of regions) rather than randomized regions
 	for (let i = 0; i < numSamples && regions.length > 0; i++) {
 		const region = regions[i];
 
@@ -137,7 +141,8 @@ function staticSampleRegions(inRegions, numSamples, binSize) {
 
 		const length = region.end - region.start;
 
-		// Offset Could be randomized if using seeded random approach so results are reproduceable
+		// Offset Could be randomized if using seeded random approach
+		// So results are reproduceable but statistically dipsersed
 		// https://github.com/davidbau/seedrandom
 		const offset = Math.round(length * 0.3);
 
