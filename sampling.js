@@ -125,7 +125,6 @@ function expandRegion(region) {
 }
 
 sample(inRegions) {
-  console.log(inRegions);
   let idealRegions = [];
   const secondaryRegions = [];
   const tertiaryRegions = [];
