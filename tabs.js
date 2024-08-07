@@ -1,4 +1,3 @@
-import { getDataBroker } from "./common.js";
 const tabsTemplate = document.createElement('template');
 tabsTemplate.innerHTML = `
 <style>
@@ -35,6 +34,12 @@ tabsTemplate.innerHTML = `
     width: 100%;
     height: 100%;
 }
+
+::slotted(.hidden) { 
+    visibility: hidden;
+    z-index: -1;
+} 
+
 </style>
     <div class="iobio-tabs">
         <div class="tabs">
@@ -56,7 +61,6 @@ class Tabs extends HTMLElement {
     }
   
     connectedCallback() {
-        this.broker = getDataBroker(this);
         this.initDOMElements();
         this.initializeTabs();
         // show default histogram 
@@ -78,34 +82,17 @@ class Tabs extends HTMLElement {
         this.tabs.forEach((tab, index) => {
             tab.addEventListener('click', () => {
                 this.showChart(index);
-                this.updateElementVisibility(index);
             });
         });
     }
 
-    showChart(index) {
-        this.updateTabStyles(index);
-
-        this.broker.onEvent('data-streaming-start', () => {
-            this.updateElementVisibility(index);
-        });
-    }
-
-    updateTabStyles(activeIndex) {
+    showChart(activeIndex) {
         this.tabs.forEach((tab, index) => {
             tab.classList.toggle('active', index === activeIndex);
         });
-    }
 
-    updateElementVisibility(activeIndex) {
         this.slottedElements.forEach((element, index) => {
-            // Dispatch a custom event to each slotted element
-            const event = new CustomEvent('element-visibility-change', {
-                detail: { isVisible: index === activeIndex },
-                bubbles: true,
-                composed: true
-            });
-            element.dispatchEvent(event);
+            element.classList.toggle('hidden', index == activeIndex ? false : true);
         });
     }
 }

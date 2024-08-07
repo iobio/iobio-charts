@@ -28,6 +28,10 @@ function genHtml(styles) {
         height: 90%;
       }
 
+      .hidden {
+        visibility: hidden;
+      }
+
     </style>
 
     <div class='iobio-histogram'>
@@ -72,13 +76,6 @@ class HistogramElement extends HTMLElement {
     this.setAttribute('broker-key', _);
   }
 
-  handleVisibilityChange(event) {
-    const svgContainer = this.shadowRoot.querySelector('.iobio-histogram-svg-container');
-    if (svgContainer) {
-        svgContainer.style.visibility = event.detail.isVisible ? 'visible' : 'hidden';
-    }
-  }
-
   connectedCallback() {
 
     this._histo = core({
@@ -87,27 +84,21 @@ class HistogramElement extends HTMLElement {
     this.shadowRoot.appendChild(this._histo.el);
     const broker = getDataBroker(this);
 
-    function toggleSVGContainerAndIndicator(svgVisibility, indicatorDisplay) {
+    function toggleSVGContainerAndIndicator(showSVG) {
       const indicator = this.shadowRoot.querySelector('.loading-indicator');
       const svgContainer = this.shadowRoot.querySelector('.iobio-histogram-svg-container');
-      svgContainer.style.visibility = svgVisibility;
-      indicator.style.display = indicatorDisplay;
+      
+      svgContainer.classList.toggle('hidden', !showSVG);
+      indicator.style.display = showSVG ? 'none' : 'block';
     }
     
-    broker.onEvent('data-request-start', () => {
-      toggleSVGContainerAndIndicator.call(this, 'hidden', 'block');
-    });
-    
-    broker.onEvent('data-streaming-start', () => {
-      toggleSVGContainerAndIndicator.call(this, 'visible', 'none');
-    });
-
-    this.addEventListener('element-visibility-change', this.handleVisibilityChange);
+    broker.onEvent('data-request-start', () => toggleSVGContainerAndIndicator.call(this, false));
+    broker.onEvent('data-streaming-start', () => toggleSVGContainerAndIndicator.call(this, true));
 
     if (broker) {
       let data = [];
       this._histo.update(data);
-      toggleSVGContainerAndIndicator.call(this, 'hidden', 'block');
+      toggleSVGContainerAndIndicator.call(this, false);
       broker.onEvent(this.brokerKey, (data) => {
           var d = Object.keys(data).filter(function (i) {
             return data[i] != "0"

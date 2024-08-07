@@ -25,6 +25,10 @@ function genHtml(styles) {
         height: 80%;
       }
 
+      .hidden {
+        visibility: hidden;
+      }
+
     </style>
 
     <div class='iobio-percent-box'>
@@ -78,13 +82,6 @@ class PercentBoxElement extends HTMLElement {
     this._broker = _;
   }
 
-  handleVisibilityChange(event) {
-    const svgContainer = this.shadowRoot.querySelector('.iobio-percent-box-svg-container');
-    if (svgContainer) {
-        svgContainer.style.visibility = event.detail.isVisible ? 'visible' : 'hidden';
-    }
-  }
-
   connectedCallback() {
 
     this._pbox = core({
@@ -95,27 +92,21 @@ class PercentBoxElement extends HTMLElement {
     this.shadowRoot.appendChild(this._pbox.el);
     const broker = getDataBroker(this);
     
-    function toggleSVGContainerAndIndicator(svgVisibility, indicatorDisplay) {
+    function toggleSVGContainerAndIndicator(showSVG) {
       const indicator = this.shadowRoot.querySelector('.loading-indicator');
       const svgContainer = this.shadowRoot.querySelector('.iobio-percent-box-svg-container');
-      svgContainer.style.visibility = svgVisibility;
-      indicator.style.display = indicatorDisplay;
+      
+      svgContainer.classList.toggle('hidden', !showSVG);
+      indicator.style.display = showSVG ? 'none' : 'block';
     }
     
-    broker.onEvent('data-request-start', () => {
-      toggleSVGContainerAndIndicator.call(this, 'hidden', 'block');
-    });
-    
-    broker.onEvent('data-streaming-start', () => {
-      toggleSVGContainerAndIndicator.call(this, 'visible', 'none');
-    });
+    broker.onEvent('data-request-start', () => toggleSVGContainerAndIndicator.call(this, false));
+    broker.onEvent('data-streaming-start', () => toggleSVGContainerAndIndicator.call(this, true));
 
-    this.addEventListener('element-visibility-change', this.handleVisibilityChange);
-    
     if (broker) {
       let data = [0, 0];
       this._pbox.update(data);
-      toggleSVGContainerAndIndicator.call(this, 'hidden', 'block')
+      toggleSVGContainerAndIndicator.call(this, false);
       broker.onEvent(this.percentKey, (val) => {
         data = [ val, data[1] - val ];
         this._pbox.update(data);
