@@ -25,15 +25,17 @@ function genHtml(styles) {
         height: 80%;
       }
 
+      .hidden {
+        visibility: hidden;
+      }
+
     </style>
 
     <div class='iobio-percent-box'>
-      <div class='iobio-panel'>
-        <div class="loading-indicator">
-          Sampling <img src="images/loading_dots.gif"/>
-        </div>
-        <div class='iobio-percent-box-svg-container'>
-        </div>
+      <div class="loading-indicator">
+        Sampling <img src="../../../images/loading_dots.gif"/>
+      </div>
+      <div class='iobio-percent-box-svg-container'>
       </div>
     </div>
   `;
@@ -90,26 +92,21 @@ class PercentBoxElement extends HTMLElement {
     this.shadowRoot.appendChild(this._pbox.el);
     const broker = getDataBroker(this);
     
-    function toggleSVGContainerAndIndicator(svgVisibility, indicatorDisplay) {
+    function toggleSVGContainerAndIndicator(showSVG) {
       const indicator = this.shadowRoot.querySelector('.loading-indicator');
       const svgContainer = this.shadowRoot.querySelector('.iobio-percent-box-svg-container');
-      svgContainer.style.visibility = svgVisibility;
-      indicator.style.display = indicatorDisplay;
+      
+      svgContainer.classList.toggle('hidden', !showSVG);
+      indicator.style.display = showSVG ? 'none' : 'block';
     }
     
-    broker.onEvent('data-request-start', () => {
-      toggleSVGContainerAndIndicator.call(this, 'hidden', 'block');
-    });
-    
-    broker.onEvent('data-streaming-start', () => {
-      toggleSVGContainerAndIndicator.call(this, 'visible', 'none');
-    });
+    broker.onEvent('data-request-start', () => toggleSVGContainerAndIndicator.call(this, false));
+    broker.onEvent('data-streaming-start', () => toggleSVGContainerAndIndicator.call(this, true));
 
-    
     if (broker) {
       let data = [0, 0];
       this._pbox.update(data);
-      toggleSVGContainerAndIndicator.call(this, 'hidden', 'block')
+      toggleSVGContainerAndIndicator.call(this, false);
       broker.onEvent(this.percentKey, (val) => {
         data = [ val, data[1] - val ];
         this._pbox.update(data);
@@ -161,7 +158,7 @@ function core(opt) {
 
   const docFrag = templateEl.content.cloneNode(true);
 
-  const panelEl = docFrag.querySelector('.iobio-panel');
+  const boxEl = docFrag.querySelector('.iobio-percent-box');
 
   const chartEl = docFrag.querySelector('.iobio-percent-box-svg-container');
 
@@ -169,7 +166,7 @@ function core(opt) {
     const titleEl = document.createElement('div');
     titleEl.classList.add('iobio-percent-box-title');
     titleEl.innerText = opt.title;
-    panelEl.insertBefore(titleEl, chartEl);
+    boxEl.insertBefore(titleEl, chartEl);
   }
 
   const d3Pie = d3.pie()

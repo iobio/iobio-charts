@@ -28,15 +28,17 @@ function genHtml(styles) {
         height: 90%;
       }
 
+      .hidden {
+        visibility: hidden;
+      }
+
     </style>
 
     <div class='iobio-histogram'>
-      <div class='iobio-panel'>
-        <div class="loading-indicator">
-          Sampling <img src="images/loading_dots.gif"/>
-        </div>
-        <div class='iobio-histogram-svg-container'>
-        </div>
+      <div class="loading-indicator">
+        Sampling <img src="../../../images/loading_dots.gif"/>
+      </div>
+      <div class='iobio-histogram-svg-container'>
       </div>
     </div>
   `;
@@ -82,25 +84,21 @@ class HistogramElement extends HTMLElement {
     this.shadowRoot.appendChild(this._histo.el);
     const broker = getDataBroker(this);
 
-    function toggleSVGContainerAndIndicator(svgVisibility, indicatorDisplay) {
+    function toggleSVGContainerAndIndicator(showSVG) {
       const indicator = this.shadowRoot.querySelector('.loading-indicator');
       const svgContainer = this.shadowRoot.querySelector('.iobio-histogram-svg-container');
-      svgContainer.style.visibility = svgVisibility;
-      indicator.style.display = indicatorDisplay;
+      
+      svgContainer.classList.toggle('hidden', !showSVG);
+      indicator.style.display = showSVG ? 'none' : 'block';
     }
     
-    broker.onEvent('data-request-start', () => {
-      toggleSVGContainerAndIndicator.call(this, 'hidden', 'block');
-    });
-    
-    broker.onEvent('data-streaming-start', () => {
-      toggleSVGContainerAndIndicator.call(this, 'visible', 'none');
-    });
+    broker.onEvent('data-request-start', () => toggleSVGContainerAndIndicator.call(this, false));
+    broker.onEvent('data-streaming-start', () => toggleSVGContainerAndIndicator.call(this, true));
 
     if (broker) {
       let data = [];
       this._histo.update(data);
-      toggleSVGContainerAndIndicator.call(this, 'hidden', 'block');
+      toggleSVGContainerAndIndicator.call(this, false);
       broker.onEvent(this.brokerKey, (data) => {
           var d = Object.keys(data).filter(function (i) {
             return data[i] != "0"
@@ -144,7 +142,7 @@ function core(opt) {
 
   const docFrag = templateEl.content.cloneNode(true);
 
-  const panelEl = docFrag.querySelector('.iobio-panel');
+  const histoEl = docFrag.querySelector('.iobio-histogram');
 
   const chartEl = docFrag.querySelector('.iobio-histogram-svg-container');
 
@@ -152,7 +150,7 @@ function core(opt) {
     const titleEl = document.createElement('div');
     titleEl.classList.add('iobio-histogram-title');
     titleEl.innerText = opt.title;
-    panelEl.insertBefore(titleEl, chartEl);
+    histoEl.insertBefore(titleEl, chartEl);
   }
 
   const chart = iobioviz.barViewer()

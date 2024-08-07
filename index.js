@@ -3,6 +3,9 @@ import { HistogramElement, createHistogram } from './histogram.js';
 import { DataBroker } from './data_broker.js';
 import { DataBrokerElement } from './data_broker_component.js';
 import './coverage/src/BamView-WebComponent.js';
+import { Panel } from './panel.js';
+import {Tabs} from './tabs.js';
+
 
 
 export default {
@@ -12,4 +15,6 @@ export default {
   createHistogram,
   DataBroker,
   DataBrokerElement,
+  Tabs,
+  Panel
 };
