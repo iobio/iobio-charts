@@ -6,7 +6,7 @@ const TERTIARY_BIN_SIZE = 2500;
 const NUM_SAMPLES = 20;
 
 // Confirm if inRegions can be narrowed to a specific region
-// Otherwise regions code is unchanged
+// Otherwise regions code is only changed to use the static method
 function sample(inRegions) {
 	let idealRegions = [];
 	const secondaryRegions = [];
