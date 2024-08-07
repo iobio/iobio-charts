@@ -23,7 +23,6 @@ function sample(inRegions) {
 			tertiaryRegions.push(region);
 		}
 	}
-	// ... regions code ...
 
 	if (idealRegions.length < NUM_SAMPLES) {
 		const expanded = expandRegions(idealRegions);
@@ -43,7 +42,7 @@ function sample(inRegions) {
 		const remaining = NUM_SAMPLES - sampledRegions.length;
 		// readRatio increases the number of regions so we still get the desired number of reads sampled
 		const readRatio = Math.floor(TARGET_BIN_SIZE / SECONDARY_BIN_SIZE);
-		const batch = sampleFromRegions(
+		const batch = staticSampleRegions(
 			secondaryRegions,
 			remaining * readRatio,
 			SECONDARY_BIN_SIZE
@@ -54,7 +53,7 @@ function sample(inRegions) {
 	if (sampledRegions.length < NUM_SAMPLES) {
 		const remaining = NUM_SAMPLES - sampledRegions.length;
 		const readRatio = Math.floor(TARGET_BIN_SIZE / TERTIARY_BIN_SIZE);
-		const batch = sampleFromRegions(
+		const batch = staticSampleRegions(
 			tertiaryRegions,
 			remaining * readRatio,
 			TERTIARY_BIN_SIZE
