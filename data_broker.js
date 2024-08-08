@@ -9,8 +9,9 @@ import { sample } from './sampling.js';
  */
 
 
-class DataBroker {
+class DataBroker extends EventTarget {
   constructor(alignmentUrl, options) {
+    super();
 
     this._server = "https://backend.iobio.io";
 
@@ -69,6 +70,11 @@ class DataBroker {
   }
 
   emitEvent(eventName, data) {
+
+    this.dispatchEvent(new CustomEvent(eventName, {
+      detail: data,
+    }));
+
     if (this._callbacks[eventName]) {
       for (const callback of this._callbacks[eventName]) {
         callback(data);
@@ -202,7 +208,7 @@ class DataBroker {
 
     const regions = sample(allRegions);
 
-    this.emitEvent('data-request-start', null);
+    this.emitEvent('stats-stream-request', null);
 
     const { response, abortController } = await this._iobioRequest("/alignmentStatsStream", {
       url: this.alignmentUrl,
@@ -221,7 +227,7 @@ class DataBroker {
 
     const reader = response.body.getReader();
 
-    this.emitEvent('data-streaming-start', null);
+    this.emitEvent('stats-stream-start', null);
 
     while (true) {
       let chunk;
@@ -267,6 +273,10 @@ class DataBroker {
         continue;
       }
 
+      this.dispatchEvent(new CustomEvent('stats-stream-data', {
+        detail: this._update,
+      }));
+
       for (const key in this._update) {
         // TODO: need to deep compare
         if (this._update[key] !== prevUpdate[key]) {
@@ -276,6 +286,8 @@ class DataBroker {
 
       prevUpdate = this._update;
     }
+
+    this.emitEvent('stats-stream-end', null);
   }
 }
 

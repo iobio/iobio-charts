@@ -100,19 +100,18 @@ class PercentBoxElement extends HTMLElement {
       indicator.style.display = showSVG ? 'none' : 'block';
     }
     
-    broker.onEvent('data-request-start', () => toggleSVGContainerAndIndicator.call(this, false));
-    broker.onEvent('data-streaming-start', () => toggleSVGContainerAndIndicator.call(this, true));
+    broker.addEventListener('stats-stream-request', () => toggleSVGContainerAndIndicator.call(this, false));
+    broker.addEventListener('stats-stream-start', () => toggleSVGContainerAndIndicator.call(this, true));
 
     if (broker) {
       let data = [0, 0];
       this._pbox.update(data);
       toggleSVGContainerAndIndicator.call(this, false);
-      broker.onEvent(this.percentKey, (val) => {
-        data = [ val, data[1] - val ];
-        this._pbox.update(data);
-      });
-      broker.onEvent(this.totalKey, (val) => {
-        data = [ data[0], val - data[0] ];
+      broker.addEventListener('stats-stream-data', (evt) => {
+        const stats = evt.detail;
+        const val = stats[this.percentKey];
+        const total = stats[this.totalKey];
+        data = [ val, total - val ];
         this._pbox.update(data);
       });
     }
