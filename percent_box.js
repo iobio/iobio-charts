@@ -4,6 +4,7 @@ import * as d3 from "d3";
 // TODO: currently data_broker_component has to be imported first, otherwise
 // it's methods are not defined when other custom elements try to call them
 import './data_broker_component.js';
+import { LoadingIndicator } from './loading_indicator.js';
 
 function genHtml(styles) {
   return `
@@ -32,9 +33,7 @@ function genHtml(styles) {
     </style>
 
     <div class='iobio-percent-box'>
-      <div class="loading-indicator">
-        Sampling <img class="loading-image"/>
-      </div>
+      <loading-indicator label="Sampling"></loading-indicator>
       <div class='iobio-percent-box-svg-container'>
       </div>
     </div>
@@ -91,13 +90,9 @@ class PercentBoxElement extends HTMLElement {
     const sheet = new CSSStyleSheet();
     this.shadowRoot.appendChild(this._pbox.el);
     const broker = getDataBroker(this);
-
-    // Dynamically set the image path without relying on the document's root path.
-    const loadingImage = this.shadowRoot.querySelector('.loading-image');
-    loadingImage.src = new URL('/images/loading_dots.gif', import.meta.url).href;
     
     function toggleSVGContainerAndIndicator(showSVG) {
-      const indicator = this.shadowRoot.querySelector('.loading-indicator');
+      const indicator = this.shadowRoot.querySelector('loading-indicator');
       const svgContainer = this.shadowRoot.querySelector('.iobio-percent-box-svg-container');
       
       svgContainer.classList.toggle('hidden', !showSVG);

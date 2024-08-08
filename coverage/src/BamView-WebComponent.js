@@ -196,9 +196,7 @@ button:hover {
             <span id="title-text"></span>
         </div>
         <div id="chart-container">
-            <div class="loading-indicator"> 
-                Initializing data <img class="loading-image"/>
-            </div>
+            <loading-indicator label="Sampling"></loading-indicator>
         </div>
     </div>
 </div>
@@ -260,10 +258,6 @@ class BamViewChart extends HTMLElement {
 
         this.broker = getDataBroker(this);
 
-        // Dynamically set the image path without relying on the document's root path.
-        const loadingImage = this.shadowRoot.querySelector('.loading-image');
-        loadingImage.src = new URL('/images/loading_dots.gif', import.meta.url).href;
-
         if (this.broker) {
             const readDepthPromise = new Promise((resolve, reject) => {
               this.broker.onEvent('read-depth', resolve);
@@ -278,7 +272,7 @@ class BamViewChart extends HTMLElement {
             this.validBamHeader = getValidRefs(this.bamHeader, this.bamReadDepth);
             this.validBamReadDepth = this.getBamReadDepthByValidRefs(this.validBamHeader, this.bamReadDepth);
             this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, this.bamViewControls, this.broker);
-            this.shadowRoot.querySelector(".loading-indicator").style.display = 'none';
+            this.shadowRoot.querySelector("loading-indicator").style.display = 'none';
             this.goButton.addEventListener("click", () => this.handleGoClick());
             this.searchButton.addEventListener("click", () => this.handleSearchClick());
             this.setupResizeObserver();
