@@ -92,24 +92,25 @@ class HistogramElement extends HTMLElement {
       indicator.style.display = showSVG ? 'none' : 'block';
     }
     
-    broker.onEvent('data-request-start', () => toggleSVGContainerAndIndicator.call(this, false));
-    broker.onEvent('data-streaming-start', () => toggleSVGContainerAndIndicator.call(this, true));
+    broker.addEventListener('data-request-start', () => toggleSVGContainerAndIndicator.call(this, false));
+    broker.addEventListener('data-streaming-start', () => toggleSVGContainerAndIndicator.call(this, true));
 
     if (broker) {
       let data = [];
       this._histo.update(data);
       toggleSVGContainerAndIndicator.call(this, false);
-      broker.onEvent(this.brokerKey, (data) => {
-          var d = Object.keys(data).filter(function (i) {
-            return data[i] != "0"
-          }).map(function (k) {
-            return [+k, +data[k]]
-          });
+      broker.addEventListener('stats-stream-data', (evt) => {
+        const data = evt.detail[this.brokerKey];
+        var d = Object.keys(data).filter(function (i) {
+          return data[i] != "0"
+        }).map(function (k) {
+          return [+k, +data[k]]
+        });
 
-          if (this.ignoreOutliers) {
-            d = iobioviz.layout.outlier()(d);
-          }
-          this._histo.update(d);
+        if (this.ignoreOutliers) {
+          d = iobioviz.layout.outlier()(d);
+        }
+        this._histo.update(d);
       });
     }
     else {

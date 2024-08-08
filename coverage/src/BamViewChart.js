@@ -255,7 +255,8 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
                 .attr('width', barWidth)
                 .attr('height', d => navHeight - yNavScale(d.avgCoverage));
 
-            broker.onEvent('coverage_hist', (data) => {
+            broker.addEventListener('stats-stream-data', (evt) => {
+                const data = evt.detail.coverage_hist;
                 let coverageMean = 0;
                 for (const coverage in data) {
                     const freq = data[coverage];

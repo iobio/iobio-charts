@@ -9,8 +9,9 @@ import { sample } from './sampling.js';
  */
 
 
-class DataBroker {
+class DataBroker extends EventTarget {
   constructor(alignmentUrl, options) {
+    super();
 
     this._server = "https://backend.iobio.io";
 
@@ -69,6 +70,11 @@ class DataBroker {
   }
 
   emitEvent(eventName, data) {
+
+    this.dispatchEvent(new CustomEvent(eventName, {
+      detail: data,
+    }));
+
     if (this._callbacks[eventName]) {
       for (const callback of this._callbacks[eventName]) {
         callback(data);
@@ -266,6 +272,10 @@ class DataBroker {
       if (!this._update) {
         continue;
       }
+
+      this.dispatchEvent(new CustomEvent('stats-stream-data', {
+        detail: this._update,
+      }));
 
       for (const key in this._update) {
         // TODO: need to deep compare

@@ -260,11 +260,15 @@ class BamViewChart extends HTMLElement {
 
         if (this.broker) {
             const readDepthPromise = new Promise((resolve, reject) => {
-              this.broker.onEvent('read-depth', resolve);
+              this.broker.addEventListener('read-depth', (evt) => {
+                resolve(evt.detail);
+              });
             });
 
             const headerPromise = new Promise((resolve, reject) => {
-              this.broker.onEvent('header', resolve);
+              this.broker.addEventListener('header', (evt) => {
+                resolve(evt.detail);
+              });
             });
 
             this.bamReadDepth = await readDepthPromise;
