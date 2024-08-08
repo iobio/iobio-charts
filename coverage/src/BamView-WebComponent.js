@@ -196,8 +196,8 @@ button:hover {
             <span id="title-text"></span>
         </div>
         <div id="chart-container">
-            <div class="loading-indicator"> Initializing data 
-            <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><style>.spinner_S1WN{animation:spinner_MGfb .8s linear infinite;animation-delay:-.8s}.spinner_Km9P{animation-delay:-.65s}.spinner_JApP{animation-delay:-.5s}@keyframes spinner_MGfb{93.75%,100%{opacity:.2}}</style><circle class="spinner_S1WN" cx="4" cy="12" r="3"/><circle class="spinner_S1WN spinner_Km9P" cx="12" cy="12" r="3"/><circle class="spinner_S1WN spinner_JApP" cx="20" cy="12" r="3"/></svg>
+            <div class="loading-indicator"> 
+                Initializing data <img class="loading-image"/>
             </div>
         </div>
     </div>
@@ -252,11 +252,17 @@ class BamViewChart extends HTMLElement {
         this.searchButton = this.shadowRoot.querySelector('#gene-search-button');
         this.tooltipButton = this.shadowRoot.querySelector('.tooltip-button');
         this.modal = this.shadowRoot.querySelector('#modal');
+
+       
     }
 
     async connectedCallback() {
 
         this.broker = getDataBroker(this);
+
+        // Dynamically set the image path without relying on the document's root path.
+        const loadingImage = this.shadowRoot.querySelector('.loading-image');
+        loadingImage.src = new URL('/images/loading_dots.gif', import.meta.url).href;
 
         if (this.broker) {
             const readDepthPromise = new Promise((resolve, reject) => {

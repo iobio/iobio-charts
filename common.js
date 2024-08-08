@@ -62,13 +62,9 @@ const commonCss = `
     z-index: 10; 
   }
 
-  .loading-indicator svg {
-    height:29px;
+  .loading-indicator img {
+    height: 9px;
     vertical-align: middle;
-  }
-
-  .loading-indicator svg circle {
-    fill: var(--data-color);
   }
 `;
 
