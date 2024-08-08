@@ -208,7 +208,7 @@ class DataBroker extends EventTarget {
 
     const regions = sample(allRegions);
 
-    this.emitEvent('data-request-start', null);
+    this.emitEvent('stats-stream-request', null);
 
     const { response, abortController } = await this._iobioRequest("/alignmentStatsStream", {
       url: this.alignmentUrl,
@@ -227,7 +227,7 @@ class DataBroker extends EventTarget {
 
     const reader = response.body.getReader();
 
-    this.emitEvent('data-streaming-start', null);
+    this.emitEvent('stats-stream-start', null);
 
     while (true) {
       let chunk;
@@ -286,6 +286,8 @@ class DataBroker extends EventTarget {
 
       prevUpdate = this._update;
     }
+
+    this.emitEvent('stats-stream-end', null);
   }
 }
 

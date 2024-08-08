@@ -92,8 +92,8 @@ class HistogramElement extends HTMLElement {
       indicator.style.display = showSVG ? 'none' : 'block';
     }
     
-    broker.addEventListener('data-request-start', () => toggleSVGContainerAndIndicator.call(this, false));
-    broker.addEventListener('data-streaming-start', () => toggleSVGContainerAndIndicator.call(this, true));
+    broker.addEventListener('stats-stream-request', () => toggleSVGContainerAndIndicator.call(this, false));
+    broker.addEventListener('stats-stream-start', () => toggleSVGContainerAndIndicator.call(this, true));
 
     if (broker) {
       let data = [];

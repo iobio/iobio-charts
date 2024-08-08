@@ -100,15 +100,14 @@ class PercentBoxElement extends HTMLElement {
       indicator.style.display = showSVG ? 'none' : 'block';
     }
     
-    broker.addEventListener('data-request-start', () => toggleSVGContainerAndIndicator.call(this, false));
-    broker.addEventListener('data-streaming-start', () => toggleSVGContainerAndIndicator.call(this, true));
+    broker.addEventListener('stats-stream-request', () => toggleSVGContainerAndIndicator.call(this, false));
+    broker.addEventListener('stats-stream-start', () => toggleSVGContainerAndIndicator.call(this, true));
 
     if (broker) {
       let data = [0, 0];
       this._pbox.update(data);
       toggleSVGContainerAndIndicator.call(this, false);
       broker.addEventListener('stats-stream-data', (evt) => {
-        console.log(evt);
         const stats = evt.detail;
         const val = stats[this.percentKey];
         const total = stats[this.totalKey];
