@@ -196,7 +196,7 @@ button:hover {
             <span id="title-text"></span>
         </div>
         <div id="chart-container">
-            <loading-indicator label="Sampling"></loading-indicator>
+            <iobio-loading-indicator label="Initializing data"></iobio-loading-indicator>
         </div>
     </div>
 </div>
@@ -272,7 +272,7 @@ class BamViewChart extends HTMLElement {
             this.validBamHeader = getValidRefs(this.bamHeader, this.bamReadDepth);
             this.validBamReadDepth = this.getBamReadDepthByValidRefs(this.validBamHeader, this.bamReadDepth);
             this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, this.bamViewControls, this.broker);
-            this.shadowRoot.querySelector("loading-indicator").style.display = 'none';
+            this.shadowRoot.querySelector("iobio-loading-indicator").style.display = 'none';
             this.goButton.addEventListener("click", () => this.handleGoClick());
             this.searchButton.addEventListener("click", () => this.handleSearchClick());
             this.setupResizeObserver();

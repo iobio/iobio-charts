@@ -36,7 +36,7 @@ function genHtml(styles) {
     </style>
 
     <div class='iobio-histogram'>
-      <loading-indicator label="Sampling"></loading-indicator>
+      <iobio-loading-indicator label="Sampling"></iobio-loading-indicator>
       <div class='iobio-histogram-svg-container'>
       </div>
     </div>
@@ -84,7 +84,7 @@ class HistogramElement extends HTMLElement {
     const broker = getDataBroker(this);
 
     function toggleSVGContainerAndIndicator(showSVG) {
-      const indicator = this.shadowRoot.querySelector('loading-indicator');
+      const indicator = this.shadowRoot.querySelector('iobio-loading-indicator');
       const svgContainer = this.shadowRoot.querySelector('.iobio-histogram-svg-container');
       
       svgContainer.classList.toggle('hidden', !showSVG);

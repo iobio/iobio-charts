@@ -33,7 +33,7 @@ function genHtml(styles) {
     </style>
 
     <div class='iobio-percent-box'>
-      <loading-indicator label="Sampling"></loading-indicator>
+      <iobio-loading-indicator label="Sampling"></iobio-loading-indicator>
       <div class='iobio-percent-box-svg-container'>
       </div>
     </div>
@@ -92,7 +92,7 @@ class PercentBoxElement extends HTMLElement {
     const broker = getDataBroker(this);
     
     function toggleSVGContainerAndIndicator(showSVG) {
-      const indicator = this.shadowRoot.querySelector('loading-indicator');
+      const indicator = this.shadowRoot.querySelector('iobio-loading-indicator');
       const svgContainer = this.shadowRoot.querySelector('.iobio-percent-box-svg-container');
       
       svgContainer.classList.toggle('hidden', !showSVG);
