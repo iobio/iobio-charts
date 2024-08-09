@@ -51,21 +51,6 @@ const commonCss = `
     border-radius: 4px;           
     pointer-events: none;         
   }
-
-  .loading-indicator {
-    font-size: 14px;
-    color: #2687BE;
-    position: absolute;
-    top: 50%; 
-    left: 50%; 
-    transform: translate(-50%, -50%); 
-    z-index: 10; 
-  }
-
-  .loading-indicator img {
-    height:9px;
-    vertical-align: middle;
-  }
 `;
 
 const commonStyleSheet = new CSSStyleSheet();

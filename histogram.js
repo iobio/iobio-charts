@@ -4,6 +4,7 @@ import * as d3 from "d3";
 // TODO: currently data_broker_component has to be imported first, otherwise
 // it's methods are not defined when other custom elements try to call them
 import './data_broker_component.js';
+import { LoadingIndicator } from './loading_indicator.js';
 
 function genHtml(styles) {
   return `
@@ -35,9 +36,7 @@ function genHtml(styles) {
     </style>
 
     <div class='iobio-histogram'>
-      <div class="loading-indicator">
-        Sampling <img src="../../../images/loading_dots.gif"/>
-      </div>
+      <iobio-loading-indicator label="Sampling"></iobio-loading-indicator>
       <div class='iobio-histogram-svg-container'>
       </div>
     </div>
@@ -85,7 +84,7 @@ class HistogramElement extends HTMLElement {
     const broker = getDataBroker(this);
 
     function toggleSVGContainerAndIndicator(showSVG) {
-      const indicator = this.shadowRoot.querySelector('.loading-indicator');
+      const indicator = this.shadowRoot.querySelector('iobio-loading-indicator');
       const svgContainer = this.shadowRoot.querySelector('.iobio-histogram-svg-container');
       
       svgContainer.classList.toggle('hidden', !showSVG);
