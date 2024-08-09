@@ -4,7 +4,7 @@
     "d3": "^7.9.0"
   },
   "name": "iobio-charts",
-  "version": "0.20.0",
+  "version": "0.21.0",
   "main": "index.js",
   "directories": {
     "lib": "lib"
