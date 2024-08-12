@@ -23,10 +23,12 @@ infoButtonTemplate.innerHTML = `
         </svg>
     </div>
     <iobio-modal id="modal">
-        <slot name="header" slot="header">
-        </slot>
-        <slot name="content" slot="content">
-        </slot>
+        <div slot="header">
+            <slot name="header">Default Header</slot>
+        </div>
+        <div slot="content">
+            <slot name="content">Default Content</slot>
+        </div>
     </iobio-modal> 
 `;
 

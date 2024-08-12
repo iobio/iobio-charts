@@ -30,10 +30,38 @@ function genHtml(styles) {
         visibility: hidden;
       }
 
+      #title-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        height: 20%;
+      }
+    
+      #title-text {
+        font-size: 16px;
+        margin-left: 5px;
+      }
+
     </style>
 
     <div class='iobio-percent-box'>
       <iobio-loading-indicator label="Sampling"></iobio-loading-indicator>
+        <div id="title-container">
+          <iobio-info-button>
+            <div slot="header">
+              <slot name="header">
+                <h4>Default Header</h4>
+              </slot>
+            </div>
+            <div slot="content">
+              <slot name="content">
+                <p>Default content goes here. Replace with custom content using the "info-content" slot.</p>
+              </slot>
+            </div>
+          </iobio-info-button>
+          <span id="title-text"></span>
+        </div>
       <div class='iobio-percent-box-svg-container'>
       </div>
     </div>
@@ -90,6 +118,10 @@ class PercentBoxElement extends HTMLElement {
     const sheet = new CSSStyleSheet();
     this.shadowRoot.appendChild(this._pbox.el);
     const broker = getDataBroker(this);
+
+    if (this.label) {
+      this.shadowRoot.querySelector('#title-text').innerText = this.label;
+    }
     
     function toggleSVGContainerAndIndicator(showSVG) {
       const indicator = this.shadowRoot.querySelector('iobio-loading-indicator');
@@ -160,12 +192,12 @@ function core(opt) {
 
   const chartEl = docFrag.querySelector('.iobio-percent-box-svg-container');
 
-  if (opt && opt.title) {
-    const titleEl = document.createElement('div');
-    titleEl.classList.add('iobio-percent-box-title');
-    titleEl.innerText = opt.title;
-    boxEl.insertBefore(titleEl, chartEl);
-  }
+  // if (opt && opt.title) {
+  //   const titleEl = document.createElement('div');
+  //   titleEl.classList.add('iobio-percent-box-title');
+  //   titleEl.innerText = opt.title;
+  //   boxEl.insertBefore(titleEl, chartEl);
+  // }
 
   const d3Pie = d3.pie()
   //const d3Pie = d3.layout.pie()

@@ -97,18 +97,24 @@
         <div class="percent-row">
 
           <iobio-panel>
-            <iobio-percent-box
-              label="Mapped Reads"
-              percent-key="mapped_reads"
-              total-key="total_reads">
+            <iobio-percent-box label="Mapped Reads" percent-key="mapped_reads" total-key="total_reads">
+              <div slot="header">
+                <h4>Custom Header</h4>
+              </div>
+              <div slot="content">
+                <p>This is custom content for the Mapped Reads percent box.</p>
+              </div>
             </iobio-percent-box>
           </iobio-panel>
           
           <iobio-panel>
-            <iobio-percent-box
-              label="Forward Strands"
-              percent-key="forward_strands"
-              total-key="total_reads">
+            <iobio-percent-box label="Forward Strands" percent-key="forward_strands" total-key="total_reads">
+              <div slot="header">
+                <h4>Another Header</h4>
+              </div>
+              <div slot="content">
+                <p>This is different custom content for the Forward Strands percent box.</p>
+              </div>
             </iobio-percent-box>
           </iobio-panel>
 
