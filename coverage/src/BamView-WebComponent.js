@@ -183,20 +183,7 @@ button:hover {
     </div>
     <div id="bamview-chart-container">
         <div id="title-container">
-            <iobio-info-button>
-                <div slot="header">
-                    <h4>Read Coverage</h4>
-                </div>
-                <div slot="content">
-                    <p>The read coverage shows how the read coverage varies across the entire genome. The coloured
-                    numbers beneath represent chromosomes in the reference genome used and can be selected to view
-                    the read coverage in an individual chromosome. Selecting a different chromosome will cause
-                    all other metrics in bam.iobio to be recalculated based on reads sampled from that chromosome only.
-                    Once a chromosome is selected, you can also focus on a smaller region by dragging over the region
-                    of interest; again, all other metrics will then be recalculated for that region only.
-                    </p>
-                </div>
-            </iobio-info-button>
+            <iobio-info-button></iobio-info-button>
             <span id="title-text"></span>
         </div>
         <div id="chart-container">
@@ -204,6 +191,20 @@ button:hover {
         </div>
     </div>
 </div>
+<iobio-modal id="modal">
+    <div slot="header">
+        <h4>Read Coverage</h4>
+    </div>
+    <div slot="content">
+        <p>The read coverage shows how the read coverage varies across the entire genome. The coloured
+        numbers beneath represent chromosomes in the reference genome used and can be selected to view
+        the read coverage in an individual chromosome. Selecting a different chromosome will cause
+        all other metrics in bam.iobio to be recalculated based on reads sampled from that chromosome only.
+        Once a chromosome is selected, you can also focus on a smaller region by dragging over the region
+        of interest; again, all other metrics will then be recalculated for that region only.
+        </p>
+    </div>
+</iobio-modal> 
 `;
 
 
@@ -238,6 +239,8 @@ class BamViewChart extends HTMLElement {
         this.sourceSelect = this.shadowRoot.querySelector('#source-select');
         this.goButton = this.shadowRoot.querySelector('#bamview-controls-go');
         this.searchButton = this.shadowRoot.querySelector('#gene-search-button');
+        this.tooltipButton = this.shadowRoot.querySelector('iobio-info-button');
+        this.modal = this.shadowRoot.querySelector('#modal');
     }
 
     async connectedCallback() {
@@ -265,6 +268,8 @@ class BamViewChart extends HTMLElement {
             this.shadowRoot.querySelector("iobio-loading-indicator").style.display = 'none';
             this.goButton.addEventListener("click", () => this.handleGoClick());
             this.searchButton.addEventListener("click", () => this.handleSearchClick());
+            this.tooltipButton.addEventListener('click', () => this.modal.showModal());
+            this.modal.addEventListener('close', () => this.modal.close());
             this.setupResizeObserver();
             
 

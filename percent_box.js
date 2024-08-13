@@ -18,7 +18,7 @@ function genHtml(styles) {
       }
 
       .iobio-percent-box-title {
-        height: 20%;
+        margin-left: 5px;
       }
 
       .iobio-percent-box-svg-container {
@@ -37,34 +37,21 @@ function genHtml(styles) {
         text-align: center;
         height: 20%;
       }
-    
-      #title-text {
-        font-size: 16px;
-        margin-left: 5px;
-      }
 
     </style>
 
     <div class='iobio-percent-box'>
       <iobio-loading-indicator label="Sampling"></iobio-loading-indicator>
-        <div id="title-container">
-          <iobio-info-button>
-            <div slot="header">
-              <slot name="header">
-                <h4>Default Header</h4>
-              </slot>
-            </div>
-            <div slot="content">
-              <slot name="content">
-                <p>Default content goes here. Replace with custom content using the "info-content" slot.</p>
-              </slot>
-            </div>
-          </iobio-info-button>
-          <span id="title-text"></span>
-        </div>
+      <div id="title-container">
+        <iobio-info-button></iobio-info-button>
+      </div>
       <div class='iobio-percent-box-svg-container'>
       </div>
     </div>
+    <iobio-modal id="modal">
+      <slot name="header" slot="header">Default Header</slot>
+      <slot name="content" slot="content">Default Content</slot>
+    </iobio-modal> 
   `;
 }
 
@@ -118,10 +105,11 @@ class PercentBoxElement extends HTMLElement {
     const sheet = new CSSStyleSheet();
     this.shadowRoot.appendChild(this._pbox.el);
     const broker = getDataBroker(this);
+    this.tooltipButton = this.shadowRoot.querySelector('iobio-info-button');
+    this.modal = this.shadowRoot.querySelector('#modal');
 
-    if (this.label) {
-      this.shadowRoot.querySelector('#title-text').innerText = this.label;
-    }
+    this.tooltipButton.addEventListener('click', () => this.modal.showModal());
+    this.modal.addEventListener('close', () => this.modal.close());
     
     function toggleSVGContainerAndIndicator(showSVG) {
       const indicator = this.shadowRoot.querySelector('iobio-loading-indicator');
@@ -192,12 +180,14 @@ function core(opt) {
 
   const chartEl = docFrag.querySelector('.iobio-percent-box-svg-container');
 
-  // if (opt && opt.title) {
-  //   const titleEl = document.createElement('div');
-  //   titleEl.classList.add('iobio-percent-box-title');
-  //   titleEl.innerText = opt.title;
-  //   boxEl.insertBefore(titleEl, chartEl);
-  // }
+  if (opt && opt.title) {
+    const titleEl = document.createElement('div');
+    titleEl.classList.add('iobio-percent-box-title');
+    titleEl.innerText = opt.title;
+    // boxEl.insertBefore(titleEl, chartEl);
+    const titleContainerEl = docFrag.querySelector('#title-container');
+    titleContainerEl.appendChild(titleEl);
+  }
 
   const d3Pie = d3.pie()
   //const d3Pie = d3.layout.pie()

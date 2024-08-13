@@ -5,6 +5,7 @@ import * as d3 from "d3";
 // it's methods are not defined when other custom elements try to call them
 import './data_broker_component.js';
 import { LoadingIndicator } from './loading_indicator.js';
+import {TooltipModal} from './modal.js';
 
 function genHtml(styles) {
   return `
@@ -22,6 +23,7 @@ function genHtml(styles) {
 
       .iobio-histogram-title {
         height: 10%;
+        margin-left: 5px;
       }
 
       .iobio-histogram-svg-container {
@@ -33,6 +35,12 @@ function genHtml(styles) {
         visibility: hidden;
       }
 
+      .title-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
     </style>
 
     <div class='iobio-histogram'>
@@ -40,6 +48,10 @@ function genHtml(styles) {
       <div class='iobio-histogram-svg-container'>
       </div>
     </div>
+    <iobio-modal id="modal">
+      <slot name="header" slot="header">Default Header</slot>
+      <slot name="content" slot="content">Default Content</slot>
+    </iobio-modal> 
   `;
 }
 
@@ -82,6 +94,14 @@ class HistogramElement extends HTMLElement {
     });
     this.shadowRoot.appendChild(this._histo.el);
     const broker = getDataBroker(this);
+
+    this.tooltipButton = this.shadowRoot.querySelector('iobio-info-button');
+    this.modal = this.shadowRoot.querySelector('#modal');
+
+    if (this.tooltipButton) {
+      this.tooltipButton.addEventListener('click', () => this.modal.showModal());
+      this.modal.addEventListener('close', () => this.modal.close());
+    }
 
     function toggleSVGContainerAndIndicator(showSVG) {
       const indicator = this.shadowRoot.querySelector('iobio-loading-indicator');
@@ -147,10 +167,18 @@ function core(opt) {
   const chartEl = docFrag.querySelector('.iobio-histogram-svg-container');
 
   if (opt && opt.title) {
+    const titleContainer = document.createElement('div');
+    titleContainer.classList.add('title-container');
+     // Create info button dynamically
+    const infoButton = document.createElement('iobio-info-button');
+
     const titleEl = document.createElement('div');
     titleEl.classList.add('iobio-histogram-title');
     titleEl.innerText = opt.title;
-    histoEl.insertBefore(titleEl, chartEl);
+    // histoEl.insertBefore(titleEl, chartEl);
+    titleContainer.appendChild(infoButton);
+    titleContainer.appendChild(titleEl);
+    histoEl.insertBefore(titleContainer, chartEl);
   }
 
   const chart = iobioviz.barViewer()
