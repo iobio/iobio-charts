@@ -246,6 +246,10 @@ class BamViewChart extends HTMLElement {
     async connectedCallback() {
 
         this.broker = getDataBroker(this);
+        
+        if (this.label) {
+            this.shadowRoot.querySelector('#title-text').innerText = this.label;
+        }
 
         if (this.broker) {
             const readDepthPromise = new Promise((resolve, reject) => {
@@ -270,12 +274,6 @@ class BamViewChart extends HTMLElement {
             this.searchButton.addEventListener("click", () => this.handleSearchClick());
             this.tooltipButton.addEventListener('click', () => this.modal.showModal());
             this.modal.addEventListener('close', () => this.modal.close());
-            this.setupResizeObserver();
-            
-
-            if (this.label) {
-                this.shadowRoot.querySelector('#title-text').innerText = this.label;
-            }
         }
     }
 
