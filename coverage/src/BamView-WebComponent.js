@@ -274,6 +274,7 @@ class BamViewChart extends HTMLElement {
             this.searchButton.addEventListener("click", () => this.handleSearchClick());
             this.tooltipButton.addEventListener('click', () => this.modal.showModal());
             this.modal.addEventListener('close', () => this.modal.close());
+            this.setupResizeObserver();
         }
     }
 
