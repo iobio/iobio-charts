@@ -18,6 +18,7 @@ function genHtml(styles) {
       .iobio-histogram {
         width: 100%;
         height: 100%;
+        position: relative;
       }
 
       .iobio-histogram-title {
