@@ -1,141 +1,261 @@
-const tabsTemplate = document.createElement('template');
-tabsTemplate.innerHTML = `
-<style>
-:host {
-    --data-color: var(--iobio-data-color, #2d8fc1);
-}
-.iobio-tabs {
-    display: flex;
-    flex-direction: column;
-}
-.tabs {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-}
-.tab {
-    cursor: pointer;
-    text-align: center;
-    color: grey;
-}
-.tab.active {
-    color:  var(--data-color);
-}
+const template = document.createElement('template');
+template.innerHTML = `
+    <style>
+    :host {
+        --data-color: var(--iobio-data-color, #2d8fc1);
+    }
 
-.content-container {
-    position: relative;
-    width: 100%;
-    height: 100%;
-}
+    .tab-panel-container {
+        display: flex;
+        flex-direction: column;
+        box-sizing: border-box;
+        width: 100%;
+        heigh: 100%;
+    }
 
-.content-container .slot-wrapper ::slotted(*) {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-}
+    .tabs {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        gap: 10px;
+    }
 
-.content-container .slot-wrapper ::slotted(.hidden) {
-    visibility: hidden;
-    z-index: -1;
-}
+    .panels {
+        width: 100%;
+        heigh: 100%;
+    }
 
-</style>
-    <div class="iobio-tabs">
-        <div class="tabs">
-            <iobio-info-button id="info-button-1"></iobio-info-button>
-            <span class="tab tab1-label"></span>  |
-            <span class="tab tab2-label"></span>
-            <iobio-info-button id="info-button-2"></iobio-info-button>
-        </div>
-        <div class="content-container">
-            <div class="slot-wrapper">
-                <slot></slot>
+    ::slotted(iobio-tab) {
+       outline: none;
+       cursor: pointer;
+       text-align: center;
+       color: grey;
+    }
+
+    ::slotted(iobio-tab[selected]) {
+        color: var(--data-color);
+        border-bottom: 1px solid var(--data-color);
+      }
+
+    </style>
+        <div class="tab-panel-container">
+            <div class="tabs">
+                <slot name="info-button-1"></slot>
+                <slot name="tab"></slot>
+                <slot name="info-button-2"></slot>
+            </div>
+            <div class="panels">
+                <slot name="panel"></slot>
             </div>
         </div>
-    </div> 
-    
-    <iobio-modal id="modal-1">
-        <slot name="header1" slot="header">Default Header</slot>
-        <slot name="content1" slot="content">Default Content</slot>
-    </iobio-modal>
-    
-    <iobio-modal id="modal-2">
-        <slot name="header2" slot="header">Default Header</slot>
-        <slot name="content2" slot="content">Default Content</slot>
-    </iobio-modal>
-    
 `;
-
 class Tabs extends HTMLElement {
     constructor() {
-        super();
-        this.attachShadow({ mode: 'open' });
-        this.shadowRoot.appendChild(tabsTemplate.content.cloneNode(true));
-    }
-  
-    connectedCallback() {
-        this.initDOMElements();
-        this.initializeTabs();
-        this.initializeModals();
-        // show default histogram 
-        this.showChart(0);
-    }
+    super();
+    this._onSlotChange = this._onSlotChange.bind(this);
+    this.attachShadow({mode: 'open'});
+    this.shadowRoot.appendChild(template.content.cloneNode(true));
 
-    initDOMElements() {
-        this.tab1_label = this.shadowRoot.querySelector('.tab1-label');
-        this.tab2_label = this.shadowRoot.querySelector('.tab2-label');
-        this.tabs = this.shadowRoot.querySelectorAll('.tab');
-        const slot = this.shadowRoot.querySelector('slot');
-        this.slottedElements = Array.from(slot.assignedElements());
+    this._tabSlot = this.shadowRoot.querySelector('slot[name=tab]');
+    this._panelSlot = this.shadowRoot.querySelector('slot[name=panel]');
+    this._tabSlot.addEventListener('slotchange', this._onSlotChange);
+    this._panelSlot.addEventListener('slotchange', this._onSlotChange);
     }
-
-    initializeTabs() {
-        this.tab1_label.textContent = this.getAttribute('label-1');
-        this.tab2_label.textContent = this.getAttribute('label-2');
-
-        this.tabs.forEach((tab, index) => {
-            tab.addEventListener('click', () => {
-                this.showChart(index);
-            });
-        });
-    }
-
-    initializeModals() {
-        const infoButton1 = this.shadowRoot.querySelector('#info-button-1');
-        const infoButton2 = this.shadowRoot.querySelector('#info-button-2');
-        
-        const modal1 = this.shadowRoot.querySelector('#modal-1');
-        const modal2 = this.shadowRoot.querySelector('#modal-2');
-        if (infoButton1 && modal1) {
-            infoButton1.addEventListener('click', () => {
-                modal1.showModal();
-            });
-            modal1.addEventListener('close', () => {
-                modal1.close();
-            });
-        }
     
-        if (infoButton2 && modal2) {
-            infoButton2.addEventListener('click', () => {
-                modal2.showModal();
-            });
-            modal2.addEventListener('close', () => {
-                modal2.close();
-            });
-        }
+    connectedCallback() {
+    this.addEventListener('click', this._onClick);
+
+    if (!this.hasAttribute('role'))
+        this.setAttribute('role', 'tablist');
     }
 
-    showChart(activeIndex) {
-        this.tabs.forEach((tab, index) => {
-            tab.classList.toggle('active', index === activeIndex);
+
+    disconnectedCallback() {
+        this.removeEventListener('click', this._onClick);
+    }
+
+    /**
+     * `_onSlotChange()` is called whenever an element is added or removed from
+     * one of the shadow DOM slots.
+     */
+    _onSlotChange() {
+        this._linkPanels();
+    }
+
+    /**
+     * `_linkPanels()` links up tabs with their adjacent panels using
+     * `aria-controls` and `aria-labelledby`. Additionally, the method makes
+     * sure only one tab is active.
+     */
+    _linkPanels() {
+        const tabs = this._allTabs();
+        // Give each panel a `aria-labelledby` attribute that refers to the tab
+        // that controls it.
+        tabs.forEach(tab => {
+            const panel = tab.nextElementSibling;
+            if (panel.tagName.toLowerCase() !== 'iobio-tab-panel') {
+            console.error(`Tab #${tab.id} is not a` +
+                `sibling of a <iobio-tab-panel>`);
+            return;
+            }
+
+            tab.setAttribute('aria-controls', panel.id);
+            panel.setAttribute('aria-labelledby', tab.id);
         });
 
-        this.slottedElements.forEach((element, index) => {
-            element.classList.toggle('hidden', index == activeIndex ? false : true);
-        });
+        // The element checks if any of the tabs have been marked as selected.
+        // If not, the first tab is now selected.
+        const selectedTab =
+            tabs.find(tab => tab.selected) || tabs[0];
+            this._selectTab(selectedTab);
+    }
+
+    _allPanels() {
+        return Array.from(this.querySelectorAll('iobio-tab-panel'));
+    }
+
+    _allTabs() {
+        return Array.from(this.querySelectorAll('iobio-tab'));
+    }
+
+    _panelForTab(tab) {
+        const panelId = tab.getAttribute('aria-controls');
+        return this.querySelector(`#${panelId}`);
+    }
+    
+    _prevTab() {
+        const tabs = this._allTabs();
+        // Use `findIndex()` to find the index of the currently
+        // selected element and subtracts one to get the index of the previous
+        // element.
+        let newIdx =
+            tabs.findIndex(tab => tab.selected) - 1;
+        // Add `tabs.length` to make sure the index is a positive number
+        // and get the modulus to wrap around if necessary.
+        return tabs[(newIdx + tabs.length) % tabs.length];
+    }
+
+    _firstTab() {
+        const tabs = this._allTabs();
+        return tabs[0];
+    }
+
+    _lastTab() {
+        const tabs = this._allTabs();
+        return tabs[tabs.length - 1];
+    }
+
+    _nextTab() {
+        const tabs = this._allTabs();
+        let newIdx = tabs.findIndex(tab => tab.selected) + 1;
+        return tabs[newIdx % tabs.length];
+    }
+
+    reset() {
+        const tabs = this._allTabs();
+        const panels = this._allPanels();
+
+        tabs.forEach(tab => tab.selected = false);
+        panels.forEach(panel => panel.hidden = true);
+    }
+
+    _selectTab(newTab) {
+        // Deselect all tabs and hide all panels.
+        this.reset();
+
+        // Get the panel that the `newTab` is associated with.
+        const newPanel = this._panelForTab(newTab);
+        // If that panel doesn’t exist, abort.
+        if (!newPanel)
+            throw new Error(`No panel with id ${newPanelId}`);
+        newTab.selected = true;
+        newPanel.hidden = false;
+        newTab.focus();
+    }
+
+    _onClick(event) {
+        // If the click was not targeted on a tab element itself,
+        // it was a click inside the a panel or on empty space. Nothing to do.
+        if (event.target.getAttribute('role') !== 'tab')
+            return;
+        // If it was on a tab element, select that tab.
+        this._selectTab(event.target);
     }
 }
-
 customElements.define('iobio-tabs', Tabs);
-export {Tabs};
+
+
+let TabCounter = 0;
+class Tab extends HTMLElement {
+    static get observedAttributes() {
+        return ['selected'];
+    }
+
+    constructor() {
+        super();
+    }
+
+    connectedCallback() {
+        // If this is executed, JavaScript is working and the element
+        // changes its role to `tab`.
+        this.setAttribute('role', 'tab');
+        if (!this.id)
+            this.id = `iobio-tab-generated-${TabCounter++}`;
+
+        // Set a well-defined initial state.
+        this.setAttribute('aria-selected', 'false');
+        this.setAttribute('tabindex', -1);
+        this._upgradeProperty('selected');
+    }
+
+    _upgradeProperty(prop) {
+        if (this.hasOwnProperty(prop)) {
+            let value = this[prop];
+            delete this[prop];
+            this[prop] = value;
+        }
+    }
+
+    attributeChangedCallback() {
+        const value = this.hasAttribute('selected');
+        this.setAttribute('aria-selected', value);
+        this.setAttribute('tabindex', value ? 0 : -1);
+    }
+
+    set selected(value) {
+        value = Boolean(value);
+        if (value)
+            this.setAttribute('selected', '');
+        else
+            this.removeAttribute('selected');
+    }
+
+    get selected() {
+        return this.hasAttribute('selected');
+    }
+}
+customElements.define('iobio-tab', Tab);
+
+
+let PanelCounter = 0;
+class TabPanel extends HTMLElement {
+    constructor() {
+        super();
+    }
+
+    connectedCallback() {
+        this.setAttribute('role', 'tabpanel');
+        if (!this.id)
+            this.id = `iobio-tab-panel-generated-${PanelCounter++}`;
+    }
+}
+customElements.define('iobio-tab-panel', TabPanel);
+
+export {Tabs, Tab, TabPanel}
+
+
+
+  
+  
+  

@@ -40,8 +40,8 @@
       }
 
       iobio-percent-box {
-        width: 180px;
-        height: 180px;
+        width: 220px;
+        height: 220px;
       }
 
       .histogram-column {
@@ -51,12 +51,8 @@
         gap: 20px;
       }
 
-      iobio-tabs {
-        height: 256px; 
-      }
-
       iobio-histogram {
-        height: 256px;
+        height: 220px;
       }
 
       #bam2-header {
@@ -78,7 +74,6 @@
       *:not(:defined) {
         opacity: 0; 
       }
-
     </style>
 
   </head>
@@ -101,136 +96,156 @@
         <div class="percent-row">
 
           <iobio-panel>
-            <iobio-percent-box label="Mapped Reads" percent-key="mapped_reads" total-key="total_reads">
+            <iobio-info-button label="Mapped Reads">
               <div slot="header">
                 <h4>Mapped Reads</h4>
               </div>
               <div slot="content">
                 <p>This is custom content for the Mapped Reads percent box.</p>
               </div>
-            </iobio-percent-box>
+            </iobio-info-button>
+
+            <iobio-percent-box percent-key="mapped_reads" total-key="total_reads"></iobio-percent-box>
           </iobio-panel>
           
           <iobio-panel>
-            <iobio-percent-box label="Forward Strands" percent-key="forward_strands" total-key="total_reads">
+            <iobio-info-button label="Forward Strands">
               <div slot="header">
                 <h4>Forward Strands</h4>
               </div>
               <div slot="content">
                 <p>This is custom content for the Forward Strands percent box.</p>
               </div>
-            </iobio-percent-box>
+            </iobio-info-button>
+
+            <iobio-percent-box percent-key="forward_strands" total-key="total_reads"></iobio-percent-box>
           </iobio-panel>
 
           <iobio-panel>
-            <iobio-percent-box label="Proper Pairs" percent-key="proper_pairs" total-key="total_reads">
+            <iobio-info-button label="Proper Pairs">
               <div slot="header">
                 <h4>Proper Pairs</h4>
               </div>
               <div slot="content">
                 <p>This is custom content for the Proper Pairs percent box.</p>
               </div>
-            </iobio-percent-box>
+            </iobio-info-button>
+
+            <iobio-percent-box percent-key="proper_pairs" total-key="total_reads"></iobio-percent-box>
           </iobio-panel>
 
           <iobio-panel>
-            <iobio-percent-box label="Singletons" percent-key="singletons" total-key="total_reads">
+            <iobio-info-button label="Singletons">
               <div slot="header">
                 <h4>Singletons</h4>
               </div>
               <div slot="content">
                 <p>This is custom content for the Singletons percent box.</p>
               </div>
-            </iobio-percent-box>
+            </iobio-info-button>
+
+            <iobio-percent-box percent-key="singletons" total-key="total_reads"></iobio-percent-box>
           </iobio-panel>
 
           <iobio-panel>
-            <iobio-percent-box label="Both Mates Mapped" percent-key="both_mates_mapped" total-key="total_reads">
+            <iobio-info-button label="Both Mates Mapped">
               <div slot="header">
                 <h4>Both Mates Mapped</h4>
               </div>
               <div slot="content">
                 <p>This is custom content for the Both Mates Mapped percent box.</p>
               </div>
-            </iobio-percent-box>
+            </iobio-info-button>
+
+            <iobio-percent-box percent-key="both_mates_mapped" total-key="total_reads"></iobio-percent-box>
           </iobio-panel>
          
           <iobio-panel>
-            <iobio-percent-box label="Duplicates" percent-key="duplicates" total-key="total_reads">
+            <iobio-info-button label="Duplicates">
               <div slot="header">
                 <h4>Duplicates</h4>
               </div>
               <div slot="content">
                 <p>This is custom content for the Duplicates percent box.</p>
               </div>
-            </iobio-percent-box>
+            </iobio-info-button>
+
+            <iobio-percent-box percent-key="duplicates" total-key="total_reads"></iobio-percent-box>
           </iobio-panel>
 
         </div>
 
         <div class='histogram-column'>
           <iobio-panel>
-            <iobio-histogram label="Read Coverage Distribution" broker-key="coverage_hist">
+            <iobio-info-button label="Read Coverage Distribution">
               <div slot="header">
                 <h4>Read Coverage Distribution</h4>
               </div>
               <div slot="content">
                 <p>This is custom content for the Read Coverage Distribution histogram.</p>
               </div>
-            </iobio-histogram>
+            </iobio-info-button>
+
+            <iobio-histogram broker-key="coverage_hist"></iobio-histogram>
           </iobio-panel>
-
+          
           <iobio-panel>
-            <iobio-tabs label-1="Fragment Length" label-2="Read Length">
-              <!-- Content for Modal 1 -->
-              <div slot="header1">
-                <h4>Fragment Length</h4>
-              </div>
-              <div slot="content1">
-                  <p>This is the content for the Fragment Length histogram modal.</p>
-              </div>
-              <!-- Content for Modal 2 -->
-              <div slot="header2">
-                  <h4>Read Length</h4>
-              </div>
-              <div slot="content2">
-                  <p>This is the content for the Read Length histogram modal.</p>
-              </div>
+            <iobio-tabs>
+              <iobio-info-button slot="info-button-1">
+                <div slot="header">
+                  <h4>Fragment Length</h4>
+                </div>
+                <div slot="content">
+                  <p>This is custom content for the Fragment Length histogram.</p>
+                </div>
+              </iobio-info-button>
+              <iobio-tab slot="tab">Fragment Length</iobio-tab>
+              <iobio-tab-panel slot="panel">
+                <iobio-histogram broker-key="frag_hist" ignore-outliers></iobio-histogram>
+              </iobio-tab-panel>
 
-              <iobio-histogram
-                broker-key="frag_hist"
-                ignore-outliers>
-              </iobio-histogram>
-              <iobio-histogram
-                broker-key="length_hist"
-                ignore-outliers>
-              </iobio-histogram>
+              <iobio-info-button slot="info-button-2">
+                <div slot="header">
+                  <h4>Read Length</h4>
+                </div>
+                <div slot="content">
+                  <p>This is custom content for the Read Length histogram.</p>
+                </div>
+              </iobio-info-button>
+              <iobio-tab slot="tab">Read Length</iobio-tab>
+              <iobio-tab-panel slot="panel">
+                <iobio-histogram broker-key="length_hist" ignore-outliers></iobio-histogram>
+              </iobio-tab-panel>
             </iobio-tabs>
           </iobio-panel>
 
           <iobio-panel>
-            <iobio-tabs label-1="Mapping Quality" label-2="Base Quality">
-                <!-- Content for Modal 1 -->
-                <div slot="header1">
+            <iobio-tabs>
+              <iobio-info-button slot="info-button-1">
+                <div slot="header">
                   <h4>Mapping Quality</h4>
                 </div>
-                <div slot="content1">
+                <div slot="content">
                   <p>This is custom content for the Mapping Quality histogram.</p>
                 </div>
-                <!-- Content for Modal 2 -->
-                <div slot="header2">
+              </iobio-info-button>
+              <iobio-tab slot="tab">Mapping Quality</iobio-tab>
+              <iobio-tab-panel slot="panel">
+                <iobio-histogram broker-key="mapq_hist"></iobio-histogram>
+              </iobio-tab-panel>
+
+              <iobio-info-button slot="info-button-2">
+                <div slot="header">
                   <h4>Base Quality</h4>
                 </div>
-                <div slot="content2">
+                <div slot="content">
                   <p>This is custom content for the Base Quality histogram.</p>
                 </div>
-
-              <iobio-histogram
-                broker-key="mapq_hist">
-              </iobio-histogram>
-              <iobio-histogram
-                broker-key="baseq_hist">
-              </iobio-histogram>
+              </iobio-info-button>
+              <iobio-tab slot="tab">Base Quality</iobio-tab>
+              <iobio-tab-panel slot="panel">
+                <iobio-histogram broker-key="baseq_hist"></iobio-histogram>
+              </iobio-tab-panel>
             </iobio-tabs>
           </iobio-panel>
 

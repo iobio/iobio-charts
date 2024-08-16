@@ -17,6 +17,9 @@ function genHtml(styles) {
       }
 
       .iobio-histogram {
+        display: flex;
+        align-items: center;
+        justify-content: center;
         width: 100%;
         height: 100%;
       }
@@ -48,10 +51,6 @@ function genHtml(styles) {
       <div class='iobio-histogram-svg-container'>
       </div>
     </div>
-    <iobio-modal id="modal">
-      <slot name="header" slot="header">Default Header</slot>
-      <slot name="content" slot="content">Default Content</slot>
-    </iobio-modal> 
   `;
 }
 
@@ -94,14 +93,6 @@ class HistogramElement extends HTMLElement {
     });
     this.shadowRoot.appendChild(this._histo.el);
     const broker = getDataBroker(this);
-
-    this.tooltipButton = this.shadowRoot.querySelector('iobio-info-button');
-    this.modal = this.shadowRoot.querySelector('#modal');
-
-    if (this.tooltipButton) {
-      this.tooltipButton.addEventListener('click', () => this.modal.showModal());
-      this.modal.addEventListener('close', () => this.modal.close());
-    }
 
     function toggleSVGContainerAndIndicator(showSVG) {
       const indicator = this.shadowRoot.querySelector('iobio-loading-indicator');
@@ -169,14 +160,11 @@ function core(opt) {
   if (opt && opt.title) {
     const titleContainer = document.createElement('div');
     titleContainer.classList.add('title-container');
-     // Create info button dynamically
-    const infoButton = document.createElement('iobio-info-button');
 
     const titleEl = document.createElement('div');
     titleEl.classList.add('iobio-histogram-title');
     titleEl.innerText = opt.title;
     // histoEl.insertBefore(titleEl, chartEl);
-    titleContainer.appendChild(infoButton);
     titleContainer.appendChild(titleEl);
     histoEl.insertBefore(titleContainer, chartEl);
   }
@@ -198,6 +186,11 @@ function core(opt) {
   function render() {
     const dim = getDimensions(chartEl);
     // console.log(dim);
+
+    if (dim.contentWidth <= 0 || dim.contentHeight <= 0) {
+      // Skipping render due to zero dimensions
+      return;
+    }
 
     chart.width(dim.contentWidth);
     chart.height(dim.contentHeight);

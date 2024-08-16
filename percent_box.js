@@ -13,6 +13,9 @@ function genHtml(styles) {
       ${styles}
 
       .iobio-percent-box {
+        display: flex;
+        align-items: center;
+        justify-content: center;
         width: 100%;
         height: 100%;
       }
@@ -24,34 +27,20 @@ function genHtml(styles) {
       .iobio-percent-box-svg-container {
         width: 100%;
         height: 80%;
+        margin-top: 10px;
       }
 
       .hidden {
         visibility: hidden;
       }
 
-      #title-container {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        height: 20%;
-      }
-
     </style>
 
     <div class='iobio-percent-box'>
       <iobio-loading-indicator label="Sampling"></iobio-loading-indicator>
-      <div id="title-container">
-        <iobio-info-button></iobio-info-button>
-      </div>
       <div class='iobio-percent-box-svg-container'>
       </div>
     </div>
-    <iobio-modal id="modal">
-      <slot name="header" slot="header">Default Header</slot>
-      <slot name="content" slot="content">Default Content</slot>
-    </iobio-modal> 
   `;
 }
 
@@ -105,11 +94,6 @@ class PercentBoxElement extends HTMLElement {
     const sheet = new CSSStyleSheet();
     this.shadowRoot.appendChild(this._pbox.el);
     const broker = getDataBroker(this);
-    this.tooltipButton = this.shadowRoot.querySelector('iobio-info-button');
-    this.modal = this.shadowRoot.querySelector('#modal');
-
-    this.tooltipButton.addEventListener('click', () => this.modal.showModal());
-    this.modal.addEventListener('close', () => this.modal.close());
     
     function toggleSVGContainerAndIndicator(showSVG) {
       const indicator = this.shadowRoot.querySelector('iobio-loading-indicator');
@@ -184,9 +168,7 @@ function core(opt) {
     const titleEl = document.createElement('div');
     titleEl.classList.add('iobio-percent-box-title');
     titleEl.innerText = opt.title;
-    // boxEl.insertBefore(titleEl, chartEl);
-    const titleContainerEl = docFrag.querySelector('#title-container');
-    titleContainerEl.appendChild(titleEl);
+    boxEl.insertBefore(titleEl, chartEl);
   }
 
   const d3Pie = d3.pie()

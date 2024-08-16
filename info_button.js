@@ -6,6 +6,7 @@ infoButtonTemplate.innerHTML = `
         display: flex;
         align-items: center;
         justify-content: center;
+        gap: 10px;
     }
 
     .tooltip-button {
@@ -22,6 +23,10 @@ infoButtonTemplate.innerHTML = `
             <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
         </svg>
     </div>
+    <iobio-modal id="modal">
+        <slot name="header" slot="header"></slot>
+        <slot name="content" slot="content"></slot>
+    </iobio-modal> 
 `;
 
 class InfoButton extends HTMLElement {
@@ -29,19 +34,30 @@ class InfoButton extends HTMLElement {
         super();
         this.attachShadow({ mode: 'open' });
         this.shadowRoot.appendChild(infoButtonTemplate.content.cloneNode(true));
-        // this.initDOMElements();
+        this.initDOMElements();
        
     }
 
-    // initDOMElements() {
-    //     this.tooltipButton = this.shadowRoot.querySelector('.tooltip-button');
-    //     this.modal = this.shadowRoot.querySelector('#modal');
-    // }
+    initDOMElements() {
+        this.tooltipButton = this.shadowRoot.querySelector('.tooltip-button');
+        this.modal = this.shadowRoot.querySelector('#modal');
+        this.label = this.getAttribute('label');
+    }
 
-    // connectedCallback () {
-    //     this.tooltipButton.addEventListener('click', () => this.modal.showModal());
-    //     this.modal.addEventListener('close', () => this.modal.close());
-    // }
+    connectedCallback () {
+        this.tooltipButton.addEventListener('click', () => this.modal.showModal());
+        this.modal.addEventListener('close', () => this.modal.close());
+        if (this.label) {
+            this.addLabel();
+        }
+    }
+
+    addLabel() {
+        const labelDiv = document.createElement('div');
+        labelDiv.textContent = this.label;
+        labelDiv.classList.add('label-container');
+        this.shadowRoot.querySelector('.iobio-info-button').appendChild(labelDiv);
+    }
   
 }
 
