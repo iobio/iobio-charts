@@ -187,11 +187,6 @@ function core(opt) {
     const dim = getDimensions(chartEl);
     // console.log(dim);
 
-    if (dim.contentWidth <= 0 || dim.contentHeight <= 0) {
-      // Skipping render due to zero dimensions
-      return;
-    }
-
     chart.width(dim.contentWidth);
     chart.height(dim.contentHeight);
 

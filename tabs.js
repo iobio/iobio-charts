@@ -22,6 +22,7 @@ template.innerHTML = `
     }
 
     .panels {
+        position: relative;
         width: 100%;
         heigh: 100%;
     }
@@ -36,7 +37,13 @@ template.innerHTML = `
     ::slotted(iobio-tab[selected]) {
         color: var(--data-color);
         border-bottom: 1px solid var(--data-color);
-      }
+    }
+
+    .panels ::slotted(.hidden-panel) {
+        visibility: hidden;
+        z-index: -1;
+        position: absolute;
+    }
 
     </style>
         <div class="tab-panel-container">
@@ -52,22 +59,23 @@ template.innerHTML = `
 `;
 class Tabs extends HTMLElement {
     constructor() {
-    super();
-    this._onSlotChange = this._onSlotChange.bind(this);
-    this.attachShadow({mode: 'open'});
-    this.shadowRoot.appendChild(template.content.cloneNode(true));
+        super();
+        this._onSlotChange = this._onSlotChange.bind(this);
+        this.attachShadow({mode: 'open'});
+        this.shadowRoot.appendChild(template.content.cloneNode(true));
 
-    this._tabSlot = this.shadowRoot.querySelector('slot[name=tab]');
-    this._panelSlot = this.shadowRoot.querySelector('slot[name=panel]');
-    this._tabSlot.addEventListener('slotchange', this._onSlotChange);
-    this._panelSlot.addEventListener('slotchange', this._onSlotChange);
+        this._tabSlot = this.shadowRoot.querySelector('slot[name=tab]');
+        this._panelSlot = this.shadowRoot.querySelector('slot[name=panel]');
+        this._tabSlot.addEventListener('slotchange', this._onSlotChange);
+        this._panelSlot.addEventListener('slotchange', this._onSlotChange);
     }
     
     connectedCallback() {
-    this.addEventListener('click', this._onClick);
+        this.addEventListener('click', this._onClick);
 
-    if (!this.hasAttribute('role'))
-        this.setAttribute('role', 'tablist');
+        if (!this.hasAttribute('role')) {
+            this.setAttribute('role', 'tablist');
+        }
     }
 
 
@@ -123,41 +131,13 @@ class Tabs extends HTMLElement {
         const panelId = tab.getAttribute('aria-controls');
         return this.querySelector(`#${panelId}`);
     }
-    
-    _prevTab() {
-        const tabs = this._allTabs();
-        // Use `findIndex()` to find the index of the currently
-        // selected element and subtracts one to get the index of the previous
-        // element.
-        let newIdx =
-            tabs.findIndex(tab => tab.selected) - 1;
-        // Add `tabs.length` to make sure the index is a positive number
-        // and get the modulus to wrap around if necessary.
-        return tabs[(newIdx + tabs.length) % tabs.length];
-    }
-
-    _firstTab() {
-        const tabs = this._allTabs();
-        return tabs[0];
-    }
-
-    _lastTab() {
-        const tabs = this._allTabs();
-        return tabs[tabs.length - 1];
-    }
-
-    _nextTab() {
-        const tabs = this._allTabs();
-        let newIdx = tabs.findIndex(tab => tab.selected) + 1;
-        return tabs[newIdx % tabs.length];
-    }
 
     reset() {
         const tabs = this._allTabs();
         const panels = this._allPanels();
 
         tabs.forEach(tab => tab.selected = false);
-        panels.forEach(panel => panel.hidden = true);
+        panels.forEach(panel => panel.classList.add('hidden-panel'));
     }
 
     _selectTab(newTab) {
@@ -170,7 +150,7 @@ class Tabs extends HTMLElement {
         if (!newPanel)
             throw new Error(`No panel with id ${newPanelId}`);
         newTab.selected = true;
-        newPanel.hidden = false;
+        newPanel.classList.remove('hidden-panel');
         newTab.focus();
     }
 
