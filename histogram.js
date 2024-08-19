@@ -153,21 +153,7 @@ function core(opt) {
 
   const docFrag = templateEl.content.cloneNode(true);
 
-  const histoEl = docFrag.querySelector('.iobio-histogram');
-
   const chartEl = docFrag.querySelector('.iobio-histogram-svg-container');
-
-  if (opt && opt.title) {
-    const titleContainer = document.createElement('div');
-    titleContainer.classList.add('title-container');
-
-    const titleEl = document.createElement('div');
-    titleEl.classList.add('iobio-histogram-title');
-    titleEl.innerText = opt.title;
-    // histoEl.insertBefore(titleEl, chartEl);
-    titleContainer.appendChild(titleEl);
-    histoEl.insertBefore(titleContainer, chartEl);
-  }
 
   const chart = iobioviz.barViewer()
     .xValue(function(d) { return d[0]; })
