@@ -42,19 +42,20 @@ class InfoButton extends HTMLElement {
         this.tooltipButton = this.shadowRoot.querySelector('.tooltip-button');
         this.modal = this.shadowRoot.querySelector('#modal');
         this.label = this.getAttribute('label');
-        this.modalHeader = this.getAttribute('modal-header');
         this.headerSlot = this.shadowRoot.querySelector('slot[name="header"]');
     }
 
     connectedCallback () {
         this.tooltipButton.addEventListener('click', () => this.modal.showModal());
         this.modal.addEventListener('close', () => this.modal.close());
-        if (this.label) {
+        // Check if the parent element is an <iobio-tab>
+        const isInsideTab = this.closest('iobio-tab') !== null;
+        if (!isInsideTab && this.label) {
             this.addChartLabel(this.label);
             this.addModalHeader(this.label);
         }
-        if (this.modalHeader) {
-            this.addModalHeader(this.modalHeader);
+        if (isInsideTab && this.label) {
+            this.addModalHeader(this.label);
         }
     }
 

@@ -24,11 +24,6 @@ function genHtml(styles) {
         height: 100%;
       }
 
-      .iobio-histogram-title {
-        height: 10%;
-        margin-left: 5px;
-      }
-
       .iobio-histogram-svg-container {
         width: 100%;
         height: 90%;
@@ -36,12 +31,6 @@ function genHtml(styles) {
 
       .hidden {
         visibility: hidden;
-      }
-
-      .title-container {
-        display: flex;
-        align-items: center;
-        justify-content: center;
       }
 
     </style>

@@ -36,7 +36,6 @@ template.innerHTML = `
 
     ::slotted(iobio-tab[selected]) {
         color: var(--data-color);
-        // border-bottom: 1px solid var(--data-color);
     }
 
     .panels ::slotted(.hidden-panel) {
@@ -44,7 +43,13 @@ template.innerHTML = `
         z-index: -1;
         position: absolute;
     }
-
+    
+    // ::slotted(iobio-tab:not(:last-child))::after {
+    //     content: "|";
+    //     margin: 0 10px;
+    //     color: grey;
+    // }
+    
     </style>
         <div class="tab-panel-container">
             <div class="tabs">
@@ -55,6 +60,11 @@ template.innerHTML = `
             </div>
         </div>
 `;
+
+/**
+ * This code is derived from 'components-howto-tabs'
+ * The link: https://web.dev/articles/components-howto-tabs
+ */
 class Tabs extends HTMLElement {
     constructor() {
         super();
@@ -74,6 +84,8 @@ class Tabs extends HTMLElement {
         if (!this.hasAttribute('role')) {
             this.setAttribute('role', 'tablist');
         }
+
+        this._addSeparators();
     }
 
 
@@ -160,6 +172,20 @@ class Tabs extends HTMLElement {
         // If it was on a tab element, select that tab.
         this._selectTab(event.target);
     }
+
+    _addSeparators() {
+        const tabs = this.querySelectorAll('iobio-tab');
+        tabs.forEach((tab, index) => {
+            // Skip the last tab
+            if (index < tabs.length - 1) {
+                const separator = document.createElement('span');
+                separator.textContent = '|';
+                separator.style.margin = '0 10px';
+                separator.style.color = 'grey';
+                tab.appendChild(separator);
+            }
+        });
+    }
 }
 customElements.define('iobio-tabs', Tabs);
 
@@ -183,6 +209,23 @@ class Tab extends HTMLElement {
         // Set a well-defined initial state.
         this.setAttribute('aria-selected', 'false');
         this.setAttribute('tabindex', -1);
+
+        // Find the iobio-info-button and use its label as the tab name
+        const infoButton = this.querySelector('iobio-info-button');
+        if (infoButton) {
+        const label = infoButton.getAttribute('label');
+        const position = infoButton.getAttribute('icon-position')
+            if (label && position === 'left') {
+                const labelNode = document.createTextNode(label);
+                // Insert the label before the info button
+                this.insertBefore(labelNode, infoButton.nextSibling);
+            }
+            if (label && position === 'right') {
+                const labelNode = document.createTextNode(label);
+                // Insert the label behind the info button
+                this.insertBefore(labelNode, infoButton);
+            }
+        } 
         this._upgradeProperty('selected');
     }
 

@@ -178,19 +178,19 @@
           <iobio-panel>
             <iobio-tabs>
               <iobio-tab slot="tab">
-                <iobio-info-button modal-header="Fragment Length">
+                <iobio-info-button label="Fragment Length" icon-position="left">
                   <div slot="content">
                     <p>This is custom content for the Fragment Length histogram.</p>
                   </div>
-                </iobio-info-button>Fragment Length
+                </iobio-info-button>
               </iobio-tab>
               <iobio-tab-panel slot="panel">
                 <iobio-histogram broker-key="frag_hist" ignore-outliers></iobio-histogram>
               </iobio-tab-panel>
 
        
-              <iobio-tab slot="tab">Read Length
-                <iobio-info-button modal-header="Read Length">
+              <iobio-tab slot="tab">
+                <iobio-info-button label="Read Length" icon-position="right">
                   <div slot="content">
                     <p>This is custom content for the Read Length histogram.</p>
                   </div>
@@ -205,19 +205,19 @@
           <iobio-panel>
             <iobio-tabs>
               <iobio-tab slot="tab">
-                <iobio-info-button modal-header="Mapping Quality">
+                <iobio-info-button label="Mapping Quality" icon-position="left">
                   <div slot="content">
                     <p>This is custom content for the Mapping Quality histogram.</p>
                   </div>
-                </iobio-info-button>Mapping Quality
-              </iobio-tab>
+                </iobio-info-button>
+              </iobio-tab> 
               <iobio-tab-panel slot="panel">
                 <iobio-histogram broker-key="mapq_hist"></iobio-histogram>
-              </iobio-tab-panel>
+              </iobio-tab-panel> 
 
             
-              <iobio-tab slot="tab">Base Quality
-                <iobio-info-button modal-header="Base Quality">
+              <iobio-tab slot="tab">
+                <iobio-info-button label="Base Quality" icon-position="right">
                   <div slot="content">
                     <p>This is custom content for the Base Quality histogram.</p>
                   </div>
