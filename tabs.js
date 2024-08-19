@@ -36,7 +36,7 @@ template.innerHTML = `
 
     ::slotted(iobio-tab[selected]) {
         color: var(--data-color);
-        border-bottom: 1px solid var(--data-color);
+        // border-bottom: 1px solid var(--data-color);
     }
 
     .panels ::slotted(.hidden-panel) {
@@ -48,9 +48,7 @@ template.innerHTML = `
     </style>
         <div class="tab-panel-container">
             <div class="tabs">
-                <slot name="info-button-1"></slot>
                 <slot name="tab"></slot>
-                <slot name="info-button-2"></slot>
             </div>
             <div class="panels">
                 <slot name="panel"></slot>
@@ -164,7 +162,6 @@ class Tabs extends HTMLElement {
     }
 }
 customElements.define('iobio-tabs', Tabs);
-
 
 let TabCounter = 0;
 class Tab extends HTMLElement {

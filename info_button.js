@@ -42,21 +42,33 @@ class InfoButton extends HTMLElement {
         this.tooltipButton = this.shadowRoot.querySelector('.tooltip-button');
         this.modal = this.shadowRoot.querySelector('#modal');
         this.label = this.getAttribute('label');
+        this.modalHeader = this.getAttribute('modal-header');
+        this.headerSlot = this.shadowRoot.querySelector('slot[name="header"]');
     }
 
     connectedCallback () {
         this.tooltipButton.addEventListener('click', () => this.modal.showModal());
         this.modal.addEventListener('close', () => this.modal.close());
         if (this.label) {
-            this.addLabel();
+            this.addChartLabel(this.label);
+            this.addModalHeader(this.label);
+        }
+        if (this.modalHeader) {
+            this.addModalHeader(this.modalHeader);
         }
     }
 
-    addLabel() {
+    addChartLabel(label) {
         const labelDiv = document.createElement('div');
-        labelDiv.textContent = this.label;
+        labelDiv.textContent = label;
         labelDiv.classList.add('label-container');
         this.shadowRoot.querySelector('.iobio-info-button').appendChild(labelDiv);
+    }
+
+    addModalHeader(header) {
+        const modalHeader = document.createElement('h4')
+        modalHeader.textContent = header;
+        this.headerSlot.appendChild(modalHeader);
     }
   
 }
