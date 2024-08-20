@@ -29,9 +29,10 @@ modalTemplate.innerHTML = `
       border-top: 1px solid #ddd;
     }
 
-    .modal-header h4 {
+    .modal-header {
       margin: 0;
       font-size: 18px;
+      font-weight: 500;
     }
 
     .modal-body {
@@ -80,7 +81,7 @@ modalTemplate.innerHTML = `
     <dialog class="modal">
       <div class="modal-header">
         <slot name="header">
-          <h4>Default Title</h4>
+          <div>Default Title</div>
         </slot>
         <span class="close-icon">&times;</span>
       </div>

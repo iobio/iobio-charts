@@ -183,9 +183,9 @@ button:hover {
     </div>
     <div id="bamview-chart-container">
         <div id="title-container">
-            <label-info-button>
+            <iobio-label-info-button>
                 <div slot="header">
-                    <h4>Read Coverage</h4>
+                    <div>Read Coverage</div>
                 </div>
                 <div slot="content">
                     <p>The read coverage shows how the read coverage varies across the entire genome. The coloured
@@ -196,7 +196,7 @@ button:hover {
                     of interest; again, all other metrics will then be recalculated for that region only.
                     </p>
                 </div>
-            </label-info-button>
+            </iobio-label-info-button>
             <span id="title-text"></span>
         </div>
         <div id="chart-container">
@@ -238,7 +238,7 @@ class BamViewChart extends HTMLElement {
         this.sourceSelect = this.shadowRoot.querySelector('#source-select');
         this.goButton = this.shadowRoot.querySelector('#bamview-controls-go');
         this.searchButton = this.shadowRoot.querySelector('#gene-search-button');
-        this.tooltipButton = this.shadowRoot.querySelector('label-info-button');
+        this.tooltipButton = this.shadowRoot.querySelector('iobio-label-info-button');
         this.modal = this.shadowRoot.querySelector('#modal');
     }
 

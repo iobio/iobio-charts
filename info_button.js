@@ -2,7 +2,7 @@ import { TooltipModal } from '../../modal.js';
 const infoButtonTemplate = document.createElement('template');
 infoButtonTemplate.innerHTML = `
 <style>
-    .label-info-button {
+    .iobio-label-info-button {
         display: flex;
         align-items: center;
         justify-content: center;
@@ -17,7 +17,7 @@ infoButtonTemplate.innerHTML = `
     }
 
 </style>
-    <div class="label-info-button">
+    <div class="iobio-label-info-button">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle tooltip-button" viewBox="0 0 16 16">
             <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
             <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
@@ -51,16 +51,16 @@ class InfoButton extends HTMLElement {
         this.modal.addEventListener('close', () => this.modal.close());
      
         if (this.label) {
-            this.addChartLabel();
+            this.addLabel();
             this.addModalHeader();
         }
     }
 
-    addChartLabel() {
+    addLabel() {
         const labelDiv = document.createElement('div');
         labelDiv.textContent = this.label;
         labelDiv.classList.add('label-container');
-        const container = this.shadowRoot.querySelector('.label-info-button');
+        const container = this.shadowRoot.querySelector('.iobio-label-info-button');
 
         if (this.labelPosition === 'left') {
             container.appendChild(labelDiv);
@@ -70,12 +70,12 @@ class InfoButton extends HTMLElement {
     }
 
     addModalHeader() {
-        const modalHeader = document.createElement('h4')
+        const modalHeader = document.createElement('div')
         modalHeader.textContent = this.label;
         this.headerSlot.appendChild(modalHeader);
     }
   
 }
 
-customElements.define('label-info-button', InfoButton);
+customElements.define('iobio-label-info-button', InfoButton);
 export {InfoButton};
