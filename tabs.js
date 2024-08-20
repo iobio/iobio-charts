@@ -39,16 +39,10 @@ template.innerHTML = `
     }
 
     .panels ::slotted(.hidden-panel) {
+        position: absolute;
         visibility: hidden;
         z-index: -1;
-        position: absolute;
     }
-    
-    // ::slotted(iobio-tab:not(:last-child))::after {
-    //     content: "|";
-    //     margin: 0 10px;
-    //     color: grey;
-    // }
     
     </style>
         <div class="tab-panel-container">
@@ -111,6 +105,12 @@ class Tabs extends HTMLElement {
         // Give each panel a `aria-labelledby` attribute that refers to the tab
         // that controls it.
         tabs.forEach(tab => {
+            const tabContent = tab.querySelector('[slot="tab-content"]');
+            if (!tabContent) {
+                console.error(`Tab #${tab.id} does not have a [slot="tab-content"] element.`);
+                return;
+            }
+
             const panel = tab.nextElementSibling;
             if (panel.tagName.toLowerCase() !== 'iobio-tab-panel') {
             console.error(`Tab #${tab.id} is not a` +
@@ -159,18 +159,24 @@ class Tabs extends HTMLElement {
         // If that panel doesn’t exist, abort.
         if (!newPanel)
             throw new Error(`No panel with id ${newPanelId}`);
+
+        // Find the tab content element
+        const newTabContent = newTab.querySelector('[slot="tab-content"]');
+        if (!newTabContent) {
+            console.error(`Tab #${newTab.id} does not have a [slot="tab-content"] element.`);
+            return;
+        }
+
         newTab.selected = true;
         newPanel.classList.remove('hidden-panel');
         newTab.focus();
     }
 
     _onClick(event) {
-        // If the click was not targeted on a tab element itself,
-        // it was a click inside the a panel or on empty space. Nothing to do.
-        if (event.target.getAttribute('role') !== 'tab')
-            return;
-        // If it was on a tab element, select that tab.
-        this._selectTab(event.target);
+        const tabContent = event.target.closest('[slot="tab-content"]');
+        if (tabContent) {
+            this._selectTab(tabContent.closest('iobio-tab'));
+        }
     }
 
     _addSeparators() {
@@ -209,23 +215,6 @@ class Tab extends HTMLElement {
         // Set a well-defined initial state.
         this.setAttribute('aria-selected', 'false');
         this.setAttribute('tabindex', -1);
-
-        // Find the iobio-info-button and use its label as the tab name
-        const infoButton = this.querySelector('iobio-info-button');
-        if (infoButton) {
-        const label = infoButton.getAttribute('label');
-        const position = infoButton.getAttribute('icon-position')
-            if (label && position === 'left') {
-                const labelNode = document.createTextNode(label);
-                // Insert the label before the info button
-                this.insertBefore(labelNode, infoButton.nextSibling);
-            }
-            if (label && position === 'right') {
-                const labelNode = document.createTextNode(label);
-                // Insert the label behind the info button
-                this.insertBefore(labelNode, infoButton);
-            }
-        } 
         this._upgradeProperty('selected');
     }
 
