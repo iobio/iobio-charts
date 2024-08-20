@@ -209,8 +209,8 @@ function core(opt) {
   return { el: docFrag, update, getStyles };
 }
 
-
-customElements.define('iobio-percent-box', PercentBoxElement);
+customElements.get('iobio-percent-box') || 
+	customElements.define('iobio-percent-box', PercentBoxElement);
 
 export {
   PercentBoxElement,

@@ -132,5 +132,6 @@ class TooltipModal extends HTMLElement {
     }
 }
 
+customElements.get('iobio-modal') ||
 customElements.define('iobio-modal', TooltipModal);
 export {TooltipModal};

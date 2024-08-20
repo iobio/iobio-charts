@@ -29,5 +29,6 @@ class Panel extends HTMLElement {
   
 }
 
+customElements.get('iobio-panel') ||
 customElements.define('iobio-panel', Panel);
 export {Panel};

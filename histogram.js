@@ -190,7 +190,7 @@ function core(opt) {
   return { el: docFrag, update };
 }
 
-
+customElements.get('iobio-histogram') ||
 customElements.define('iobio-histogram', HistogramElement);
 
 export {

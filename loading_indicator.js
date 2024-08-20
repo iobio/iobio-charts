@@ -61,5 +61,6 @@ class LoadingIndicator extends HTMLElement {
     }
 }
 
+customElements.get('iobio-loading-indicator') ||
 customElements.define('iobio-loading-indicator', LoadingIndicator);
 export { LoadingIndicator };
