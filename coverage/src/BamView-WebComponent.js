@@ -402,5 +402,5 @@ class BamViewChart extends HTMLElement {
     
 }
 
-window.customElements.define('iobio-coverage-depth', BamViewChart);
+window.customElements.get('iobio-coverage-depth') || window.customElements.define('iobio-coverage-depth', BamViewChart);
 export { BamViewChart };
