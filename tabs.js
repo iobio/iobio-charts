@@ -54,9 +54,9 @@ tabsTemplate.innerHTML = `
 
 class Tabs extends HTMLElement {
 		constructor() {
-			super();
-			this.attachShadow({ mode: 'open' });
-			this.shadowRoot.appendChild(tabsTemplate.content.cloneNode(true));
+				super();
+				this.attachShadow({ mode: 'open' });
+				this.shadowRoot.appendChild(tabsTemplate.content.cloneNode(true));
 			
 		}
 
