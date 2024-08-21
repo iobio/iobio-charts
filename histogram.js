@@ -5,6 +5,7 @@ import * as d3 from "d3";
 // it's methods are not defined when other custom elements try to call them
 import './data_broker_component.js';
 import { LoadingIndicator } from './loading_indicator.js';
+import {TooltipModal} from './modal.js';
 
 function genHtml(styles) {
   return `
@@ -16,13 +17,12 @@ function genHtml(styles) {
       }
 
       .iobio-histogram {
+        display: flex;
+        align-items: center;
+        justify-content: center;
         width: 100%;
         height: 100%;
         position: relative;
-      }
-
-      .iobio-histogram-title {
-        height: 10%;
       }
 
       .iobio-histogram-svg-container {
@@ -143,16 +143,7 @@ function core(opt) {
 
   const docFrag = templateEl.content.cloneNode(true);
 
-  const histoEl = docFrag.querySelector('.iobio-histogram');
-
   const chartEl = docFrag.querySelector('.iobio-histogram-svg-container');
-
-  if (opt && opt.title) {
-    const titleEl = document.createElement('div');
-    titleEl.classList.add('iobio-histogram-title');
-    titleEl.innerText = opt.title;
-    histoEl.insertBefore(titleEl, chartEl);
-  }
 
   const chart = iobioviz.barViewer()
     .xValue(function(d) { return d[0]; })

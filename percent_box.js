@@ -13,13 +13,16 @@ function genHtml(styles) {
       ${styles}
 
       .iobio-percent-box {
+        display: flex;
+        align-items: center;
+        justify-content: center;
         width: 100%;
         height: 100%;
         position: relative;
       }
 
       .iobio-percent-box-title {
-        height: 20%;
+        margin-left: 5px;
       }
 
       .iobio-percent-box-svg-container {
@@ -157,16 +160,7 @@ function core(opt) {
 
   const docFrag = templateEl.content.cloneNode(true);
 
-  const boxEl = docFrag.querySelector('.iobio-percent-box');
-
   const chartEl = docFrag.querySelector('.iobio-percent-box-svg-container');
-
-  if (opt && opt.title) {
-    const titleEl = document.createElement('div');
-    titleEl.classList.add('iobio-percent-box-title');
-    titleEl.innerText = opt.title;
-    boxEl.insertBefore(titleEl, chartEl);
-  }
 
   const d3Pie = d3.pie()
   //const d3Pie = d3.layout.pie()

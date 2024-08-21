@@ -1,7 +1,7 @@
 import { createBamView} from "./BamViewChart.js";
 import { getDataBroker, upgradeProperty, commonCss} from '../../common.js';
 import { getValidRefs } from "./BamData.js";
-import { TooltipModal } from '../../modal.js';
+import { InfoButton } from "../../info_button.js";
 
 const template = document.createElement('template');
 template.innerHTML = `
@@ -112,13 +112,14 @@ button:hover {
 }
 
 #title-container {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
+    gap: 10px;
 }
 
 #title-text {
-    width: 100%;
-    height: 10%;
     font-size: 20px;
 }
 
@@ -126,13 +127,6 @@ button:hover {
     width: 100%;
     height: 100%;
     position: relative;
-}
-
-.tooltip-button {
-    background-color: #2d8fc1;
-    color: white;
-    border-radius: 50%;
-    cursor: pointer;
 }
 
 .chromosome-button:hover rect,
@@ -189,10 +183,20 @@ button:hover {
     </div>
     <div id="bamview-chart-container">
         <div id="title-container">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle tooltip-button" viewBox="0 0 16 16">
-                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
-            </svg>
+            <iobio-label-info-button>
+                <div slot="header">
+                    <div>Read Coverage</div>
+                </div>
+                <div slot="content">
+                    <p>The read coverage shows how the read coverage varies across the entire genome. The coloured
+                    numbers beneath represent chromosomes in the reference genome used and can be selected to view
+                    the read coverage in an individual chromosome. Selecting a different chromosome will cause
+                    all other metrics in bam.iobio to be recalculated based on reads sampled from that chromosome only.
+                    Once a chromosome is selected, you can also focus on a smaller region by dragging over the region
+                    of interest; again, all other metrics will then be recalculated for that region only.
+                    </p>
+                </div>
+            </iobio-label-info-button>
             <span id="title-text"></span>
         </div>
         <div id="chart-container">
@@ -200,20 +204,6 @@ button:hover {
         </div>
     </div>
 </div>
-<iobio-modal id="modal">
-  <div slot="header">
-    <h4>Read Coverage</h4>
-  </div>
-  <div slot="content">
-    <p>The read coverage shows how the read coverage varies across the entire genome. The coloured
-    numbers beneath represent chromosomes in the reference genome used and can be selected to view
-    the read coverage in an individual chromosome. Selecting a different chromosome will cause
-    all other metrics in bam.iobio to be recalculated based on reads sampled from that chromosome only.
-    Once a chromosome is selected, you can also focus on a smaller region by dragging over the region
-    of interest; again, all other metrics will then be recalculated for that region only.
-    </p>
-  </div>
-</iobio-modal>
 `;
 
 
@@ -248,10 +238,8 @@ class BamViewChart extends HTMLElement {
         this.sourceSelect = this.shadowRoot.querySelector('#source-select');
         this.goButton = this.shadowRoot.querySelector('#bamview-controls-go');
         this.searchButton = this.shadowRoot.querySelector('#gene-search-button');
-        this.tooltipButton = this.shadowRoot.querySelector('.tooltip-button');
+        this.tooltipButton = this.shadowRoot.querySelector('iobio-label-info-button');
         this.modal = this.shadowRoot.querySelector('#modal');
-
-       
     }
 
     async connectedCallback() {
@@ -284,8 +272,6 @@ class BamViewChart extends HTMLElement {
             this.goButton.addEventListener("click", () => this.handleGoClick());
             this.searchButton.addEventListener("click", () => this.handleSearchClick());
             this.setupResizeObserver();
-            this.tooltipButton.addEventListener('click', () => this.modal.showModal());
-            this.modal.addEventListener('close', () => this.modal.close());
         }
     }
 
