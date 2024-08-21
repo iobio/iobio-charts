@@ -379,8 +379,8 @@ class BamViewChart extends HTMLElement {
             alert('Start position cannot be greater than end position');
             return false;
         }
-        if (start < 0 || end < 0) {
-            alert('Start and end positions must be positive');
+        if (start <= 0 || end <= 0) {
+            alert('Start and end positions must be greater than or equal to 1.');
             return false;
         }
         return true;
