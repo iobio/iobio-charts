@@ -234,7 +234,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
 
             const barWidth = 1; // Fixed bar width with 1 pixel
             const numBins = innerWidth; // Number of bins based on inner width
-            const start = 0;
+            const start = 1;
             const end = totalLength;
 
             // Aggregate data into bins
@@ -462,7 +462,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
 
         const barWidth = 1; // Fixed bar width in pixels
         const numBins = innerWidth; // Number of bins based on inner width
-        const chromStart = 0;
+        const chromStart = 1;
         const chromEnd = chromosomeEnd;
 
         // Aggregate data into bins
@@ -559,7 +559,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
 
                 // Update the chromosome label to show the selected region
                 svg.selectAll('.chromosome-label')
-                    .text(`${bamHeaderMap[chromosomeEnd]}:${Math.round(x0)}-${Math.round(x1)} (${Math.round(x1 - x0) + 1} bp)`);
+                    .text(`${bamHeaderMap[chromosomeEnd]}:${Math.round(x0)}-${Math.round(x1)} (${Math.round(x1 - x0)} bp)`);
 
                 // Update the input fields
                 bamViewControlsElement.querySelector('#bamview-region-chromosome').value = "chr" + orgChromosome;
@@ -672,7 +672,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
 
         const barWidth = 1; // Fixed bar width with 1 pixel
         const numBins = innerWidth; // Number of bins based on inner width
-        const chromStart = 0;
+        const chromStart = 1;
         const chromEnd = chromosomeEnd;
 
         // Aggregate data into bins
@@ -774,7 +774,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
 
                 // Update the chromosome label to show the selected region
                 svg.selectAll('.chromosome-label')
-                    .text(`${bamHeaderMap[chromosomeEnd]}:${Math.round(x0)}-${Math.round(x1)} (${Math.round(x1 - x0) + 1} bp)`);
+                    .text(`${bamHeaderMap[chromosomeEnd]}:${Math.round(x0)}-${Math.round(x1)} (${Math.round(x1 - x0)} bp)`);
 
                 // Update the input fields
                 bamViewControlsElement.querySelector('#bamview-region-chromosome').value = "chr" + orgChromosome;
@@ -873,7 +873,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
     }
 
     function aggreateDataIntoBins(data, start, end, numBins, getChromosomeStart) {
-        const brushedRange = end - start;
+        const brushedRange = end - start + 1;
         const aggregationfactor =  brushedRange / numBins;
         return new Array(numBins).fill(0).map((_, i) => {
             const binStart = start + i * aggregationfactor;
