@@ -2,17 +2,17 @@ import * as d3 from 'd3';
 
 function createBamView(bamHeader, data, element, bamViewControlsElement, broker) {
 
-    let xScale, yScale, xNavScale, yNavScale, svg, main, nav, color, brush, yAxis, bamHeaderArray, 
+    let xScale, yScale, xNavScale, yNavScale, svg, main, nav, color, brush, yAxis,
         margin, margin2, mainHeight, navHeight, innerWidth, innerHeight, bamHeaderMap;
 
     function createBamViewInner(bamHeader, data, element, bamViewControlsElement) {
         const average = calculateMeanCoverage(data);
         const aggregatedDataArray = aggregateData(data, 30);
-        bamHeaderArray = bamHeader;
-        const totalLength = d3.sum(bamHeaderArray, d => d.length);
-        // Convert to a map with chr 'end' as key and 'sn' as value
-        bamHeaderMap = bamHeader.reduce((acc, curr) => {
-            acc[curr.end] = curr.sn;
+        const totalLength = d3.sum(bamHeader, d => d.length);
+        // Convert to a map with 'sn' as key and corresponding array as the value
+        bamHeaderMap = bamHeader.reduce((acc, obj) => {
+            const { sn } = obj;
+            acc[sn.replace('chr', '')] = obj;
             return acc;
         }, {});
 
@@ -76,9 +76,9 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
         // Get the start position of each chromosome in the total length
         function getChromosomeStart(sn) {
             let start = 0;
-            for (let i = 0; i < bamHeaderArray.length; i++) {
+            for (let i = 0; i < bamHeader.length; i++) {
                 if (i == sn) break;
-                start += bamHeaderArray[i].length;
+                start += bamHeader[i].length;
             }
             return start;
         }
@@ -114,7 +114,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
                 drawChart(svg);
 
                 // Dispatch custom event from the shadow DOM element
-                dispatchCustomEvent('selected-regions-change', bamHeaderArray);
+                dispatchCustomEvent('selected-regions-change', bamHeader);
             });
 
             // Create a circle for the reset button
@@ -155,14 +155,14 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
 
             // Create a color scale
             color = d3.scaleSequential(d3.interpolateRainbow)
-                            .domain([0, bamHeaderArray.length - 1]);
+                            .domain([0, bamHeader.length - 1]);
 
             // Create groups for each chromosome
             const chromosomes = svg.selectAll('.chromosome-button-small')
-                .data(bamHeaderArray)
+                .data(bamHeader)
                 .enter().append('g')
                 .attr('class', 'chromosome-button-small chromosome-button')
-                .attr('transform', (d, i) => `translate(${buttons_xScale(d3.sum(bamHeaderArray.slice(0, i), e => e.length)) + margin2.left}, ${margin2.top})`)
+                .attr('transform', (d, i) => `translate(${buttons_xScale(d3.sum(bamHeader.slice(0, i), e => e.length)) + margin2.left}, ${margin2.top})`)
                 .on('click', function (event, d) {
                     zoomToChromosome(d.sn.replace('chr', ''));
                     
@@ -423,11 +423,11 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
         }
 
         const selectedChromosomeData = data[chromosome - 1];
-        const chromosomeEnd = bamHeaderArray[chromosome - 1].length;
+        const chromosomeLength = bamHeaderMap[orgChromosome].length;
         const meanCoverage = d3.mean(selectedChromosomeData, d => d.avgCoverage);
-        xScale.domain([1, chromosomeEnd]);
+        xScale.domain([1, chromosomeLength]);
         yScale.domain([0, 2 * meanCoverage]);
-        xNavScale.domain([1, chromosomeEnd]);
+        xNavScale.domain([1, chromosomeLength]);
 
         // Clear existing bars and brush
         main.selectAll('.bar').remove();
@@ -439,7 +439,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
 
         // Re-draw the chromosome button for the selected chromosome
         const chromosomes = svg.selectAll('.chromosome-button-big')
-            .data([bamHeaderArray[chromosome - 1]])
+            .data([bamHeaderMap[orgChromosome]])
             .enter().append('g')
             .attr('class', 'chromosome-button-big')
             .attr('transform', `translate(${margin2.left}, ${margin2.top})`);
@@ -463,7 +463,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
         const barWidth = 1; // Fixed bar width in pixels
         const numBins = innerWidth; // Number of bins based on inner width
         const chromStart = 1;
-        const chromEnd = chromosomeEnd;
+        const chromEnd = chromosomeLength;
 
         // Aggregate data into bins
         const aggregatedData = aggreateDataIntoBins(selectedChromosomeData, chromStart, chromEnd, numBins, null);
@@ -490,12 +490,12 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
         // Create a text label for showing the chromosome name and selected region and put it in the botton of the main chart
         svg.append('text')
             .attr('class', 'chromosome-label')
-            .attr('x', xScale(chromosomeEnd) / 2)
+            .attr('x', xScale(chromosomeLength) / 2)
             .attr('y', margin.top + mainHeight + 10)
             .attr('dy', '.35em')
             .attr('text-anchor', 'start')
             .attr('fill', 'black')
-            .text(`${bamHeaderMap[chromosomeEnd]}:1-${chromosomeEnd} (${chromosomeEnd} bp)`)
+            .text(`${bamHeaderMap[orgChromosome].sn}:1-${chromosomeLength} (${chromosomeLength} bp)`)
             .style('font-size', '12px');
 
         // Define new brush based on new domain
@@ -511,7 +511,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
             // Update the input fields
             bamViewControlsElement.querySelector('#bamview-region-chromosome').value = "chr" + orgChromosome;
             bamViewControlsElement.querySelector('#bamview-region-start').value = 1;
-            bamViewControlsElement.querySelector('#bamview-region-end').value = chromosomeEnd;
+            bamViewControlsElement.querySelector('#bamview-region-end').value = chromosomeLength;
 
         function brushedRegion(event) {
             if (event.selection) {
@@ -559,7 +559,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
 
                 // Update the chromosome label to show the selected region
                 svg.selectAll('.chromosome-label')
-                    .text(`${bamHeaderMap[chromosomeEnd]}:${Math.round(x0)}-${Math.round(x1)} (${Math.round(x1 - x0)} bp)`);
+                    .text(`${bamHeaderMap[orgChromosome].sn}:${Math.round(x0)}-${Math.round(x1)} (${Math.round(x1 - x0)} bp)`);
 
                 // Update the input fields
                 bamViewControlsElement.querySelector('#bamview-region-chromosome').value = "chr" + orgChromosome;
@@ -567,7 +567,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
                 bamViewControlsElement.querySelector('#bamview-region-end').value = Math.round(x1);
             } else {
                 // If there is no selection, reset the scales and update the chart
-                xScale.domain([1, bamHeaderArray[chromosome - 1].length]);
+                xScale.domain([1, chromosomeLength]);
 
                 // Remove existing bars
                 main.selectAll('.bar').remove();
@@ -584,12 +584,12 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
 
                 // Reset the chromosome label to show the full chromosome region
                 svg.selectAll('.chromosome-label')
-                    .text(`${bamHeaderMap[chromosomeEnd]}:1-${bamHeaderArray[chromosome - 1].length} (${bamHeaderArray[chromosome - 1].length} bp)`);
+                    .text(`${bamHeaderMap[orgChromosome].sn}:1-${chromosomeLength} (${chromosomeLength} bp)`);
 
                 // Reset the input fields
                 bamViewControlsElement.querySelector('#bamview-region-chromosome').value = "chr" + orgChromosome;
                 bamViewControlsElement.querySelector('#bamview-region-start').value = 1;
-                bamViewControlsElement.querySelector('#bamview-region-end').value = bamHeaderArray[chromosome - 1].length;
+                bamViewControlsElement.querySelector('#bamview-region-end').value = chromosomeLength;
             }
         }
     }
@@ -607,11 +607,11 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
         }
 
         const selectedChromosomeData = data[chromosome - 1];
-        const chromosomeEnd = bamHeaderArray[chromosome - 1].length;
+        const chromosomeLength = bamHeaderMap[orgChromosome].length;
         const meanCoverage = d3.mean(selectedChromosomeData, d => d.avgCoverage);
-        xScale.domain([1, chromosomeEnd]);
+        xScale.domain([1, chromosomeLength]);
         yScale.domain([0, 2 * meanCoverage]);
-        xNavScale.domain([1, chromosomeEnd]);
+        xNavScale.domain([1, chromosomeLength]);
 
         if (geneName != null){
             drawGeneRegion(xScale, margin, svg, originStart, originEnd, geneName, orgChromosome)
@@ -632,11 +632,11 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
         // Ensure the new start and end are within the chromosome boundaries
         if (start < 0) {
             start = 1;
-            end = Math.min(minRange, chromosomeEnd);
+            end = Math.min(minRange, chromosomeLength);
         }
-        if (end > chromosomeEnd) {
-            end = chromosomeEnd;
-            start = Math.max(0, chromosomeEnd - minRange);
+        if (end > chromosomeLength) {
+            end = chromosomeLength;
+            start = Math.max(0, chromosomeLength - minRange);
         }
 
         // Clear existing bars and brush
@@ -649,7 +649,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
 
         // Re-draw the chromosome button for the selected chromosome
         const chromosomes = svg.selectAll('.chromosome-button-big')
-            .data([bamHeaderArray[chromosome - 1]])
+            .data([bamHeaderMap[orgChromosome]])
             .enter().append('g')
             .attr('class', 'chromosome-button-big')
             .attr('transform', `translate(${margin2.left}, ${margin2.top})`);
@@ -673,7 +673,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
         const barWidth = 1; // Fixed bar width with 1 pixel
         const numBins = innerWidth; // Number of bins based on inner width
         const chromStart = 1;
-        const chromEnd = chromosomeEnd;
+        const chromEnd = chromosomeLength;
 
         // Aggregate data into bins
         const aggregatedData = aggreateDataIntoBins(selectedChromosomeData, chromStart, chromEnd, numBins, null);
@@ -700,12 +700,12 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
         // Create a text label for showing the chromosome name and selected region and put it in the botton of the main chart
         svg.append('text')
             .attr('class', 'chromosome-label')
-            .attr('x', xScale(chromosomeEnd) / 2)
+            .attr('x', xScale(chromosomeLength) / 2)
             .attr('y', margin.top + mainHeight + 10)
             .attr('dy', '.35em')
             .attr('text-anchor', 'start')
             .attr('fill', 'black')
-            .text(`${bamHeaderMap[chromosomeEnd]}:1-${chromosomeEnd} (${chromosomeEnd} bp)`)
+            .text(`${bamHeaderMap[orgChromosome].sn}:1-${chromosomeLength} (${chromosomeLength} bp)`)
             .style('font-size', '12px');
 
         // Define new brush based on new domain and set default position
@@ -774,7 +774,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
 
                 // Update the chromosome label to show the selected region
                 svg.selectAll('.chromosome-label')
-                    .text(`${bamHeaderMap[chromosomeEnd]}:${Math.round(x0)}-${Math.round(x1)} (${Math.round(x1 - x0)} bp)`);
+                    .text(`${bamHeaderMap[orgChromosome].sn}:${Math.round(x0)}-${Math.round(x1)} (${Math.round(x1 - x0)} bp)`);
 
                 // Update the input fields
                 bamViewControlsElement.querySelector('#bamview-region-chromosome').value = "chr" + orgChromosome;
@@ -782,7 +782,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
                 bamViewControlsElement.querySelector('#bamview-region-end').value = Math.round(x1);
             } else {
                 // Reset to default selection if no brush is present
-                xScale.domain([1, bamHeaderArray[chromosome - 1].length]);
+                xScale.domain([1, chromosomeLength]);
 
                 if (geneName != null) {
                     drawGeneRegion(xScale, margin, svg, originStart, originEnd, geneName, orgChromosome);
@@ -803,12 +803,12 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
 
                 // Reset the chromosome label to show the full chromosome region
                 svg.selectAll('.chromosome-label')
-                    .text(`${bamHeaderMap[chromosomeEnd]}:1-${bamHeaderArray[chromosome - 1].length} (${bamHeaderArray[chromosome - 1].length} bp)`);
+                    .text(`${bamHeaderMap[orgChromosome].sn}:1-${chromosomeLength} (${chromosomeLength} bp)`);
 
                 // Reset the input fields
                 bamViewControlsElement.querySelector('#bamview-region-chromosome').value = "chr" + orgChromosome;
                 bamViewControlsElement.querySelector('#bamview-region-start').value = 1;
-                bamViewControlsElement.querySelector('#bamview-region-end').value = bamHeaderArray[chromosome - 1].length;
+                bamViewControlsElement.querySelector('#bamview-region-end').value = chromosomeLength;
             }
         }
     }
