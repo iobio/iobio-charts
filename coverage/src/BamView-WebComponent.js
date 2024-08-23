@@ -2,6 +2,7 @@ import { createBamView} from "./BamViewChart.js";
 import { getDataBroker, upgradeProperty, commonCss} from '../../common.js';
 import { getValidRefs } from "./BamData.js";
 import { InfoButton } from "../../info_button.js";
+import { FilePicker } from "../../file_picker.js";
 
 const template = document.createElement('template');
 template.innerHTML = `
@@ -33,10 +34,19 @@ rect {
     justify-content: start;
 }
 
-.bamview-control-container {
+.bamview-control-container,
+.bedfile-control-container {
     display: flex;
-    align-items: center;
+    align-items: center; 
     gap: 10px;
+    padding: 5px 10px;
+    border-radius: 15px;
+    border: 1px solid #ccc;
+    justify-content: space-between; 
+}
+
+.bamview-control-container {
+    width: 350px;
 }
 
 #bamview-region-chromosome {
@@ -56,15 +66,11 @@ rect {
 .input-group {
     display: flex;
     align-items: center;
-    border: 1px solid #ccc;
-    border-radius: 20px;
-    padding: 5px 10px;
 }
 
 .input-group i, .input-group input, .input-group span {
     align-self: center;
     border: none; 
-    margin: 0 5px;
 }
 
 .input-group input {
@@ -77,10 +83,10 @@ rect {
 
 select {
     border: 1px solid #ccc;
-    border-radius: 20px;
-    padding: 5px 10px;
+    border-radius: 15px;
     background: white;
     cursor: pointer;
+    height: 25.5px;
 }
 
 select:focus {
@@ -91,9 +97,11 @@ button {
     background-color: #2d8fc1;
     color: white;
     border: none;
-    padding: 5px 15px;
-    border-radius: 20px; 
+    padding: 5px 10px;
+    border-radius: 15px; 
     cursor: pointer;
+    width: 70px;
+    text-align: center;
 }
 
 button:hover {
@@ -101,6 +109,11 @@ button:hover {
     transform: scale(1.05);
 }
 
+#file-button-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
 
 #bamview-chart-container {
     display: flex;
@@ -173,12 +186,25 @@ button:hover {
                 <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
                 </svg>
                 <input type="text" id="gene-name-input" placeholder="Gene name">
+                <select id="source-select">
+                    <option value="gencode" selected>gencode</option>
+                    <option value="refseq">refseq</option>
+                </select>
             </div>
-            <select id="source-select">
-                <option value="gencode" selected>gencode</option>
-                <option value="refseq">refseq</option>
-            </select>
+            
             <button id="gene-search-button">Search</button>
+        </div>
+        <div class="bedfile-control-container">
+            <div id="file-button-row">
+                <div id="default-bedfile-button-grch37" class="file-selection-button" title="1000G human exome targets file">
+                    GRCh37 Exonic Regions
+                </div>
+                <div id="default-bedfile-button-grch38" class="file-selection-button" title="1000G human exome targets file">
+                    GRCh38 Exonic Regions
+                </div>
+                <iobio-file-picker label="Custom Bed" title="Add Bed format capture target definition file"></iobio-file-picker>
+            </div>
+            <button id="remove-bedfile-button">Remove</button>
         </div>
     </div>
     <div id="bamview-chart-container">
@@ -240,6 +266,10 @@ class BamViewChart extends HTMLElement {
         this.searchButton = this.shadowRoot.querySelector('#gene-search-button');
         this.tooltipButton = this.shadowRoot.querySelector('iobio-label-info-button');
         this.modal = this.shadowRoot.querySelector('#modal');
+        this.defaultBedFileGRCh37 = this.shadowRoot.querySelector('#default-bedfile-button-grch37');
+        this.defaultBedFileGRCh38 = this.shadowRoot.querySelector('#default-bedfile-button-grch38');
+        this.removeBedFile = this.shadowRoot.querySelector('#remove-bedfile-button');
+        this.filePicker =  this.shadowRoot.querySelector('iobio-file-picker');
     }
 
     async connectedCallback() {
@@ -272,6 +302,15 @@ class BamViewChart extends HTMLElement {
             this.goButton.addEventListener("click", () => this.handleGoClick());
             this.searchButton.addEventListener("click", () => this.handleSearchClick());
             this.setupResizeObserver();
+            this.defaultBedFileGRCh37.addEventListener("click", () => this.handleBedfileClick('addGRCh37BedFile', this.defaultBedFileGRCh37));
+            this.defaultBedFileGRCh38.addEventListener("click", () => this.handleBedfileClick('addGRCh38BedFile', this.defaultBedFileGRCh38));
+            this.removeBedFile.addEventListener("click", () => this.handleBedfileRemove('bedFileRemoved'));
+
+            // Add an event listener from the FilePicker
+            this.filePicker.addEventListener('file-selected', () => {
+                this.clearActiveButtons();
+                this.filePicker.shadowRoot.querySelector('label').classList.add('active');
+            });
         }
     }
 
@@ -385,7 +424,36 @@ class BamViewChart extends HTMLElement {
         }
         return true;
     }
-    
+
+    handleBedfileClick(message, buttonElement) {
+        this.clearActiveButtons(); // Ensure only one button can be active
+        buttonElement.classList.add('active');
+
+        const event = new CustomEvent('default-bedfile-selected', {
+            detail: { message },
+            bubbles: true,
+            composed: true
+        });
+        this.dispatchEvent(event);
+    }
+
+    handleBedfileRemove(message) {
+        this.clearActiveButtons();
+
+        const event = new CustomEvent('bedfile-removed', {
+            detail: { message },
+            bubbles: true,
+            composed: true
+        });
+        this.dispatchEvent(event);
+    }
+
+    clearActiveButtons() {
+        this.shadowRoot.querySelectorAll('.file-selection-button').forEach(button => {
+            button.classList.remove('active');
+        });
+        this.filePicker.shadowRoot.querySelector('label').classList.remove('active');
+    }
 }
 
 window.customElements.define('iobio-coverage-depth', BamViewChart);

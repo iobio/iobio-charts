@@ -48,9 +48,33 @@ const commonCss = `
     font: 11px arial;        
     background: rgb(80,80,80);   
     border: 0px;      
-    border-radius: 4px;           
+    border-radius: 8px;           
     pointer-events: none;         
   }
+
+  /* Bed file button */
+  .file-selection-button {
+    display: flex;
+    align-items: center;
+    justify-content: center; 
+    text-align: center;
+    white-space: nowrap;
+    padding: 5px 0px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+    height: 100%;
+    font-size: 13px;
+}
+
+.file-selection-button:hover {
+    color: var(--data-color)
+}
+
+.file-selection-button.active {
+  color: var(--data-color);
+}
+
 `;
 
 const commonStyleSheet = new CSSStyleSheet();
