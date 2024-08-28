@@ -310,10 +310,9 @@ class BamViewChart extends HTMLElement {
         const chromosome = this.chromosomeInput.value.trim();
         const startInput = this.startInput.value.trim();
         const endInput = this.endInput.value.trim();
-        const chromosomeNumber = chromosome.replace('chr', '');
 
         // Validate chromosome number first
-        if (!this.isValidChromosome(chromosomeNumber)) {
+        if (!this.isValidChromosome(chromosome)) {
             alert('Invalid chromosome number');
             return;
         }
@@ -328,9 +327,9 @@ class BamViewChart extends HTMLElement {
 
         // Check if only the chromosome is provided and start and end inputs are empty
         if (parsedStart === undefined && parsedEnd === undefined) {
-            this._bamView.zoomToChromosome(chromosomeNumber);
+            this._bamView.zoomToChromosome(chromosome);
         } else if (this.validateInput(parsedStart, parsedEnd)) {
-            this._bamView.brushToRegion(this.validBamReadDepth, chromosomeNumber, parsedStart, parsedEnd, null);
+            this._bamView.brushToRegion(this.validBamReadDepth, chromosome, parsedStart, parsedEnd, null);
         }
     }
 
@@ -355,7 +354,7 @@ class BamViewChart extends HTMLElement {
                 alert(`Gene ${geneName} is not in ${source} for build ${build}`);
                 return;
             }
-            const chr = data[0].chr.replace('chr', '');
+            const chr = data[0].chr;
             const start = parseInt(data[0].start);
             const end = parseInt(data[0].end);
             this._bamView.brushToRegion(this.validBamReadDepth, chr, start, end, geneName);
@@ -365,9 +364,9 @@ class BamViewChart extends HTMLElement {
         }
     }
 
-    isValidChromosome(chromosomeNumber) {
-        const validChromosomes = new Set(this.validBamHeader.map(header => header.sn.replace('chr', '')));
-        return validChromosomes.has(chromosomeNumber);
+    isValidChromosome(chromosome) {
+        const validChromosomes = new Set(this.validBamHeader.map(header => header.sn));
+        return validChromosomes.has(chromosome);
     }    
 
     validateInput(start, end) {
