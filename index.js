@@ -5,6 +5,7 @@ import { DataBrokerElement } from './data_broker_component.js';
 import './coverage/src/BamView-WebComponent.js';
 import { Panel } from './panel.js';
 import {Tabs, Tab, TabPanel} from './tabs.js';
+import { BamControls } from './bam_controls.js';
 
 
 

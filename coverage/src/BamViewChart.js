@@ -1,15 +1,17 @@
 import * as d3 from 'd3';
 
-function createBamView(bamHeader, data, element, bamViewControlsElement, broker) {
+function createBamView(bamHeader, data, element, broker) {
 
     let xScale, yScale, xNavScale, yNavScale, svg, main, nav, color, brush, yAxis, bamHeaderArray, 
-        margin, margin2, mainHeight, navHeight, innerWidth, innerHeight;
+        margin, margin2, mainHeight, navHeight, innerWidth, innerHeight, bamViewControlsElement;
 
-    function createBamViewInner(bamHeader, data, element, bamViewControlsElement) {
+    function createBamViewInner(bamHeader, data, element) {
         const average = calculateMeanCoverage(data);
         const aggregatedDataArray = aggregateData(data, 30);
         bamHeaderArray = bamHeader;
         const totalLength = d3.sum(bamHeaderArray, d => d.length);
+
+        bamViewControlsElement = document.querySelector('iobio-bam-controls').shadowRoot;
 
         const width = element.offsetWidth;
         const height = element.offsetHeight;
@@ -410,6 +412,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
 
 
     function zoomToChromosome(chromosome) {
+        console.log(chromosome)
         const orgChromosome = chromosome;
         if (chromosome === "X") {
             chromosome = 23;
@@ -885,7 +888,7 @@ function createBamView(bamHeader, data, element, bamViewControlsElement, broker)
         });
     }
 
-    createBamViewInner(bamHeader, data, element, bamViewControlsElement)
+    createBamViewInner(bamHeader, data, element)
     return {brushToRegion, zoomToChromosome}
 }
 
