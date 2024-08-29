@@ -200,7 +200,7 @@ class BamControls extends HTMLElement {
         this.clearActiveButtons(); // Ensure only one button can be active
         buttonElement.classList.add('active');
 
-        const event = new CustomEvent('default-bedfile-selected', {
+        const event = new CustomEvent('bed-file-selected', {
             detail: { message },
             bubbles: true,
             composed: true
@@ -211,7 +211,7 @@ class BamControls extends HTMLElement {
     handleBedfileRemove(message) {
         this.clearActiveButtons();
 
-        const event = new CustomEvent('bedfile-removed', {
+        const event = new CustomEvent('bed-file-removed', {
             detail: { message },
             bubbles: true,
             composed: true

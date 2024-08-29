@@ -412,7 +412,6 @@ function createBamView(bamHeader, data, element, broker) {
 
 
     function zoomToChromosome(chromosome) {
-        console.log(chromosome)
         const orgChromosome = chromosome;
         if (chromosome === "X") {
             chromosome = 23;
