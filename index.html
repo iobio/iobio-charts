@@ -82,6 +82,11 @@
         font-size: 1.5em;
         cursor: pointer;
       }
+
+      #help-button:hover {
+        background-color: white;
+        color: #2d8fc1;
+      }
       
       *:not(:defined) {
         opacity: 0; 
@@ -100,12 +105,14 @@
   <body>
     <div id="bam2-header">
       <h1>bam2.iobio</h1>
-      <span id="help-button">Get Help</span>
+      <span id="help-button" data-link="/help">Get Help</span>
     </div>
 
     <iobio-data-broker></iobio-data-broker>
 
     <main>
+      <iobio-help-page class="route" id="help-page"></iobio-help-page>
+
       <div class='read-depth-container'>
         <iobio-coverage-depth
           label="Read Coverage">

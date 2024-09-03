@@ -29,4 +29,4 @@ class HelpPage extends HTMLElement {
 }
 
 customElements.define('iobio-help-page', HelpPage);
-export {HelpPage}
+export { HelpPage }
