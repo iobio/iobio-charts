@@ -93,6 +93,8 @@
     <iobio-data-broker></iobio-data-broker>
 
     <main>
+      <iobio-bam-controls></iobio-bam-controls>
+      
       <div class='read-depth-container'>
         <iobio-coverage-depth
           label="Read Coverage">
@@ -333,6 +335,16 @@
       document.addEventListener('selected-regions-change', (event) => {
         broker.regions = event.detail;
       });
+
+      document.addEventListener('bed-file-selected', (event) => {
+        console.log(event.detail)
+      });
+
+      document.addEventListener('bed-file-removed', (event) => {
+        console.log(event.detail)
+      });
+
+
 
     </script>
   </body>

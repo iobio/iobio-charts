@@ -48,7 +48,7 @@ const commonCss = `
     font: 11px arial;        
     background: rgb(80,80,80);   
     border: 0px;      
-    border-radius: 4px;           
+    border-radius: 8px;           
     pointer-events: none;         
   }
 `;
