@@ -1,4 +1,4 @@
-import { commonCss } from '../../common.js';
+import { getDataBroker, commonCss } from '../../common.js';
 const template = document.createElement('template');
 template.innerHTML = `
 <style>
@@ -89,6 +89,33 @@ button:hover {
     gap: 10px;
 }
 
+#file-selection {
+    display: none;
+}
+
+/* Bed file button */
+.file-selection-button {
+    display: flex;
+    align-items: center;
+    justify-content: center; 
+    text-align: center;
+    white-space: nowrap;
+    padding: 5px 0px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+    height: 100%;
+    font-size: 13px;
+}
+
+.file-selection-button:hover {
+    color: var(--data-color)
+}
+
+.file-selection-button.active {
+  color: var(--data-color);
+}
+
 </style>
     <div id="bamview-controls">
         <div class="bamview-control-container">
@@ -121,13 +148,13 @@ button:hover {
         </div>
         <div class="bedfile-control-container">
             <div id="file-button-row">
-                <div id="default-bedfile-button-grch37" class="file-selection-button" title="1000G human exome targets file">
-                    GRCh37 Exonic Regions
+                <div id="default-bedfile-button" class="file-selection-button" title="1000G human exome targets file">
+                    Exonic Regions
                 </div>
-                <div id="default-bedfile-button-grch38" class="file-selection-button" title="1000G human exome targets file">
-                    GRCh38 Exonic Regions
+                <div class="iobio-file-picker" title="Add Bed format capture target definition file">
+                    <input type="file" id="file-selection" multiple>
+                    <label for="file-selection" class="file-selection-button">Custom Bed</label>
                 </div>
-                <iobio-file-picker label="Custom Bed" title="Add Bed format capture target definition file"></iobio-file-picker>
             </div>
             <button id="remove-bedfile-button">Remove</button>
         </div>
@@ -151,33 +178,45 @@ class BamControls extends HTMLElement {
         this.geneNameInput = this.shadowRoot.querySelector('#gene-name-input');
         this.sourceSelect = this.shadowRoot.querySelector('#source-select');
 
-        this.defaultBedFileGRCh37 = this.shadowRoot.querySelector('#default-bedfile-button-grch37');
-        this.defaultBedFileGRCh38 = this.shadowRoot.querySelector('#default-bedfile-button-grch38');
-        this.removeBedFile = this.shadowRoot.querySelector('#remove-bedfile-button');
-        this.filePicker =  this.shadowRoot.querySelector('iobio-file-picker');
-
         this.goButton.addEventListener('click', () => this.handleGoClick());
         this.searchButton.addEventListener('click', () => this.handleSearchClick());
+
+        this.defaultBedFileButton = this.shadowRoot.querySelector('#default-bedfile-button');
+       
+        this.filePicker = this.shadowRoot.querySelector('#file-selection');
+        this.label = this.shadowRoot.querySelector('label');
+
+        this.removeBedFile = this.shadowRoot.querySelector('#remove-bedfile-button');
     }
 
     async connectedCallback() {
-        this.defaultBedFileGRCh37.addEventListener("click", () => this.handleBedfileClick('addGRCh37BedFile', this.defaultBedFileGRCh37));
-        this.defaultBedFileGRCh38.addEventListener("click", () => this.handleBedfileClick('addGRCh38BedFile', this.defaultBedFileGRCh38));
-        this.removeBedFile.addEventListener("click", () => this.handleBedfileRemove('bedFileRemoved'));
-         // Add an event listener from the FilePicker
-         this.filePicker.addEventListener('file-selected', () => {
-            this.clearActiveButtons();
-            this.filePicker.shadowRoot.querySelector('label').classList.add('active');
-        });
+        this.broker = getDataBroker(this);
+        if (this.broker) {
+            const headerPromise = new Promise((resolve, reject) => {
+                this.broker.addEventListener('header', (evt) => {
+                  resolve(evt.detail);
+                });
+              });
+        
+            this.bamHeader = await headerPromise;
+            this.build = this.bamHeader[0].length === 249250621 ? 'GRCh37' : 'GRCh38';
+        }
+        this.defaultBedFileButton.addEventListener("click", () => this.handleBedfileClick(this.defaultBedFileButton));
+        this.filePicker.addEventListener('change', (event) => this.handleBedfilePick(event));
+        this.removeBedFile.addEventListener("click", () => this.handleBedfileRemove());
     }
 
     handleGoClick() {
-        const chromosome = this.chromosomeInput.value.trim();
+        const rname = this.chromosomeInput.value.trim();
         const start = this.startInput.value.trim();
         const end = this.endInput.value.trim();
 
-        const event = new CustomEvent('go-click', {
-            detail: { chromosome, start, end },
+        const event = new CustomEvent('region-selected', {
+            detail: { 
+                rname: rname,
+                start: start, 
+                end: end
+            },
             bubbles: true, 
             composed: true
         });
@@ -188,7 +227,7 @@ class BamControls extends HTMLElement {
         const geneName = this.geneNameInput.value.trim().toUpperCase();;
         const source = this.sourceSelect.value;
 
-        const event = new CustomEvent('search-click', {
+        const event = new CustomEvent('gene-entered', {
             detail: { geneName, source },
             bubbles: true,
             composed: true
@@ -196,23 +235,81 @@ class BamControls extends HTMLElement {
         this.dispatchEvent(event);
     }
 
-    handleBedfileClick(message, buttonElement) {
-        this.clearActiveButtons(); // Ensure only one button can be active
-        buttonElement.classList.add('active');
+    async handleBedfileClick(buttonElement) {
+        let filePath;
 
-        const event = new CustomEvent('bed-file-selected', {
-            detail: { message },
-            bubbles: true,
-            composed: true
-        });
-        this.dispatchEvent(event);
+        if (this.build === "GRCh37") {
+            filePath = '/files/20130108.exome.targets.bed';
+        } else if (this.build === "GRCh38") {
+            filePath = '/files/20130108.exome.targets.grch38.bed';
+        } else {
+            alert('Unable to determine reference genome version.');
+            return;
+        }
+
+        try {
+            const response = await fetch(filePath);
+    
+            if (!response.ok) {
+                throw new Error(`Failed to fetch BED file: ${response.statusText}`);
+            }
+            const bedFileContent = await response.text();
+    
+            this.clearActiveButtons();
+            buttonElement.classList.add('active');
+            const event = new CustomEvent('bed-file-selected', {
+                detail: { bedText: bedFileContent },
+                bubbles: true,
+                composed: true
+            });
+    
+            this.dispatchEvent(event);
+        } catch (error) {
+            console.error('Error fetching BED file:', error);
+            alert('Error fetching BED file. Please try again.');
+        }
     }
 
-    handleBedfileRemove(message) {
+    handleBedfilePick(event) {
+        this.clearActiveButtons();
+
+        const files = event.target.files;
+        if (files.length === 1) {
+            const file = files[0]
+
+            if (file.name.endsWith('.bed')) {
+                const reader = new FileReader();
+
+                reader.onload = (e) => {
+                    const bedFileContent = e.target.result;
+
+                    this.dispatchEvent(new CustomEvent('bed-file-selected', { 
+                        detail: { bedText: bedFileContent },
+                        bubbles: true,
+                        composed: true 
+                    }));
+                };
+
+                // Read the file as text
+                reader.readAsText(file); 
+            } 
+            else {
+                alert('Must select a .bed file');
+                return;
+            }
+        }
+        else {
+            alert('Must select only one .bed file')
+            return
+        }
+
+        this.label.classList.add('active');
+    }
+
+    handleBedfileRemove() {
         this.clearActiveButtons();
 
         const event = new CustomEvent('bed-file-removed', {
-            detail: { message },
             bubbles: true,
             composed: true
         });
@@ -223,7 +320,7 @@ class BamControls extends HTMLElement {
         this.shadowRoot.querySelectorAll('.file-selection-button').forEach(button => {
             button.classList.remove('active');
         });
-        this.filePicker.shadowRoot.querySelector('label').classList.remove('active');
+        this.label.classList.remove('active');
     }
 }
 

@@ -3,7 +3,7 @@ import * as d3 from 'd3';
 function createBamView(bamHeader, data, element, broker) {
 
     let xScale, yScale, xNavScale, yNavScale, svg, main, nav, color, brush, yAxis,
-        margin, margin2, mainHeight, navHeight, innerWidth, innerHeight, indexMap;
+        margin, margin2, mainHeight, navHeight, innerWidth, innerHeight, indexMap, bamViewControlsElement;
 
     function createBamViewInner(bamHeader, data, element) {
         const average = calculateMeanCoverage(data);

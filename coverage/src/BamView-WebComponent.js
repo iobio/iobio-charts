@@ -2,7 +2,6 @@ import { createBamView} from "./BamViewChart.js";
 import { getDataBroker, upgradeProperty, commonCss} from '../../common.js';
 import { getValidRefs } from "./BamData.js";
 import { InfoButton } from "../../info_button.js";
-import { FilePicker } from "../../file_picker.js";
 
 const template = document.createElement('template');
 template.innerHTML = `
@@ -156,8 +155,8 @@ class BamViewChart extends HTMLElement {
             this.shadowRoot.querySelector("iobio-loading-indicator").style.display = 'none';
 
             // Listen for global custom events dispatched from BamControls
-            document.addEventListener('go-click', (e) => this.handleGoClick(e.detail));
-            document.addEventListener('search-click', (e) => this.handleSearchClick(e.detail));
+            document.addEventListener('region-selected', (e) => this.handleGoClick(e.detail));
+            document.addEventListener('gene-entered', (e) => this.handleSearchClick(e.detail));
 
             this.setupResizeObserver();
         }
@@ -191,16 +190,15 @@ class BamViewChart extends HTMLElement {
         if (this.resizeObserver) {
             this.resizeObserver.disconnect();
         }
-        document.removeEventListener('go-click', this.handleGoClick);
-        document.removeEventListener('search-click', this.handleSearchClick);
+        document.removeEventListener('region-selected', this.handleGoClick);
+        document.removeEventListener('gene-entered', this.handleSearchClick);
     }
     
     handleGoClick(detail) {
-        const { chromosome, start, end } = detail;
-        const chromosomeNumber = chromosome.replace('chr', '');
+        const { rname, start, end } = detail;
 
         // Validate chromosome number first
-        if (!this.isValidChromosome(chromosome)) {
+        if (!this.isValidChromosome(rname)) {
             alert('Invalid chromosome number');
             return;
         }
@@ -216,9 +214,9 @@ class BamViewChart extends HTMLElement {
 
         // Check if only the chromosome is provided and start and end inputs are empty
         if (parsedStart === undefined && parsedEnd === undefined) {
-            this._bamView.zoomToChromosome(chromosome);
+            this._bamView.zoomToChromosome(rname);
         } else if (this.validateInput(parsedStart, parsedEnd)) {
-            this._bamView.brushToRegion(this.validBamReadDepth, chromosome, parsedStart, parsedEnd, null);
+            this._bamView.brushToRegion(this.validBamReadDepth, rname, parsedStart, parsedEnd, null);
         }
     }
 

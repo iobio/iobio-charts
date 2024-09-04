@@ -336,34 +336,6 @@
         broker.regions = event.detail;
       });
 
-      document.addEventListener('file-selected', (event) => {
-        const files = event.detail.files
-        if (files.length === 1) {
-          if (files[0].name.endsWith('.bed')) {
-            console.log('Process the bed file' + files[0].name)
-          } else {
-            alert('Must select a .bed file');
-            return;
-          }
-        }
-        else if (files.length === 2) {
-          if ((files[0].name.endsWith('.bam') && files[1].name.endsWith('.bai')) || 
-              (files[0].name.endsWith('.bai') && files[1].name.endsWith('.bam'))) {
-              console.log('Process bam and bai files' + files[0].name + files[1].name)
-          } else if ((files[0].name.endsWith('.cram') && files[1].name.endsWith('.crai')) || 
-                     (files[0].name.endsWith('.crai') && files[1].name.endsWith('.cram'))) {
-            console.log('Process cram and crai files' + files[0].name + files[1].name)
-          } else {
-            alert('Must select both bam/cram and bai/crai')
-            return
-          }
-        } 
-        else {
-          alert('Must select one or two files')
-          return
-        }
-      });
-
       document.addEventListener('bed-file-selected', (event) => {
         console.log(event.detail)
       });
