@@ -208,8 +208,18 @@ class BamControls extends HTMLElement {
 
     handleGoClick() {
         const rname = this.chromosomeInput.value.trim();
-        const start = this.startInput.value.trim();
-        const end = this.endInput.value.trim();
+        const startInput = this.startInput.value.trim();
+        const endInput = this.endInput.value.trim();
+        
+        let start, end;
+        // Check if start and end inputs are non-empty before converting to integers
+        if (startInput !== "" && endInput !== "") {
+            start = parseInt(startInput);
+            end = parseInt(endInput);
+        } else {
+            start = startInput;
+            end = endInput
+        }
 
         const event = new CustomEvent('region-selected', {
             detail: { 
@@ -239,9 +249,9 @@ class BamControls extends HTMLElement {
         let filePath;
 
         if (this.build === "GRCh37") {
-            filePath = '/files/20130108.exome.targets.bed';
+            filePath = '/grch37.bed';
         } else if (this.build === "GRCh38") {
-            filePath = '/files/20130108.exome.targets.grch38.bed';
+            filePath = '/grch38.bed';
         } else {
             alert('Unable to determine reference genome version.');
             return;

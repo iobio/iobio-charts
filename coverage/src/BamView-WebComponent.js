@@ -203,20 +203,11 @@ class BamViewChart extends HTMLElement {
             return;
         }
 
-        let parsedStart, parsedEnd;
-        // Check if start and end inputs are non-empty before parsing
-        if (start !== "") {
-            parsedStart = parseInt(start);
-        }
-        if (end !== "") {
-            parsedEnd = parseInt(end);
-        }
-
         // Check if only the chromosome is provided and start and end inputs are empty
-        if (parsedStart === undefined && parsedEnd === undefined) {
+        if (start === "" && end === "") {
             this._bamView.zoomToChromosome(rname);
-        } else if (this.validateInput(parsedStart, parsedEnd)) {
-            this._bamView.brushToRegion(this.validBamReadDepth, rname, parsedStart, parsedEnd, null);
+        } else if (this.validateInput(start, end)) {
+            this._bamView.brushToRegion(this.validBamReadDepth, rname, start, end, null);
         }
     }
 
