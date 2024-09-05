@@ -354,6 +354,16 @@
         broker.regions = event.detail;
       });
 
+      document.addEventListener('bed-file-selected', (event) => {
+        console.log(event.detail)
+      });
+
+      document.addEventListener('bed-file-removed', (event) => {
+        console.log(event.detail)
+      });
+
+
+
     </script>
   </body>
 
