@@ -38,10 +38,14 @@ modalTemplate.innerHTML = `
     .modal-body {
       text-align: justify;
       padding: 0 30px;
-      overflow: auto;
-      font-size: 11pt;
+      font-size: 13px;
       max-height: 200px;
       line-height: 1.5;
+      width: 100%;
+      box-sizing: border-box;
+      word-wrap: break-word;
+      white-space: normal;
+      overflow: auto;
     }
 
     ::backdrop {
