@@ -13,14 +13,16 @@ ${commonCss}
 }
 
 .bamview-control-container,
-.bedfile-control-container {
+.bedfile-control-container,
+.sample-control-container {
     display: flex;
     align-items: center; 
     gap: 10px;
     padding: 5px 10px;
-    border-radius: 15px;
+    border-radius: 9999px;
     border: 1px solid #ccc;
     justify-content: space-between; 
+    white-space: nowrap;
 }
 
 #bamview-region-chromosome {
@@ -57,7 +59,7 @@ ${commonCss}
 
 select {
     border: 1px solid #ccc;
-    border-radius: 15px;
+    border-radius: 9999px;
     background: white;
     cursor: pointer;
     height: 25.5px;
@@ -72,10 +74,15 @@ button {
     color: white;
     border: none;
     padding: 5px 10px;
-    border-radius: 15px; 
+    border-radius: 9999px;
     cursor: pointer;
-    width: 70px;
     text-align: center;
+}
+
+#region-search-button,
+#gene-search-button,
+#remove-bedfile-button {
+    width: 70px;
 }
 
 button:hover {
@@ -116,6 +123,20 @@ button:hover {
   color: var(--data-color);
 }
 
+.sample-reads-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#total-reads-number {
+    padding: 0px 5px;
+    width: 25px;
+}
+
+.sample-reads-text {
+    color: #2d8fc1;
+}
 </style>
     <div id="bamview-controls">
         <div class="bamview-control-container">
@@ -131,7 +152,7 @@ button:hover {
                 <span>-</span>
                 <input type="text" id="bamview-region-end" placeholder="End">
             </div>
-            <button id="bamview-controls-go">Go</button>
+            <button id="region-search-button">Go</button>
         </div>
         <div class="bamview-control-container">
             <div id="gene-search-container" class="input-group">
@@ -158,6 +179,23 @@ button:hover {
             </div>
             <button id="remove-bedfile-button">Remove</button>
         </div>
+
+        <div class="sample-control-container">
+            <div class="sample-reads-container">
+                <iobio-label-info-button label="Sampled Reads" icon-position="left">
+                    <div slot="content">
+                        <p>Bam.iobio does not read the entire bam file, rather, it samples reads from across the entire genome.
+                            The number of reads that have been sampled are shown here, and should be at least in the tens of thousands
+                            to have confidence in the statistics. Click the arrow beneath the displayed number to increase the number
+                            of sampled reads.
+                        </p>
+                    </div>
+                </iobio-label-info-button>
+                <div id="total-reads-number" class="sample-reads-text">0</div>
+                <div id="sample-reads-unit" class="sample-reads-text">thousand</div>
+            </div>
+            <button id="sample-more-reads-button">Sample More</button>
+        </div>
     </div>
 `;
 
@@ -170,7 +208,7 @@ class BamControls extends HTMLElement {
     }
 
     initDOMElements() {
-        this.goButton = this.shadowRoot.querySelector('#bamview-controls-go');
+        this.goButton = this.shadowRoot.querySelector('#region-search-button');
         this.searchButton = this.shadowRoot.querySelector('#gene-search-button');
         this.chromosomeInput = this.shadowRoot.querySelector('#bamview-region-chromosome');
         this.startInput = this.shadowRoot.querySelector('#bamview-region-start');
@@ -187,6 +225,9 @@ class BamControls extends HTMLElement {
         this.label = this.shadowRoot.querySelector('label');
 
         this.removeBedFile = this.shadowRoot.querySelector('#remove-bedfile-button');
+
+        this.totalReadsContainer = this.shadowRoot.querySelector("#total-reads-number");
+        this.sampleMoreButton = this.shadowRoot.querySelector('#sample-more-reads-button');
     }
 
     async connectedCallback() {
@@ -197,6 +238,13 @@ class BamControls extends HTMLElement {
                   resolve(evt.detail);
                 });
               });
+
+            this.broker.addEventListener('stats-stream-data', (evt) => {
+                const stats = evt.detail;
+                this.total_reads = stats["total_reads"] / 1000;
+
+                this.updateSampleReads();
+            });
         
             this.bamHeader = await headerPromise;
             this.build = this.bamHeader[0].length === 249250621 ? 'GRCh37' : 'GRCh38';
@@ -204,13 +252,14 @@ class BamControls extends HTMLElement {
         this.defaultBedFileButton.addEventListener("click", () => this.handleBedfileClick(this.defaultBedFileButton));
         this.filePicker.addEventListener('change', (event) => this.handleBedfilePick(event));
         this.removeBedFile.addEventListener("click", () => this.handleBedfileRemove());
+        this.sampleMoreButton.addEventListener("click", () => this.handleSampleMoreReads());
     }
 
     handleGoClick() {
         const rname = this.chromosomeInput.value.trim();
         const startInput = this.startInput.value.trim();
         const endInput = this.endInput.value.trim();
-        
+
         let start, end;
         // Check if start and end inputs are non-empty before converting to integers
         if (startInput !== "" && endInput !== "") {
@@ -332,6 +381,19 @@ class BamControls extends HTMLElement {
         });
         this.label.classList.remove('active');
     }
+
+    updateSampleReads() {
+        this.totalReadsContainer.textContent = Math.round(this.total_reads);
+    }
+    
+    handleSampleMoreReads() {
+        const event = new CustomEvent('sample-more-reads', {
+            bubbles: true,
+            composed: true
+        });
+        this.dispatchEvent(event);
+    }
+      
 }
 
 customElements.define('iobio-bam-controls', BamControls);
