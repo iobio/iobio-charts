@@ -5,9 +5,12 @@ import { DataBrokerElement } from './data_broker_component.js';
 import './coverage/src/BamView-WebComponent.js';
 import { Panel } from './panel.js';
 import {Tabs, Tab, TabPanel} from './tabs.js';
+import { HelpPage } from './help_page.js';
+import { initRouter } from './router.js';
 import { BamControls } from './bam_controls.js';
 
 
+initRouter()
 
 export default {
   PercentBoxElement,

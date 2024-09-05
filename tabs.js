@@ -10,7 +10,7 @@ template.innerHTML = `
         flex-direction: column;
         box-sizing: border-box;
         width: 100%;
-        heigh: 100%;
+        height: 100%;
     }
 
     .tabs {
@@ -24,7 +24,7 @@ template.innerHTML = `
     .panels {
         position: relative;
         width: 100%;
-        heigh: 100%;
+        height: 100%;
     }
 
     ::slotted(iobio-tab) {
@@ -42,6 +42,10 @@ template.innerHTML = `
         position: absolute;
         visibility: hidden;
         z-index: -1;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
     }
     
     </style>

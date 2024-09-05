@@ -20,6 +20,7 @@
 
       main {
         padding: 0 10px 10px 10px;
+        box-sizing: border-box;
       }
 
       .read-depth-container {
@@ -56,19 +57,35 @@
       }
 
       #bam2-header {
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center;
         height: 40px;
         width: 100%;
         background-color: #2d8fc1;
         position: sticky;
         top: 0;
         z-index: 1;
+        padding: 0 10px;
+        box-sizing: border-box;
       }
 
       #bam2-header h1 {
         color: white;
         font-size: 1.5em;
         margin: 0;
-        padding: 5px 0 5px 10px;
+        padding: 5px 0;
+      }
+
+      #help-button {
+        color: white;
+        font-size: 1.5em;
+        cursor: pointer;
+      }
+
+      #help-button:hover {
+        background-color: white;
+        color: #2d8fc1;
       }
       
       *:not(:defined) {
@@ -88,11 +105,14 @@
   <body>
     <div id="bam2-header">
       <h1>bam2.iobio</h1>
+      <span id="help-button" data-link="/help">Get Help</span>
     </div>
 
     <iobio-data-broker></iobio-data-broker>
 
-    <main>
+    <iobio-help-page class="route" id="help-page"></iobio-help-page>
+
+    <main id="main-content">
       <iobio-bam-controls></iobio-bam-controls>
       
       <div class='read-depth-container'>
