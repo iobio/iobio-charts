@@ -1,23 +1,60 @@
+import { commonCss } from '../../common.js';
 const homePageTemplate = document.createElement('template');
 homePageTemplate.innerHTML = `
 <style>
+${commonCss}
 #main {
     display: flex;
-    width: 100%;
-    height: 100%;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     margin-left: auto;
     margin-right: auto;
     margin-top: 100px;
+    width: 100%;
+    height: 100%;
 }
 
-.title {
+.home-page-title {
     font-size: 28px;
     color: rgb(110,110,110);
     margin-bottom: 30px;
     text-align: center;
+}
+
+.file-loading-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+}
+
+#file-selection {
+    display: none;
+}
+
+.local-file-input,
+.remote-file-input,
+.demo-data-input {
+    width: 300px;
+    height: 60px;
+    text-align: center;
+    background-color: var(--data-color);
+}
+
+.file-selection-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    height: 100%;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+#info {
+    margin-top: 50px;
 }
 
 #info ul {
@@ -28,7 +65,7 @@ homePageTemplate.innerHTML = `
     
 #info li {
     display: inline;
-    margin-right: 10px;
+    margin-right: 50px;
 }
 
 .variant-files {
@@ -55,7 +92,7 @@ homePageTemplate.innerHTML = `
 }
 
 a {
-    color: #2d8fc1;
+    color: var(--data-color);
 }
 
 #marthlabtext {
@@ -63,18 +100,30 @@ a {
     left: 100px;
     top: 4px;
     font-size: 50px;
+    font-family:'Overlock SC', cursive;
 }
 </style>
 
 <div id="main">
-    <div class="title">
+    <div class="home-page-title">
         Examine your sequence alignment file in seconds
     </div>
-    
-    <div class="iobio-file-picker" title="Add Bed format capture target definition file">
-        <input type="file" id="file-selection" multiple>
-        <label for="file-selection" class="file-selection-button">Custom Bed</label>
+
+    <div class="file-loading-container">
+        <div class="local-file-input">
+            <input type="file" id="file-selection" multiple>
+            <label for="file-selection" class="file-selection-button">LOCAL BAM/CRAM FILE</label>
+        </div>
+
+        <div class="remote-file-input">
+            <div class="file-selection-button">REMOTE BAM/CRAM FILE</div>
+        </div>
+
+        <div class="demo-data-input">
+            <div class="file-selection-button">LAUNCH WITH DEMO DATA</div>
+        </div>
     </div>
+   
 
     <div id="info">
         <ul>
@@ -86,21 +135,19 @@ a {
     </div>
 
     <div class="variant-files">
-        <div>for variant files check out <a href="http://vcf.iobio.io">vcf.iobio</a></div>
+        <div>For variant files check out <a href="http://vcf.iobio.io">vcf.iobio</a></div>
     </div>
 </div>
 
 <div id="marth-lab-footer">
     <div class="logos">
         <div id="marthlabtext">Marthlab</div>
-        <img src="../../../images/ustar-ucgd-logo.jpg" style="height:60px;"/>
+        <img src="/images/ustar-ucgd-logo.jpg" style="height:60px;"/>
         <a href="http://www.genetics.utah.edu/">
-        <img src="../../../images/genetics_mainlogo3_lrg.png" style="height:50px;position:absolute;right:0px;top:7px"/>
+        <img src="/images/genetics_mainlogo3_lrg.png" style="height:50px;position:absolute;right:0px;top:7px"/>
         </a>
     </div>
 </div>
-
-
 `;
 
 class HomePage extends HTMLElement {
