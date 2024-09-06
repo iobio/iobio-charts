@@ -8,6 +8,7 @@ import {Tabs, Tab, TabPanel} from './tabs.js';
 import { HelpPage } from './help_page.js';
 import { initRouter } from './router.js';
 import { BamControls } from './bam_controls.js';
+import { HomePage } from './home-page.js';
 
 
 initRouter()

@@ -14,13 +14,20 @@ function router() {
 
     const helpPage = document.getElementById('help-page');
     const mainContent = document.getElementById('main-content');
+    const homePage = document.getElementById('home-page');
 
     if (path === '/help') {
         helpPage.style.display = 'block';
         mainContent.style.visibility = 'hidden';
-    } else {
+        homePage.style.display = 'none';
+    } else if (path === '/home') {
+        homePage.style.display = 'block';
+        mainContent.style.visibility = 'hidden';
         helpPage.style.display = 'none';
+    } else {
         mainContent.style.visibility = 'visible';
+        homePage.style.display = 'none';
+        helpPage.style.display = 'none';
     }
 }
 

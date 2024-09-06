@@ -109,7 +109,6 @@ button:hover {
     white-space: nowrap;
     padding: 5px 0px;
     cursor: pointer;
-    transition: all 0.3s ease;
     width: 100%;
     height: 100%;
     font-size: 13px;
