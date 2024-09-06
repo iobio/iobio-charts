@@ -173,7 +173,6 @@ class Tabs extends HTMLElement {
 
         newTab.selected = true;
         newPanel.classList.remove('hidden-panel');
-        newTab.focus();
     }
 
     _onClick(event) {
