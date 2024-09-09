@@ -16,8 +16,6 @@ function router() {
     // Get the current path and query string
     const path = window.location.pathname;
     const queryString = window.location.search;
-    console.log('Current path:', path);
-    console.log('Query string:', queryString);
 
     const homePage = document.getElementById('home-page');
     const helpPage = document.getElementById('help-page');
