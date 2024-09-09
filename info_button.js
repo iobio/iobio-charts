@@ -1,4 +1,4 @@
-import { TooltipModal } from '../../modal.js';
+import { TooltipModal } from './modal.js';
 const infoButtonTemplate = document.createElement('template');
 infoButtonTemplate.innerHTML = `
 <style>
