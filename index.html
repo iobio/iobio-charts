@@ -18,6 +18,12 @@
         margin: 0;
       }
 
+
+      #home-page, #help-page {
+        min-height: 100vh;
+        overflow: hidden;
+      }
+
       main {
         padding: 40px 10px 10px 10px;
         box-sizing: border-box;
@@ -98,7 +104,7 @@
 
   <body>
     <div id="bam2-header">
-      <h1 id="home-button" data-link="/home">bam2.iobio</h1>
+      <h1 id="home-button" data-link="/">bam2.iobio</h1>
       <span id="help-button" data-link="/help">Get Help</span>
     </div>
 
@@ -106,6 +112,9 @@
 
     <iobio-help-page class="route" id="help-page"></iobio-help-page>
     <iobio-home-page class="route" id="home-page"></iobio-home-page>
+    <iobio-file-requirements-page class="route" id="file-requirements-page"></iobio-file-requirements-page>
+    <iobio-license-page class="route" id="license-page"></iobio-license-page>
+    <iobio-compatible-browsers-page class="route" id="compatible-browsers-page"></iobio-compatible-browsers-page>
 
     <main id="main-content">
       <iobio-bam-controls></iobio-bam-controls>
@@ -358,6 +367,18 @@
       document.addEventListener('bed-file-removed', (event) => {
         console.log(event.detail)
       });
+
+      document.addEventListener('local-file-selected', (event) => {
+        console.log(event.detail)
+      });
+
+      // document.addEventListener('remote-file-loaded', (event) => {
+      //   console.log(event.detail)
+      // });
+
+      // document.addEventListener('demo-file-selected', (event) => {
+      //   console.log(event.detail)
+      // });
 
 
 
