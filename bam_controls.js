@@ -1,4 +1,4 @@
-import { getDataBroker, commonCss } from '../../common.js';
+import { getDataBroker, commonCss } from './common.js';
 const template = document.createElement('template');
 template.innerHTML = `
 <style>
