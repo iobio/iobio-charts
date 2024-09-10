@@ -7,9 +7,6 @@ import { Panel } from './panel.js';
 import {Tabs, Tab, TabPanel} from './tabs.js';
 import { BamControls } from './bam_controls.js';
 
-
-initRouter()
-
 export default {
   PercentBoxElement,
   createPercentBox,
