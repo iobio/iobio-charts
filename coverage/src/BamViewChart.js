@@ -3,7 +3,7 @@ import * as d3 from 'd3';
 function createBamView(bamHeader, data, element, broker) {
 
     let xScale, yScale, xNavScale, yNavScale, svg, main, nav, color, brush, yAxis,
-        margin, margin2, mainHeight, navHeight, innerWidth, innerHeight, indexMap, bamViewControlsElement;
+        margin, margin2, mainHeight, navHeight, innerWidth, innerHeight, indexMap;
 
     function createBamViewInner(bamHeader, data, element) {
         const average = calculateMeanCoverage(data);
@@ -14,8 +14,6 @@ function createBamView(bamHeader, data, element, broker) {
             acc[ref.sn] = index;
             return acc;
           }, {});
-
-        bamViewControlsElement = document.querySelector('iobio-bam-controls').shadowRoot;
 
         const width = element.offsetWidth;
         const height = element.offsetHeight;
@@ -85,18 +83,6 @@ function createBamView(bamHeader, data, element, broker) {
         }
 
 
-        // Dispatch custom event from the shadow DOM element, set to bubble up and be composed to cross shadow DOM boundaries
-        function dispatchCustomEvent(eventName, detail) {
-            const customEvent = new CustomEvent(eventName, {
-                detail: detail,
-                bubbles: true,
-                composed: true
-            });
-            const shadowRoot = document.querySelector('iobio-coverage-depth').shadowRoot;
-            shadowRoot.dispatchEvent(customEvent);
-        }
-
-
         // Reset to all chromosomes
         function drawCircleButton(svg) {
             // Remove existing reset button if it exists
@@ -106,17 +92,21 @@ function createBamView(bamHeader, data, element, broker) {
                 .attr('class', 'circle-button-reset-chromosomes chromosome-button')
                 .attr('transform', 'translate(30, 20)')
                 .on('click', (event, d) => {
-                    // Clear the input fields
-                    bamViewControlsElement.querySelector('#bamview-region-chromosome').value = '';
-                    bamViewControlsElement.querySelector('#bamview-region-start').value = '';
-                    bamViewControlsElement.querySelector('#bamview-region-end').value = '';
-                    bamViewControlsElement.querySelector('#gene-name-input').value = '';
-                // Redraw the chart
-                drawChart(svg);
+                    // Redraw the chart
+                    drawChart(svg);
 
-                // Dispatch custom event from the shadow DOM element
-                dispatchCustomEvent('selected-regions-change', bamHeader);
-            });
+                    // Dispatch custom event from the shadow DOM element
+                    dispatchCustomEvent('selected-regions-change', bamHeader);
+
+                    // Dispatch custom event for resetting the inputs in bam controls
+                    const inputData = {
+                        chromosome: '',
+                        start: '',
+                        end: '',
+                        geneName: ''
+                    };
+                    dispatchCustomEvent('update-bamcontrol-input', inputData);
+                });
 
             // Create a circle for the reset button
             circleButton.append('circle')
@@ -503,9 +493,12 @@ function createBamView(bamHeader, data, element, broker) {
             .call(brush);
 
             // Update the input fields
-            bamViewControlsElement.querySelector('#bamview-region-chromosome').value = bamHeader[indexMap[chromosome]].sn;
-            bamViewControlsElement.querySelector('#bamview-region-start').value = 1;
-            bamViewControlsElement.querySelector('#bamview-region-end').value = chromosomeLength;
+            const inputData = {
+                chromosome: bamHeader[indexMap[chromosome]].sn,
+                start: 1,
+                end: chromosomeLength
+            };
+            dispatchCustomEvent('update-bamcontrol-input', inputData);
 
         function brushedRegion(event) {
             if (event.selection) {
@@ -556,9 +549,12 @@ function createBamView(bamHeader, data, element, broker) {
                     .text(`${bamHeader[indexMap[chromosome]].sn}:${Math.round(x0)}-${Math.round(x1)} (${Math.round(x1 - x0)} bp)`);
 
                 // Update the input fields
-                bamViewControlsElement.querySelector('#bamview-region-chromosome').value = bamHeader[indexMap[chromosome]].sn;
-                bamViewControlsElement.querySelector('#bamview-region-start').value = Math.round(x0);
-                bamViewControlsElement.querySelector('#bamview-region-end').value = Math.round(x1);
+                const inputData = {
+                    chromosome: bamHeader[indexMap[chromosome]].sn,
+                    start: Math.round(x0),
+                    end: Math.round(x1)
+                };
+                dispatchCustomEvent('update-bamcontrol-input', inputData);
             } else {
                 // If there is no selection, reset the scales and update the chart
                 xScale.domain([1, chromosomeLength]);
@@ -581,9 +577,12 @@ function createBamView(bamHeader, data, element, broker) {
                     .text(`${bamHeader[indexMap[chromosome]].sn}:1-${chromosomeLength} (${chromosomeLength} bp)`);
 
                 // Reset the input fields
-                bamViewControlsElement.querySelector('#bamview-region-chromosome').value = bamHeader[indexMap[chromosome]].sn;
-                bamViewControlsElement.querySelector('#bamview-region-start').value = 1;
-                bamViewControlsElement.querySelector('#bamview-region-end').value = chromosomeLength;
+                const inputData = {
+                    chromosome: bamHeader[indexMap[chromosome]].sn,
+                    start: 1,
+                    end: chromosomeLength
+                };
+                dispatchCustomEvent('update-bamcontrol-input', inputData);
             }
         }
     }
@@ -773,9 +772,12 @@ function createBamView(bamHeader, data, element, broker) {
                     .text(`${bamHeader[chromosomeIndex].sn}:${Math.round(x0)}-${Math.round(x1)} (${Math.round(x1 - x0)} bp)`);
 
                 // Update the input fields
-                bamViewControlsElement.querySelector('#bamview-region-chromosome').value = bamHeader[chromosomeIndex].sn;
-                bamViewControlsElement.querySelector('#bamview-region-start').value = Math.round(x0);
-                bamViewControlsElement.querySelector('#bamview-region-end').value = Math.round(x1);
+                const inputData = {
+                    chromosome:  bamHeader[chromosomeIndex].sn,
+                    start: Math.round(x0),
+                    end: Math.round(x1)
+                };
+                dispatchCustomEvent('update-bamcontrol-input', inputData);
             } else {
                 // Reset to default selection if no brush is present
                 xScale.domain([1, chromosomeLength]);
@@ -802,9 +804,12 @@ function createBamView(bamHeader, data, element, broker) {
                     .text(`${bamHeader[chromosomeIndex].sn}:1-${chromosomeLength} (${chromosomeLength} bp)`);
 
                 // Reset the input fields
-                bamViewControlsElement.querySelector('#bamview-region-chromosome').value = bamHeader[chromosomeIndex].sn;
-                bamViewControlsElement.querySelector('#bamview-region-start').value = 1;
-                bamViewControlsElement.querySelector('#bamview-region-end').value = chromosomeLength;
+                const inputData = {
+                    chromosome: bamHeader[chromosomeIndex].sn,
+                    start: 1,
+                    end: chromosomeLength
+                };
+                dispatchCustomEvent('update-bamcontrol-input', inputData);
             }
         }
     }
@@ -884,6 +889,18 @@ function createBamView(bamHeader, data, element, broker) {
                 avgCoverage: avgCoverage
             };
         });
+    }
+
+
+    // Dispatch custom event from the shadow DOM element, set to bubble up and be composed to cross shadow DOM boundaries
+    function dispatchCustomEvent(eventName, detail) {
+        const customEvent = new CustomEvent(eventName, {
+            detail: detail,
+            bubbles: true,
+            composed: true
+        });
+        const shadowRoot = document.querySelector('iobio-coverage-depth').shadowRoot;
+        shadowRoot.dispatchEvent(customEvent);
     }
 
     createBamViewInner(bamHeader, data, element)

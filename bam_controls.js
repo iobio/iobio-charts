@@ -253,6 +253,17 @@ class BamControls extends HTMLElement {
         this.filePicker.addEventListener('change', (event) => this.handleBedfilePick(event));
         this.removeBedFile.addEventListener("click", () => this.handleBedfileRemove());
         this.sampleMoreButton.addEventListener("click", () => this.handleSampleMoreReads());
+
+        // Add event listener for resetting bam control input fields
+        document.addEventListener('update-bamcontrol-input', (event) => {
+            const { chromosome, start, end, geneName } = event.detail;
+            this.chromosomeInput.value = chromosome;
+            this.startInput.value = start;
+            this.endInput.value = end;
+            if (event.detail.hasOwnProperty('geneName')) {
+                this.geneNameInput.value = geneName;
+            }
+        });
     }
 
     handleGoClick() {
