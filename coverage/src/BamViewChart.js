@@ -98,14 +98,19 @@ function createBamView(bamHeader, data, element, broker) {
                     // Dispatch custom event from the shadow DOM element
                     dispatchCustomEvent('selected-regions-change', bamHeader);
 
-                    // Dispatch custom event for resetting the inputs in bam controls
-                    const inputData = {
+                    // Dispatch custom event for resetting the region inputs
+                    const regionsInput = {
                         chromosome: '',
                         start: '',
-                        end: '',
+                        end: ''
+                    };
+                    dispatchCustomEvent('brushed-region-change', regionsInput);
+
+                    // Dispatch custom event for resetting the gene input
+                    const geneInput = {
                         geneName: ''
                     };
-                    dispatchCustomEvent('update-bamcontrol-input', inputData);
+                    dispatchCustomEvent('selected-gene-change', geneInput);
                 });
 
             // Create a circle for the reset button
@@ -493,12 +498,12 @@ function createBamView(bamHeader, data, element, broker) {
             .call(brush);
 
             // Update the input fields
-            const inputData = {
+            const regionsInput = {
                 chromosome: bamHeader[indexMap[chromosome]].sn,
                 start: 1,
                 end: chromosomeLength
             };
-            dispatchCustomEvent('update-bamcontrol-input', inputData);
+            dispatchCustomEvent('brushed-region-change', regionsInput);
 
         function brushedRegion(event) {
             if (event.selection) {
@@ -549,12 +554,12 @@ function createBamView(bamHeader, data, element, broker) {
                     .text(`${bamHeader[indexMap[chromosome]].sn}:${Math.round(x0)}-${Math.round(x1)} (${Math.round(x1 - x0)} bp)`);
 
                 // Update the input fields
-                const inputData = {
+                const regionsInput = {
                     chromosome: bamHeader[indexMap[chromosome]].sn,
                     start: Math.round(x0),
                     end: Math.round(x1)
                 };
-                dispatchCustomEvent('update-bamcontrol-input', inputData);
+                dispatchCustomEvent('brushed-region-change', regionsInput);
             } else {
                 // If there is no selection, reset the scales and update the chart
                 xScale.domain([1, chromosomeLength]);
@@ -577,12 +582,12 @@ function createBamView(bamHeader, data, element, broker) {
                     .text(`${bamHeader[indexMap[chromosome]].sn}:1-${chromosomeLength} (${chromosomeLength} bp)`);
 
                 // Reset the input fields
-                const inputData = {
+                const regionsInput = {
                     chromosome: bamHeader[indexMap[chromosome]].sn,
                     start: 1,
                     end: chromosomeLength
                 };
-                dispatchCustomEvent('update-bamcontrol-input', inputData);
+                dispatchCustomEvent('brushed-region-change', regionsInput);
             }
         }
     }
@@ -772,12 +777,12 @@ function createBamView(bamHeader, data, element, broker) {
                     .text(`${bamHeader[chromosomeIndex].sn}:${Math.round(x0)}-${Math.round(x1)} (${Math.round(x1 - x0)} bp)`);
 
                 // Update the input fields
-                const inputData = {
+                const regionsInput = {
                     chromosome:  bamHeader[chromosomeIndex].sn,
                     start: Math.round(x0),
                     end: Math.round(x1)
                 };
-                dispatchCustomEvent('update-bamcontrol-input', inputData);
+                dispatchCustomEvent('brushed-region-change', regionsInput);
             } else {
                 // Reset to default selection if no brush is present
                 xScale.domain([1, chromosomeLength]);
@@ -804,12 +809,12 @@ function createBamView(bamHeader, data, element, broker) {
                     .text(`${bamHeader[chromosomeIndex].sn}:1-${chromosomeLength} (${chromosomeLength} bp)`);
 
                 // Reset the input fields
-                const inputData = {
+                const regionsInput = {
                     chromosome: bamHeader[chromosomeIndex].sn,
                     start: 1,
                     end: chromosomeLength
                 };
-                dispatchCustomEvent('update-bamcontrol-input', inputData);
+                dispatchCustomEvent('brushed-region-change', regionsInput);
             }
         }
     }
