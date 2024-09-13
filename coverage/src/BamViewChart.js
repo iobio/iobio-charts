@@ -100,7 +100,7 @@ function createBamView(bamHeader, data, element, broker) {
 
                     // Dispatch custom event for resetting the region inputs
                     const regionsInput = {
-                        chromosome: '',
+                        rname: '',
                         start: '',
                         end: ''
                     };
@@ -499,7 +499,7 @@ function createBamView(bamHeader, data, element, broker) {
 
             // Update the input fields
             const regionsInput = {
-                chromosome: bamHeader[indexMap[chromosome]].sn,
+                rname: bamHeader[indexMap[chromosome]].sn,
                 start: 1,
                 end: chromosomeLength
             };
@@ -555,7 +555,7 @@ function createBamView(bamHeader, data, element, broker) {
 
                 // Update the input fields
                 const regionsInput = {
-                    chromosome: bamHeader[indexMap[chromosome]].sn,
+                    rname: bamHeader[indexMap[chromosome]].sn,
                     start: Math.round(x0),
                     end: Math.round(x1)
                 };
@@ -583,7 +583,7 @@ function createBamView(bamHeader, data, element, broker) {
 
                 // Reset the input fields
                 const regionsInput = {
-                    chromosome: bamHeader[indexMap[chromosome]].sn,
+                    rname: bamHeader[indexMap[chromosome]].sn,
                     start: 1,
                     end: chromosomeLength
                 };
@@ -778,7 +778,7 @@ function createBamView(bamHeader, data, element, broker) {
 
                 // Update the input fields
                 const regionsInput = {
-                    chromosome:  bamHeader[chromosomeIndex].sn,
+                    rname:  bamHeader[chromosomeIndex].sn,
                     start: Math.round(x0),
                     end: Math.round(x1)
                 };
@@ -810,7 +810,7 @@ function createBamView(bamHeader, data, element, broker) {
 
                 // Reset the input fields
                 const regionsInput = {
-                    chromosome: bamHeader[chromosomeIndex].sn,
+                    rname: bamHeader[chromosomeIndex].sn,
                     start: 1,
                     end: chromosomeLength
                 };

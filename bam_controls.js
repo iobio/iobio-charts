@@ -398,8 +398,8 @@ class BamControls extends HTMLElement {
     }
 
     handleRegionsInput(event) {
-        const { chromosome, start, end } = event.detail;
-        this.chromosomeInput.value = chromosome;
+        const { rname, start, end } = event.detail;
+        this.chromosomeInput.value = rname;
         this.startInput.value = start;
         this.endInput.value = end;
     }
