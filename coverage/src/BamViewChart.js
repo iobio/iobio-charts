@@ -101,8 +101,8 @@ function createBamView(bamHeader, data, element, broker) {
                     // Dispatch custom event for resetting the region inputs
                     const regionsInput = {
                         rname: '',
-                        start: '',
-                        end: ''
+                        start: null,
+                        end: null
                     };
                     dispatchCustomEvent('brushed-region-change', regionsInput);
 
