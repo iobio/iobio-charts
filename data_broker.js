@@ -23,6 +23,7 @@ class DataBroker extends EventTarget {
 
     this._callbacks = {};
     this._latestUpdates = {};
+    this._lastAlignmentUrl = null;
 
     this.alignmentUrl = alignmentUrl;
   }
@@ -40,6 +41,9 @@ class DataBroker extends EventTarget {
   }
 
   set alignmentUrl(_) {
+    if (this._alignmentUrl !== _) {
+      this.emitEvent('bamview-data-request-start', null);
+    }
     this._alignmentUrl = _;
     this._tryUpdate(this._doUpdate.bind(this));
   }
@@ -151,7 +155,12 @@ class DataBroker extends EventTarget {
       return;
     }
 
-    if (!this._header) {
+    const alignmentUrlChanged = this.alignmentUrl !== this._lastAlignmentUrl;
+
+    if (alignmentUrlChanged) {
+
+      this._lastAlignmentUrl = this.alignmentUrl;
+
       const parsedUrl = new URL(this.alignmentUrl);
 
       const isCram = parsedUrl.pathname.endsWith(".cram"); 
@@ -190,6 +199,8 @@ class DataBroker extends EventTarget {
       this._header = parseBamHeaderData(headerText);
       this.emitEvent('header', this._header);
 
+      this.emitEvent('bamview-data-request-end', null)
+
       if (bedText) {
         this._bedData = parseBedFile(bedText, this._header);
       }
@@ -199,7 +210,7 @@ class DataBroker extends EventTarget {
   }
 
   async _updateStats() {
-    const validRegions = this.regions ? this.regions : getValidRefs(this._header, this._readDepthData);
+    const validRegions = getValidRefs(this._header, this._readDepthData);
 
     let allRegions = validRegions;
     if (this._bedData) {

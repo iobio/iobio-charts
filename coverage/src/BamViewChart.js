@@ -6,6 +6,8 @@ function createBamView(bamHeader, data, element, broker) {
         margin, margin2, mainHeight, navHeight, innerWidth, innerHeight, indexMap;
 
     function createBamViewInner(bamHeader, data, element) {
+        d3.select(element).selectAll("*").remove();
+
         const average = calculateMeanCoverage(data);
         const aggregatedDataArray = aggregateData(data, 30);
         const totalLength = d3.sum(bamHeader, d => d.length);

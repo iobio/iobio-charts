@@ -31,6 +31,7 @@ rect {
     height: 100%;
     border: 1px solid #ccc;
     padding: 5px 0;
+    position: relative;
 }
 
 #title-container {
@@ -71,6 +72,10 @@ rect {
 .bar, .circle {
     fill: var(--data-color);
 }
+
+.hidden {
+    visibility: hidden;
+}
 </style>
 <div id="bamview">
     <div id="bamview-chart-container">
@@ -91,8 +96,8 @@ rect {
             </iobio-label-info-button>
             <span id="title-text"></span>
         </div>
+        <iobio-loading-indicator label="Initializing data"></iobio-loading-indicator>
         <div id="chart-container">
-            <iobio-loading-indicator label="Initializing data"></iobio-loading-indicator>
         </div>
     </div>
 </div>
@@ -133,32 +138,48 @@ class BamViewChart extends HTMLElement {
         if (this.label) {
             this.shadowRoot.querySelector('#title-text').innerText = this.label;
         }
-
+  
         if (this.broker) {
-            const readDepthPromise = new Promise((resolve, reject) => {
-              this.broker.addEventListener('read-depth', (evt) => {
-                resolve(evt.detail);
-              });
+            this.broker.addEventListener('read-depth', (evt) => {
+                this.bamReadDepth = evt.detail;
             });
 
-            const headerPromise = new Promise((resolve, reject) => {
-              this.broker.addEventListener('header', (evt) => {
-                resolve(evt.detail);
-              });
+            this.broker.addEventListener('header', (evt) => {
+                this.bamHeader = evt.detail;
             });
 
-            this.bamReadDepth = await readDepthPromise;
-            this.bamHeader = await headerPromise;
-            this.validBamHeader = getValidRefs(this.bamHeader, this.bamReadDepth);
-            this.validBamReadDepth = this.getBamReadDepthByValidRefs(this.validBamHeader, this.bamReadDepth);
-            this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, this.broker);
-            this.shadowRoot.querySelector("iobio-loading-indicator").style.display = 'none';
+            this.broker.addEventListener('bamview-data-request-start', () => {
+                this.toggleSVGContainerAndIndicator(false);
+            });
+            
+            this.broker.addEventListener('bamview-data-request-end', () => {
+                this.toggleSVGContainerAndIndicator(true);
+                this.updateBamView();
+            });
 
-            // Listen for global custom events dispatched from BamControls
             document.addEventListener('region-selected', (e) => this.handleGoClick(e.detail));
             document.addEventListener('gene-entered', (e) => this.handleSearchClick(e.detail));
 
             this.setupResizeObserver();
+        }
+    }
+
+    toggleSVGContainerAndIndicator(showSVG) {
+        const indicator = this.shadowRoot.querySelector('iobio-loading-indicator');
+        const svgContainer = this.shadowRoot.querySelector('#chart-container');
+        
+        svgContainer.classList.toggle('hidden', !showSVG);
+        indicator.style.display = showSVG ? 'none' : 'block';
+    }
+
+    updateBamView() {
+        // Check if both bamReadDepth and bamHeader are available
+        if (this.bamReadDepth && this.bamHeader) {
+            this.validBamHeader = getValidRefs(this.bamHeader, this.bamReadDepth);
+            this.validBamReadDepth = this.getBamReadDepthByValidRefs(this.validBamHeader, this.bamReadDepth);
+    
+            // Create the new BAM view
+            this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, this.broker);
         }
     }
 
@@ -176,9 +197,10 @@ class BamViewChart extends HTMLElement {
             if (resizeTimeout) clearTimeout(resizeTimeout);
             resizeTimeout = setTimeout(() => {
                 entries.forEach(entry => {
-                    if (entry.target === this.bamViewContainer) {
-                        this.bamViewContainer.innerHTML = ''; // Clear the current SVG
-                        this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, this.broker);
+                    if (entry.target === this.bamViewContainer ) {
+                        if (this.bamReadDepth && this.bamHeader) {
+                            this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, this.broker);
+                        }
                     }
                 });
             }, 200);
