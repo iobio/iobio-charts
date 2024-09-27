@@ -140,25 +140,21 @@ class BamViewChart extends HTMLElement {
         }
   
         if (this.broker) {
-            this.broker.addEventListener('read-depth', (evt) => {
-                this.bamReadDepth = evt.detail;
-            });
-
-            this.broker.addEventListener('header', (evt) => {
-                this.bamHeader = evt.detail;
-            });
-
-            this.broker.addEventListener('bamview-data-request-start', () => {
+            document.addEventListener('alignment-data-request', () => {
                 this.toggleSVGContainerAndIndicator(false);
             });
-            
-            this.broker.addEventListener('bamview-data-request-end', () => {
+
+            this.broker.addEventListener('alignment-data', (event) => {
+                const { header, readDepthData } = event.detail;
+                this.bamHeader = header;
+                this.bamReadDepth = readDepthData;
+
                 this.toggleSVGContainerAndIndicator(true);
                 this.updateBamView();
             });
 
-            document.addEventListener('region-selected', (e) => this.handleGoClick(e.detail));
-            document.addEventListener('gene-entered', (e) => this.handleSearchClick(e.detail));
+            document.addEventListener('region-selected', (event) => this.handleGoClick(event.detail));
+            document.addEventListener('gene-entered', (event) => this.handleSearchClick(event.detail));
 
             this.setupResizeObserver();
         }

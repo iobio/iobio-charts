@@ -102,8 +102,8 @@ class PercentBoxElement extends HTMLElement {
       svgContainer.classList.toggle('hidden', !showSVG);
       indicator.style.display = showSVG ? 'none' : 'block';
     }
-    
-    broker.addEventListener('bamview-data-request-start', () => toggleSVGContainerAndIndicator.call(this, false));
+
+    document.addEventListener('alignment-data-request', () => toggleSVGContainerAndIndicator.call(this, false));
     broker.addEventListener('stats-stream-request', () => toggleSVGContainerAndIndicator.call(this, false));
     broker.addEventListener('stats-stream-start', () => toggleSVGContainerAndIndicator.call(this, true));
 

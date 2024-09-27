@@ -233,11 +233,10 @@ class BamControls extends HTMLElement {
     async connectedCallback() {
         this.broker = getDataBroker(this);
         if (this.broker) {
-            const headerPromise = new Promise((resolve, reject) => {
-                this.broker.addEventListener('header', (evt) => {
-                  resolve(evt.detail);
-                });
-              });
+            this.broker.addEventListener('alignment-data', (event) => {
+                const { header } = event.detail;
+                this.bamHeader = header;
+            });
 
             this.broker.addEventListener('stats-stream-data', (evt) => {
                 const stats = evt.detail;
@@ -245,9 +244,10 @@ class BamControls extends HTMLElement {
 
                 this.updateSampleReads();
             });
-        
-            this.bamHeader = await headerPromise;
-            this.build = this.bamHeader[0].length === 249250621 ? 'GRCh37' : 'GRCh38';
+
+            if (this.bamHeader) {
+                this.build = this.bamHeader[0].length === 249250621 ? 'GRCh37' : 'GRCh38';
+            }
         }
         this.defaultBedFileButton.addEventListener("click", () => this.handleBedfileClick(this.defaultBedFileButton));
         this.filePicker.addEventListener('change', (event) => this.handleBedfilePick(event));
@@ -256,6 +256,8 @@ class BamControls extends HTMLElement {
         // Add event listener for updating bam control input fields
         document.addEventListener('brushed-region-change', (event) => this.handleRegionsInput(event));
         document.addEventListener('selected-gene-change', (event) => this.handleGeneInput(event));
+        
+        document.addEventListener('alignment-data-request', () => this.resetBamControls());
     }
 
     handleGoClick() {
@@ -409,7 +411,13 @@ class BamControls extends HTMLElement {
         this.geneNameInput.value = geneName;
     }
 
-
+    resetBamControls() {
+        this.chromosomeInput.value = null;
+        this.startInput.value = null;
+        this.endInput.value = null;
+        this.geneNameInput.value = null;
+        this.totalReadsContainer.textContent = 0;
+    }
       
 }
 

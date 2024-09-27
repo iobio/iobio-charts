@@ -41,9 +41,6 @@ class DataBroker extends EventTarget {
   }
 
   set alignmentUrl(_) {
-    if (this._alignmentUrl !== _) {
-      this.emitEvent('bamview-data-request-start', null);
-    }
     this._alignmentUrl = _;
     this._tryUpdate(this._doUpdate.bind(this));
   }
@@ -194,23 +191,25 @@ class DataBroker extends EventTarget {
       const headerText = await headerTextRes.text();
 
       this._readDepthData = parseReadDepthData(coverageText);
-      this.emitEvent('read-depth', this._readDepthData);
-
       this._header = parseBamHeaderData(headerText);
-      this.emitEvent('header', this._header);
-
-      this.emitEvent('bamview-data-request-end', null)
+      this.emitEvent('alignment-data', {
+        header: this._header,
+        readDepthData: this._readDepthData,
+      });
 
       if (bedText) {
         this._bedData = parseBedFile(bedText, this._header);
       }
-    }
 
+      if (this._regions) {
+        this._regions = null;
+      }
+    }
     this._updateStats();
   }
 
   async _updateStats() {
-    const validRegions = getValidRefs(this._header, this._readDepthData);
+    const validRegions = this.regions ? this.regions : getValidRefs(this._header, this._readDepthData);
 
     let allRegions = validRegions;
     if (this._bedData) {
