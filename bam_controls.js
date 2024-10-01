@@ -236,6 +236,8 @@ class BamControls extends HTMLElement {
             this.broker.addEventListener('alignment-data', (event) => {
                 const { header } = event.detail;
                 this.bamHeader = header;
+
+                this.build = this.bamHeader[0].length === 249250621 ? 'GRCh37' : 'GRCh38';
             });
 
             this.broker.addEventListener('stats-stream-data', (evt) => {
@@ -244,10 +246,6 @@ class BamControls extends HTMLElement {
 
                 this.updateSampleReads();
             });
-
-            if (this.bamHeader) {
-                this.build = this.bamHeader[0].length === 249250621 ? 'GRCh37' : 'GRCh38';
-            }
         }
         this.defaultBedFileButton.addEventListener("click", () => this.handleBedfileClick(this.defaultBedFileButton));
         this.filePicker.addEventListener('change', (event) => this.handleBedfilePick(event));
@@ -257,7 +255,7 @@ class BamControls extends HTMLElement {
         document.addEventListener('brushed-region-change', (event) => this.handleRegionsInput(event));
         document.addEventListener('selected-gene-change', (event) => this.handleGeneInput(event));
         
-        document.addEventListener('alignment-data-request', () => this.resetBamControls());
+        document.addEventListener('toggle-loading-indicator-bamview', () => this.resetBamControls());
     }
 
     handleGoClick() {

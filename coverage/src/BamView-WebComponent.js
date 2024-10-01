@@ -140,7 +140,7 @@ class BamViewChart extends HTMLElement {
         }
   
         if (this.broker) {
-            document.addEventListener('alignment-data-request', () => {
+            document.addEventListener('toggle-loading-indicator-bamview', () => {
                 this.toggleSVGContainerAndIndicator(false);
             });
 
@@ -155,8 +155,6 @@ class BamViewChart extends HTMLElement {
 
             document.addEventListener('region-selected', (event) => this.handleGoClick(event.detail));
             document.addEventListener('gene-entered', (event) => this.handleSearchClick(event.detail));
-
-            this.setupResizeObserver();
         }
     }
 
@@ -169,14 +167,13 @@ class BamViewChart extends HTMLElement {
     }
 
     updateBamView() {
-        // Check if both bamReadDepth and bamHeader are available
-        if (this.bamReadDepth && this.bamHeader) {
-            this.validBamHeader = getValidRefs(this.bamHeader, this.bamReadDepth);
-            this.validBamReadDepth = this.getBamReadDepthByValidRefs(this.validBamHeader, this.bamReadDepth);
-    
-            // Create the new BAM view
-            this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, this.broker);
-        }
+        this.validBamHeader = getValidRefs(this.bamHeader, this.bamReadDepth);
+        this.validBamReadDepth = this.getBamReadDepthByValidRefs(this.validBamHeader, this.bamReadDepth);
+
+        // Create the new BAM view
+        this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, this.broker);
+
+        this.setupResizeObserver();
     }
 
     getBamReadDepthByValidRefs(bamHeader, bamReadDepth) {
@@ -193,13 +190,11 @@ class BamViewChart extends HTMLElement {
             if (resizeTimeout) clearTimeout(resizeTimeout);
             resizeTimeout = setTimeout(() => {
                 entries.forEach(entry => {
-                    if (entry.target === this.bamViewContainer ) {
-                        if (this.bamReadDepth && this.bamHeader) {
-                            this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, this.broker);
-                        }
+                    if (entry.target === this.bamViewContainer) {
+                        this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, this.broker);  
                     }
                 });
-            }, 200);
+            }, 100);
         });
         this.resizeObserver.observe(this.bamViewContainer);
     }
