@@ -96,6 +96,10 @@ class DataBroker extends EventTarget {
     }
   }
 
+  reset() {
+    this.emitEvent('reset', null);
+  }
+
   async _iobioRequest(endpoint, params) {
 
     const abortController = new AbortController();

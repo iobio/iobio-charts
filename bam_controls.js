@@ -255,7 +255,8 @@ class BamControls extends HTMLElement {
         document.addEventListener('brushed-region-change', (event) => this.handleRegionsInput(event));
         document.addEventListener('selected-gene-change', (event) => this.handleGeneInput(event));
         
-        document.addEventListener('toggle-loading-indicator-bamview', () => this.resetBamControls());
+        // reset bam controls state
+        this.broker.addEventListener('reset', () => this.resetBamControls());
     }
 
     handleGoClick() {

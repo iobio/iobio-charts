@@ -140,7 +140,7 @@ class BamViewChart extends HTMLElement {
         }
   
         if (this.broker) {
-            document.addEventListener('toggle-loading-indicator-bamview', () => {
+            this.broker.addEventListener('reset', () => {
                 this.toggleSVGContainerAndIndicator(false);
             });
 
