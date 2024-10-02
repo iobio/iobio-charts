@@ -23,6 +23,7 @@ class DataBroker extends EventTarget {
 
     this._callbacks = {};
     this._latestUpdates = {};
+    this._lastAlignmentUrl = null;
 
     this.alignmentUrl = alignmentUrl;
   }
@@ -95,6 +96,10 @@ class DataBroker extends EventTarget {
     }
   }
 
+  reset() {
+    this.emitEvent('reset', null);
+  }
+
   async _iobioRequest(endpoint, params) {
 
     const abortController = new AbortController();
@@ -151,7 +156,12 @@ class DataBroker extends EventTarget {
       return;
     }
 
-    if (!this._header) {
+    const alignmentUrlChanged = this.alignmentUrl !== this._lastAlignmentUrl;
+
+    if (alignmentUrlChanged) {
+
+      this._lastAlignmentUrl = this.alignmentUrl;
+
       const parsedUrl = new URL(this.alignmentUrl);
 
       const isCram = parsedUrl.pathname.endsWith(".cram"); 
@@ -185,16 +195,20 @@ class DataBroker extends EventTarget {
       const headerText = await headerTextRes.text();
 
       this._readDepthData = parseReadDepthData(coverageText);
-      this.emitEvent('read-depth', this._readDepthData);
-
       this._header = parseBamHeaderData(headerText);
-      this.emitEvent('header', this._header);
+      this.emitEvent('alignment-data', {
+        header: this._header,
+        readDepthData: this._readDepthData,
+      });
 
       if (bedText) {
         this._bedData = parseBedFile(bedText, this._header);
       }
-    }
 
+      if (this._regions) {
+        this._regions = null;
+      }
+    }
     this._updateStats();
   }
 
