@@ -205,9 +205,9 @@ class BamViewChart extends HTMLElement {
 
         // Check if only the chromosome is provided and start and end inputs are empty
         if (start === "" && end === "") {
-            this._bamView.zoomToChromosome(rname);
+            this._bamView.zoomToChromomsomeRegion(this.validBamReadDepth, rname);
         } else if (this.validateInput(start, end)) {
-            this._bamView.brushToRegion(this.validBamReadDepth, rname, start, end, null);
+            this._bamView.zoomToChromomsomeRegion(this.validBamReadDepth, rname, start, end, null);
         }
     }
 
@@ -234,7 +234,8 @@ class BamViewChart extends HTMLElement {
             const chr = data[0].chr;
             const start = parseInt(data[0].start);
             const end = parseInt(data[0].end);
-            this._bamView.brushToRegion(this.validBamReadDepth, chr, start, end, geneName);
+            this._bamView.zoomToChromomsomeRegion(this.validBamReadDepth, chr, start, end, geneName);
+
         } catch (error) {
             console.error('Error fetching gene information:', error);
             alert('Failed to fetch gene information');
