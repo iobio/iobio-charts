@@ -49,17 +49,9 @@ class HistogramElement extends HTMLElement {
     super();
 
     this.attachShadow({ mode: 'open' });
-
-    upgradeProperty(this, 'label');
+    
     upgradeProperty(this, 'broker-key');
     upgradeProperty(this, 'ignore-outliers');
-  }
-
-  get label() {
-    return this.getAttribute('label');
-  }
-  set label(_) {
-    this.setAttribute('label', _);
   }
 
   get ignoreOutliers() {
@@ -79,7 +71,6 @@ class HistogramElement extends HTMLElement {
   connectedCallback() {
 
     this._histo = core({
-      title: this.label,
       brokerKey: this.brokerKey 
     });
     this.shadowRoot.appendChild(this._histo.el);
