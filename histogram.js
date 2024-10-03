@@ -80,6 +80,7 @@ class HistogramElement extends HTMLElement {
 
     this._histo = core({
       title: this.label,
+      brokerKey: this.brokerKey 
     });
     this.shadowRoot.appendChild(this._histo.el);
     const broker = getDataBroker(this);
@@ -153,9 +154,16 @@ function core(opt) {
     //.width("100%")
     .margin({ top: 5, right: 20, bottom: 20, left: 55 })
     .sizeRatio(.75)
-    .tooltip(function(d) {
-      return d[1];
-    });
+
+  if (opt.brokerKey === 'coverage_hist') {
+    chart.tooltip(function(d) { return d[0] + ',' + precisionRound(d[1]*100,2) + '%'; });
+    chart.xAxis().tickFormat(function(d) { return d + 'X'; });
+    chart.yAxis().tickFormat(function(d) { return d*100 + '%'; });
+  } else {
+    chart.tooltip((d) => tooltipFormatter(d));
+    chart.xAxis().tickFormat((d) => tickFormatter(d));
+    chart.yAxis().tickFormat((d) => tickFormatter(d));
+  }
 
   let data;
 
@@ -176,6 +184,32 @@ function core(opt) {
   function update(newData) {
     data = newData;
     render();
+  }
+
+  function tickFormatter (d) {
+    if ((d / 1000000) >= 1)
+      d = d / 1000000 + "M";
+    else if ((d / 1000) >= 1)
+      d = d / 1000 + "K";
+    return d;
+  }
+  
+  function tooltipFormatter (d) {
+    var yVal = d[1];
+  
+    if ((yVal / 1000000) >= 1)
+      yVal = precisionRound(yVal / 1000000, 1) + "M";
+    else if ((yVal / 1000) >= 1)
+      yVal = precisionRound(yVal / 1000, 1) + "K";
+    else
+      yVal = precisionRound(yVal, 1);
+  
+    return d[0] + ',' + yVal;
+  }
+  
+  function precisionRound(number, precision) {
+    var factor = Math.pow(10, precision);
+    return Math.round(number * factor) / factor;
   }
 
   return { el: docFrag, update };
