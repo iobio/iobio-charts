@@ -70,9 +70,7 @@ class HistogramElement extends HTMLElement {
 
   connectedCallback() {
 
-    this._histo = core({
-      brokerKey: this.brokerKey 
-    });
+    this._histo = core();
     this.shadowRoot.appendChild(this._histo.el);
     const broker = getDataBroker(this);
 
@@ -83,7 +81,7 @@ class HistogramElement extends HTMLElement {
       svgContainer.classList.toggle('hidden', !showSVG);
       indicator.style.display = showSVG ? 'none' : 'block';
     }
-    
+
     broker.addEventListener('stats-stream-request', () => toggleSVGContainerAndIndicator.call(this, false));
     broker.addEventListener('stats-stream-start', () => toggleSVGContainerAndIndicator.call(this, true));
 
@@ -102,6 +100,10 @@ class HistogramElement extends HTMLElement {
         if (this.ignoreOutliers) {
           d = iobioviz.layout.outlier()(d);
         }
+
+        // Apply custom or default configurations based on attributes
+        this.applyChartConfigurations();
+
         this._histo.update(d);
       });
     }
@@ -118,6 +120,53 @@ class HistogramElement extends HTMLElement {
   update(data) {
     return this._histo.update;
   }
+
+  applyChartConfigurations() {
+    // Apply custom or default configurations for the chart tooltip, xAxis and yAxis
+    if (this.hasAttribute('custom-tooltip-format')) {
+      this._histo.chart.tooltip((d) => `${d[0]}, ${this.precisionRound(d[1] * 100, 2)}%`);
+    } else {
+      this._histo.chart.tooltip((d) => this.tooltipFormatter(d));
+    }
+
+    if (this.hasAttribute('custom-xaxis-tickformat')) {
+      this._histo.chart.xAxis().tickFormat((d) => `${d}X`);
+    } else {
+      this._histo.chart.xAxis().tickFormat((d) => this.tickFormatter(d));
+    }
+
+    if (this.hasAttribute('custom-yaxis-tickformat')) {
+      this._histo.chart.yAxis().tickFormat((d) => `${d * 100}%`);
+    } else {
+      this._histo.chart.yAxis().tickFormat((d) => this.tickFormatter(d));
+    }
+  }
+
+  tickFormatter (d) {
+    if ((d / 1000000) >= 1)
+      d = d / 1000000 + "M";
+    else if ((d / 1000) >= 1)
+      d = d / 1000 + "K";
+    return d;
+  }
+  
+  tooltipFormatter (d) {
+    var yVal = d[1];
+  
+    if ((yVal / 1000000) >= 1)
+      yVal = this.precisionRound(yVal / 1000000, 1) + "M";
+    else if ((yVal / 1000) >= 1)
+      yVal = this.precisionRound(yVal / 1000, 1) + "K";
+    else
+      yVal = this.precisionRound(yVal, 1);
+  
+    return d[0] + ',' + yVal;
+  }
+  
+  precisionRound(number, precision) {
+    var factor = Math.pow(10, precision);
+    return Math.round(number * factor) / factor;
+  }
 }
 
 function createHistogram() {
@@ -126,7 +175,7 @@ function createHistogram() {
 }
 
 let templateEl;
-function core(opt) {
+function core() {
 
   if (!templateEl) {
     templateEl = document.createElement('template');
@@ -146,15 +195,6 @@ function core(opt) {
     .margin({ top: 5, right: 20, bottom: 20, left: 55 })
     .sizeRatio(.75)
 
-  if (opt.brokerKey === 'coverage_hist') {
-    chart.tooltip(function(d) { return d[0] + ',' + precisionRound(d[1]*100,2) + '%'; });
-    chart.xAxis().tickFormat(function(d) { return d + 'X'; });
-    chart.yAxis().tickFormat(function(d) { return d*100 + '%'; });
-  } else {
-    chart.tooltip((d) => tooltipFormatter(d));
-    chart.xAxis().tickFormat((d) => tickFormatter(d));
-    chart.yAxis().tickFormat((d) => tickFormatter(d));
-  }
 
   let data;
 
@@ -177,33 +217,7 @@ function core(opt) {
     render();
   }
 
-  function tickFormatter (d) {
-    if ((d / 1000000) >= 1)
-      d = d / 1000000 + "M";
-    else if ((d / 1000) >= 1)
-      d = d / 1000 + "K";
-    return d;
-  }
-  
-  function tooltipFormatter (d) {
-    var yVal = d[1];
-  
-    if ((yVal / 1000000) >= 1)
-      yVal = precisionRound(yVal / 1000000, 1) + "M";
-    else if ((yVal / 1000) >= 1)
-      yVal = precisionRound(yVal / 1000, 1) + "K";
-    else
-      yVal = precisionRound(yVal, 1);
-  
-    return d[0] + ',' + yVal;
-  }
-  
-  function precisionRound(number, precision) {
-    var factor = Math.pow(10, precision);
-    return Math.round(number * factor) / factor;
-  }
-
-  return { el: docFrag, update };
+  return { el: docFrag, update, chart };
 }
 
 
