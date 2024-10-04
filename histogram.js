@@ -152,10 +152,8 @@ class HistogramElement extends HTMLElement {
   applyChartConfigurations() {
     // Apply custom or default configurations for the chart
     if (this._customTooltipFormatter) {
-      console.log('testing1')
       this._histo.chart.tooltip(this._customTooltipFormatter);
     } else {
-      console.log('testing2')
       this._histo.chart.tooltip((d) => this.defaultTooltipFormatter(d));
     }
 
