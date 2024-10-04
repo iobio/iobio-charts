@@ -52,6 +52,10 @@ class HistogramElement extends HTMLElement {
     
     upgradeProperty(this, 'broker-key');
     upgradeProperty(this, 'ignore-outliers');
+
+    this._customTooltipFormatter = null;
+    this._customXAxisTickFormatter = null;
+    this._customYAxisTickFormatter = null;
   }
 
   get ignoreOutliers() {
@@ -66,6 +70,31 @@ class HistogramElement extends HTMLElement {
   }
   set brokerKey(_) {
     this.setAttribute('broker-key', _);
+  }
+
+  // Setters and getters for custom configuration: tooltip, aAxis and yAxis tick format
+  get tooltipFormatter() {
+    return this._customTooltipFormatter;
+  }
+
+  set tooltipFormatter(fn) {
+    this._customTooltipFormatter = fn;
+  }
+
+  get xAxisTickFormatter() {
+    return this._customXAxisTickFormatter;
+  }
+
+  set xAxisTickFormatter(fn) {
+    this._customXAxisTickFormatter = fn;
+  }
+
+  get yAxisTickFormatter() {
+    return this._customYAxisTickFormatter;
+  }
+
+  set yAxisTickFormatter(fn) {
+    this._customYAxisTickFormatter = fn;
   }
 
   connectedCallback() {
@@ -101,7 +130,6 @@ class HistogramElement extends HTMLElement {
           d = iobioviz.layout.outlier()(d);
         }
 
-        // Apply custom or default configurations based on attributes
         this.applyChartConfigurations();
 
         this._histo.update(d);
@@ -122,27 +150,29 @@ class HistogramElement extends HTMLElement {
   }
 
   applyChartConfigurations() {
-    // Apply custom or default configurations for the chart tooltip, xAxis and yAxis
-    if (this.hasAttribute('custom-tooltip-format')) {
-      this._histo.chart.tooltip((d) => `${d[0]}, ${this.precisionRound(d[1] * 100, 2)}%`);
+    // Apply custom or default configurations for the chart
+    if (this._customTooltipFormatter) {
+      console.log('testing1')
+      this._histo.chart.tooltip(this._customTooltipFormatter);
     } else {
-      this._histo.chart.tooltip((d) => this.tooltipFormatter(d));
+      console.log('testing2')
+      this._histo.chart.tooltip((d) => this.defaultTooltipFormatter(d));
     }
 
-    if (this.hasAttribute('custom-xaxis-tickformat')) {
-      this._histo.chart.xAxis().tickFormat((d) => `${d}X`);
+    if (this._customXAxisTickFormatter) {
+      this._histo.chart.xAxis().tickFormat(this._customXAxisTickFormatter);
     } else {
-      this._histo.chart.xAxis().tickFormat((d) => this.tickFormatter(d));
+      this._histo.chart.xAxis().tickFormat((d) => this.defaultTickFormatter(d));
     }
 
-    if (this.hasAttribute('custom-yaxis-tickformat')) {
-      this._histo.chart.yAxis().tickFormat((d) => `${d * 100}%`);
+    if (this._customYAxisTickFormatter) {
+      this._histo.chart.yAxis().tickFormat(this._customYAxisTickFormatter);
     } else {
-      this._histo.chart.yAxis().tickFormat((d) => this.tickFormatter(d));
+      this._histo.chart.yAxis().tickFormat((d) => this.defaultTickFormatter(d));
     }
   }
 
-  tickFormatter (d) {
+  defaultTickFormatter (d) {
     if ((d / 1000000) >= 1)
       d = d / 1000000 + "M";
     else if ((d / 1000) >= 1)
@@ -150,7 +180,7 @@ class HistogramElement extends HTMLElement {
     return d;
   }
   
-  tooltipFormatter (d) {
+  defaultTooltipFormatter (d) {
     var yVal = d[1];
   
     if ((yVal / 1000000) >= 1)
