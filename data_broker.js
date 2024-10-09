@@ -218,8 +218,8 @@ class DataBroker extends EventTarget {
 
     let allRegions = validRegions;
 
-    const snNumbers = allRegions.map(item => {
-      return item.sn;
+    const sns = allRegions.map(ref => {
+      return ref.sn;
     });
 
     const indexMap = validBamHeader.reduce((acc, ref, index) => {
@@ -230,15 +230,11 @@ class DataBroker extends EventTarget {
     let mappedReads, unmappedReads;
     if (this._readDepthData[0].mapped !== undefined) {
       mappedReads = unmappedReads = 0;
-      snNumbers.forEach(sn => {
+      sns.forEach(sn => {
         mappedReads += this._readDepthData[indexMap[sn]].mapped;
         unmappedReads += this._readDepthData[indexMap[sn]].unmapped;
       });
     }
-
-    console.log(mappedReads, unmappedReads)
-
-
 
     if (this._bedData) {
       allRegions = filterRegions(this._bedData.regions, validRegions);

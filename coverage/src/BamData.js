@@ -23,7 +23,6 @@ function parseReadDepthData(rawData) {
           });
       }
   }
-  console.log(groupedData)
 
   return groupedData;
 }

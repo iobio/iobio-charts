@@ -118,13 +118,12 @@ class PercentBoxElement extends HTMLElement {
 
         if (this.percentKey === "mapped_reads" && mappedReads != undefined & unmappedReads != undefined) {
           data = [mappedReads, unmappedReads]
-          d3.select('arc iobio-data').selectAll('path').attr('fill', 'rgb(9,176,135)')
-          d3.select('arc iobio-data-secondary').selectAll('path').attr('fill', 'rgb(9,176,135, 0.5)')
-          console.log(this._pbox.chart)
+          this._pbox.chart.setColors('rgb(9,176,135)', 'rgba(9,176,135,0.5)');
         } else {
           const val = stats[this.percentKey];
           const total = stats[this.totalKey];
           data = [ val, total - val ];
+          this._pbox.chart.setColors(null, null);
         }
 
         this._pbox.update(data);
@@ -212,7 +211,7 @@ function core(opt) {
     return chart.getStyles();
   }
 
-  return { el: docFrag, update, getStyles, chart };
+  return { el: docFrag, update, getStyles, chart};
 }
 
 
