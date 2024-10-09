@@ -213,9 +213,33 @@ class DataBroker extends EventTarget {
   }
 
   async _updateStats() {
-    const validRegions = this.regions ? this.regions : getValidRefs(this._header, this._readDepthData);
+    const validBamHeader = getValidRefs(this._header, this._readDepthData);
+    const validRegions = this.regions ? this.regions : validBamHeader
 
     let allRegions = validRegions;
+
+    const snNumbers = allRegions.map(item => {
+      return item.sn;
+    });
+
+    const indexMap = validBamHeader.reduce((acc, ref, index) => {
+      acc[ref.sn] = index;
+      return acc;
+    }, {});
+
+    let mappedReads, unmappedReads;
+    if (this._readDepthData[0].mapped !== undefined) {
+      mappedReads = unmappedReads = 0;
+      snNumbers.forEach(sn => {
+        mappedReads += this._readDepthData[indexMap[sn]].mapped;
+        unmappedReads += this._readDepthData[indexMap[sn]].unmapped;
+      });
+    }
+
+    console.log(mappedReads, unmappedReads)
+
+
+
     if (this._bedData) {
       allRegions = filterRegions(this._bedData.regions, validRegions);
     }
@@ -288,7 +312,13 @@ class DataBroker extends EventTarget {
       }
 
       this.dispatchEvent(new CustomEvent('stats-stream-data', {
-        detail: this._update,
+        detail: {
+          stats: this._update,
+          mapDataFromIndex: { 
+            mappedReads:mappedReads, 
+            unmappedReads:unmappedReads 
+          }
+        }
       }));
 
       for (const key in this._update) {

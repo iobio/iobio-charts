@@ -5,12 +5,15 @@ function parseReadDepthData(rawData) {
 
   for (const line of lines) {
       if (line.startsWith('#')) {
-          const groupNumber = line.split(/\s+/)[0].substring(1); // Extract the first number after #
-          currentGroup = groupNumber;
+          const idRow = line.substr(1).split("\t");
+          currentGroup = idRow[0];
           groupedData[currentGroup] = [];
+          if (idRow[1]) {
+            groupedData[currentGroup].mapped = +idRow[1];
+            groupedData[currentGroup].unmapped = +idRow[2];
+          }
       } else if (line.startsWith('*')) {
-          // If line starts with '*', ignore it and reset currentGroup
-          currentGroup = null;
+          groupedData.n_no_coor = +line.split("\t")[2];
       } else if (currentGroup !== null) {
           const [offset, reads] = line.trim().split(/\s+/).map(Number);
           groupedData[currentGroup].push({
@@ -20,6 +23,7 @@ function parseReadDepthData(rawData) {
           });
       }
   }
+  console.log(groupedData)
 
   return groupedData;
 }
