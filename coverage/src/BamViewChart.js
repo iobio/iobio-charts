@@ -259,7 +259,7 @@ function createBamView(bamHeader, data, element, broker) {
                 .attr('height', d => navHeight - yNavScale(d.avgCoverage));
 
             broker.addEventListener('stats-stream-data', (evt) => {
-                const data = evt.detail.coverage_hist;
+                const data = evt.detail.stats.coverage_hist;
                 let coverageMean = 0;
                 for (const coverage in data) {
                     const freq = data[coverage];
