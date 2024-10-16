@@ -73,6 +73,10 @@ rect {
     fill: var(--data-color);
 }
 
+.brush rect.selection {
+    stroke: red;
+}
+
 .hidden {
     visibility: hidden;
 }
