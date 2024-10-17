@@ -147,7 +147,7 @@ class BedFileInputModal extends HTMLElement {
         this.toggleInput('file');
     }
 
-    handleLoad() {
+    async handleLoad() {
         const file = this.fileInput.files[0];
         const url = this.urlInput.value.trim();
         
@@ -158,8 +158,8 @@ class BedFileInputModal extends HTMLElement {
 
         if (file) {
             // If a file is provided, check its extension
-            const fileExtension = file.name.split('.').pop().toLowerCase();
-            if (fileExtension !== 'bed') {
+            const fileExtension = file.name.toLowerCase();
+            if (!fileExtension.endsWith('.bed')) {
                 alert('Only files with the ".bed" extension are allowed.');
                 return;
             }
@@ -174,13 +174,26 @@ class BedFileInputModal extends HTMLElement {
                 this.close();
             };
             reader.readAsText(file);
-        } else if (url) {
-            this.dispatchEvent(new CustomEvent('bed-file-selected', {
-                detail: { bedUrl: url },
-                bubbles: true,
-                composed: true
-            }));
-            this.close();
+        } 
+        else if (url) {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch BED file: ${response.statusText}`);
+                }
+                const bedFileContent = await response.text();
+
+                this.dispatchEvent(new CustomEvent('bed-file-selected', {
+                    detail: { bedText: bedFileContent },
+                    bubbles: true,
+                    composed: true
+                }));
+                this.close();
+            } 
+            catch (error){
+                console.error('Error fetching BED file:', error);
+                alert('Error fetching BED file. Please try again.');
+            }
         }
     }
 
