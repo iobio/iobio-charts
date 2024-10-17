@@ -102,7 +102,7 @@ class HistogramElement extends HTMLElement {
       this._histo.update(data);
       toggleSVGContainerAndIndicator.call(this, false);
       broker.addEventListener('stats-stream-data', (evt) => {
-        const data = evt.detail[this.brokerKey];
+        const data = evt.detail.stats[this.brokerKey];
         var d = Object.keys(data).filter(function (i) {
           return data[i] != "0"
         }).map(function (k) {
