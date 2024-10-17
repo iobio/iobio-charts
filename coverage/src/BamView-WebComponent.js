@@ -239,7 +239,11 @@ class BamViewChart extends HTMLElement {
 
     async fetchGeneInfo(geneName, source, species, build) {
         try {
-            const response = await fetch(`https://backend.iobio.io/geneinfo/${geneName}?source=${source}&species=${species}&build=${build}`);
+            const urlParams = new URLSearchParams(window.location.search);
+            const sourceUrl = urlParams.get("source");
+            let backendUrl = sourceUrl ? 'https://backend.iobio.io' : 'https://backend.iobio.io';
+
+            const response = await fetch(`${backendUrl}/geneinfo/${geneName}?source=${source}&species=${species}&build=${build}`);
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
