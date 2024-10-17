@@ -1,4 +1,6 @@
 import { getDataBroker, commonCss } from './common.js';
+import { BedFileInputModal } from './bed_file_input_modal.js'
+
 const template = document.createElement('template');
 template.innerHTML = `
 <style>
@@ -169,12 +171,11 @@ button:hover {
         </div>
         <div class="bedfile-control-container">
             <div id="file-button-row">
-                <div id="default-bedfile-button" class="file-selection-button" title="1000G human exome targets file">
+                <div id="default-bedfile-button" class="file-selection-button">
                     Exonic Regions
                 </div>
-                <div class="iobio-file-picker" title="Add Bed format capture target definition file">
-                    <input type="file" id="file-selection" multiple>
-                    <label for="file-selection" class="file-selection-button">Custom Bed</label>
+                <div id="custom-bedfile-button" class="file-selection-button">
+                    Custom Bed
                 </div>
             </div>
             <button id="remove-bedfile-button">Remove</button>
@@ -197,6 +198,7 @@ button:hover {
             <button id="sample-more-reads-button">Sample More</button>
         </div>
     </div>
+    <iobio-bed-file-input-modal id="bed-file-input-modal"></iobio-bed-file-input-modal>
 `;
 
 class BamControls extends HTMLElement {
@@ -220,14 +222,14 @@ class BamControls extends HTMLElement {
         this.searchButton.addEventListener('click', () => this.handleSearchClick());
 
         this.defaultBedFileButton = this.shadowRoot.querySelector('#default-bedfile-button');
-       
-        this.filePicker = this.shadowRoot.querySelector('#file-selection');
-        this.label = this.shadowRoot.querySelector('label');
+        this.customBedButton = this.shadowRoot.querySelector('#custom-bedfile-button');
 
         this.removeBedFile = this.shadowRoot.querySelector('#remove-bedfile-button');
 
         this.totalReadsContainer = this.shadowRoot.querySelector("#total-reads-number");
         this.sampleMoreButton = this.shadowRoot.querySelector('#sample-more-reads-button');
+
+        this.bedFileInputModal = this.shadowRoot.querySelector('#bed-file-input-modal');
     }
 
     async connectedCallback() {
@@ -248,7 +250,8 @@ class BamControls extends HTMLElement {
             });
         }
         this.defaultBedFileButton.addEventListener("click", () => this.handleBedfileClick(this.defaultBedFileButton));
-        this.filePicker.addEventListener('change', (event) => this.handleBedfilePick(event));
+        // this.customBedButton.addEventListener('click', () => this.bedFileInputModal.showModal());
+        this.customBedButton.addEventListener('click', () => this.handleCustomBedfileClick());
         this.removeBedFile.addEventListener("click", () => this.handleBedfileRemove());
         this.sampleMoreButton.addEventListener("click", () => this.handleSampleMoreReads());
         // Add event listener for updating bam control input fields
@@ -333,40 +336,12 @@ class BamControls extends HTMLElement {
         }
     }
 
-    handleBedfilePick(event) {
-        this.clearActiveButtons();
-
-        const files = event.target.files;
-        if (files.length === 1) {
-            const file = files[0]
-
-            if (file.name.endsWith('.bed')) {
-                const reader = new FileReader();
-
-                reader.onload = (e) => {
-                    const bedFileContent = e.target.result;
-
-                    this.dispatchEvent(new CustomEvent('bed-file-selected', { 
-                        detail: { bedText: bedFileContent },
-                        bubbles: true,
-                        composed: true 
-                    }));
-                };
-
-                // Read the file as text
-                reader.readAsText(file); 
-            } 
-            else {
-                alert('Must select a .bed file');
-                return;
-            }
-        }
-        else {
-            alert('Must select only one .bed file')
-            return
-        }
-
-        this.label.classList.add('active');
+    handleCustomBedfileClick() {
+        this.bedFileInputModal.showModal();
+        this.bedFileInputModal.addEventListener('bed-file-selected', () => {
+            this.clearActiveButtons();
+            this.customBedButton.classList.add('active');
+        }, { once: true });
     }
 
     handleBedfileRemove() {
@@ -383,7 +358,6 @@ class BamControls extends HTMLElement {
         this.shadowRoot.querySelectorAll('.file-selection-button').forEach(button => {
             button.classList.remove('active');
         });
-        this.label.classList.remove('active');
     }
 
     updateSampleReads() {
