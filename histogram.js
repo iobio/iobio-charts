@@ -30,10 +30,13 @@ function genHtml(styles) {
         height: 90%;
       }
 
+      .iobio-brush rect.selection {
+        stroke: red;
+      }
+
       .hidden {
         visibility: hidden;
       }
-
     </style>
 
     <div class='iobio-histogram'>
