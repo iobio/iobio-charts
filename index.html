@@ -262,7 +262,6 @@
         }
       }
     </script>
-
     <script type='module' src='./index.js'></script>
     <script type='module'>
 
@@ -352,6 +351,11 @@
         return request;
       }
 
+      function determineBackendUrl() {
+        // Determine backend URL dynamically
+        return 'https://backend.iobio.io'; // Default URL
+      }
+
       document.addEventListener('selected-regions-change', (event) => {
         broker.regions = event.detail;
       });
@@ -362,6 +366,12 @@
 
       document.addEventListener('bed-file-removed', (event) => {
         console.log(event.detail)
+      });
+
+      document.addEventListener('DOMContentLoaded', () => {
+        const backendUrl = determineBackendUrl(); 
+        const readDepthComponent = document.querySelector('iobio-coverage-depth');
+        readDepthComponent.backendUrl = backendUrl;
       });
 
 
