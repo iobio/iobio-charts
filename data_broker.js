@@ -67,10 +67,7 @@ class DataBroker extends EventTarget {
 
   set bedText(_) {
     this._bedText = _;
-    if (this._bedText) {
-      this._updateStats();
-      console.log('testing1')
-    }
+    this._updateStats();
   }
 
 
