@@ -114,10 +114,19 @@ class PercentBoxElement extends HTMLElement {
       this._pbox.update(data);
       toggleSVGContainerAndIndicator.call(this, false);
       broker.addEventListener('stats-stream-data', (evt) => {
-        const stats = evt.detail;
-        const val = stats[this.percentKey];
-        const total = stats[this.totalKey];
-        data = [ val, total - val ];
+        const stats = evt.detail.stats;
+        const { mappedReads, unmappedReads } = evt.detail.mapDataFromIndex
+
+        if (this.percentKey === "mapped_reads" && mappedReads != undefined & unmappedReads != undefined) {
+          data = [mappedReads, unmappedReads]
+          this._pbox.chart.setColors('rgb(9,176,135)', 'rgba(9,176,135,0.5)');
+        } else {
+          const val = stats[this.percentKey];
+          const total = stats[this.totalKey];
+          data = [ val, total - val ];
+          this._pbox.chart.setColors(null, null);
+        }
+
         this._pbox.update(data);
       });
     }
@@ -203,7 +212,7 @@ function core(opt) {
     return chart.getStyles();
   }
 
-  return { el: docFrag, update, getStyles };
+  return { el: docFrag, update, getStyles, chart};
 }
 
 
