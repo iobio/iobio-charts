@@ -30,10 +30,13 @@ function genHtml(styles) {
         height: 90%;
       }
 
+      .iobio-brush rect.selection {
+        stroke: red;
+      }
+
       .hidden {
         visibility: hidden;
       }
-
     </style>
 
     <div class='iobio-histogram'>
@@ -91,10 +94,12 @@ class HistogramElement extends HTMLElement {
       svgContainer.classList.toggle('hidden', !showSVG);
       indicator.style.display = showSVG ? 'none' : 'block';
     }
-    
+
+    broker.addEventListener('reset', () => toggleSVGContainerAndIndicator.call(this, false));
+
     broker.addEventListener('stats-stream-request', () => toggleSVGContainerAndIndicator.call(this, false));
     broker.addEventListener('stats-stream-start', () => toggleSVGContainerAndIndicator.call(this, true));
-
+    
     if (broker) {
       let data = [];
       this._histo.update(data);
