@@ -21,10 +21,6 @@ function genHtml(styles) {
         position: relative;
       }
 
-      .iobio-percent-box-title {
-        margin-left: 5px;
-      }
-
       .iobio-percent-box-svg-container {
         width: 100%;
         height: 80%;
@@ -52,17 +48,9 @@ class PercentBoxElement extends HTMLElement {
 
     this.attachShadow({ mode: 'open' });
 
-    upgradeProperty(this, 'label');
     upgradeProperty(this, 'percent-key');
     upgradeProperty(this, 'total-key');
     upgradeProperty(this, 'broker');
-  }
-
-  get label() {
-    return this.getAttribute('label');
-  }
-  set label(_) {
-    this.setAttribute('label', _);
   }
 
   get percentKey() {
@@ -88,9 +76,7 @@ class PercentBoxElement extends HTMLElement {
 
   connectedCallback() {
 
-    this._pbox = core({
-      title: this.label,
-    });
+    this._pbox = core();
 
     const sheet = new CSSStyleSheet();
     this.shadowRoot.appendChild(this._pbox.el);
@@ -150,7 +136,7 @@ function createPercentBox() {
 }
 
 let templateEl;
-function core(opt) {
+function core() {
 
   const chart = iobioviz.pie()
     .radius(61)

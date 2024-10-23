@@ -52,17 +52,13 @@ class HistogramElement extends HTMLElement {
     super();
 
     this.attachShadow({ mode: 'open' });
-
-    upgradeProperty(this, 'label');
+    
     upgradeProperty(this, 'broker-key');
     upgradeProperty(this, 'ignore-outliers');
-  }
 
-  get label() {
-    return this.getAttribute('label');
-  }
-  set label(_) {
-    this.setAttribute('label', _);
+    this._customTooltipFormatter = null;
+    this._customXAxisTickFormatter = null;
+    this._customYAxisTickFormatter = null;
   }
 
   get ignoreOutliers() {
@@ -79,11 +75,34 @@ class HistogramElement extends HTMLElement {
     this.setAttribute('broker-key', _);
   }
 
+  // Setters and getters for custom configuration: tooltip, aAxis and yAxis tick format
+  get tooltipFormatter() {
+    return this._customTooltipFormatter;
+  }
+
+  set tooltipFormatter(fn) {
+    this._customTooltipFormatter = fn;
+  }
+
+  get xAxisTickFormatter() {
+    return this._customXAxisTickFormatter;
+  }
+
+  set xAxisTickFormatter(fn) {
+    this._customXAxisTickFormatter = fn;
+  }
+
+  get yAxisTickFormatter() {
+    return this._customYAxisTickFormatter;
+  }
+
+  set yAxisTickFormatter(fn) {
+    this._customYAxisTickFormatter = fn;
+  }
+
   connectedCallback() {
 
-    this._histo = core({
-      title: this.label,
-    });
+    this._histo = core();
     this.shadowRoot.appendChild(this._histo.el);
     const broker = getDataBroker(this);
 
@@ -96,6 +115,7 @@ class HistogramElement extends HTMLElement {
     }
 
     broker.addEventListener('reset', () => toggleSVGContainerAndIndicator.call(this, false));
+
 
     broker.addEventListener('stats-stream-request', () => toggleSVGContainerAndIndicator.call(this, false));
     broker.addEventListener('stats-stream-start', () => toggleSVGContainerAndIndicator.call(this, true));
@@ -115,6 +135,9 @@ class HistogramElement extends HTMLElement {
         if (this.ignoreOutliers) {
           d = iobioviz.layout.outlier()(d);
         }
+
+        this.applyChartConfigurations();
+
         this._histo.update(d);
       });
     }
@@ -131,6 +154,53 @@ class HistogramElement extends HTMLElement {
   update(data) {
     return this._histo.update;
   }
+
+  applyChartConfigurations() {
+    // Apply custom or default configurations for the chart
+    if (this._customTooltipFormatter) {
+      this._histo.chart.tooltip(this._customTooltipFormatter);
+    } else {
+      this._histo.chart.tooltip((d) => this.defaultTooltipFormatter(d));
+    }
+
+    if (this._customXAxisTickFormatter) {
+      this._histo.chart.xAxis().tickFormat(this._customXAxisTickFormatter);
+    } else {
+      this._histo.chart.xAxis().tickFormat((d) => this.defaultTickFormatter(d));
+    }
+
+    if (this._customYAxisTickFormatter) {
+      this._histo.chart.yAxis().tickFormat(this._customYAxisTickFormatter);
+    } else {
+      this._histo.chart.yAxis().tickFormat((d) => this.defaultTickFormatter(d));
+    }
+  }
+
+  defaultTickFormatter (d) {
+    if ((d / 1000000) >= 1)
+      d = d / 1000000 + "M";
+    else if ((d / 1000) >= 1)
+      d = d / 1000 + "K";
+    return d;
+  }
+  
+  defaultTooltipFormatter (d) {
+    var yVal = d[1];
+  
+    if ((yVal / 1000000) >= 1)
+      yVal = this.precisionRound(yVal / 1000000, 1) + "M";
+    else if ((yVal / 1000) >= 1)
+      yVal = this.precisionRound(yVal / 1000, 1) + "K";
+    else
+      yVal = this.precisionRound(yVal, 1);
+  
+    return d[0] + ',' + yVal;
+  }
+  
+  precisionRound(number, precision) {
+    var factor = Math.pow(10, precision);
+    return Math.round(number * factor) / factor;
+  }
 }
 
 function createHistogram() {
@@ -139,7 +209,7 @@ function createHistogram() {
 }
 
 let templateEl;
-function core(opt) {
+function core() {
 
   if (!templateEl) {
     templateEl = document.createElement('template');
@@ -158,9 +228,7 @@ function core(opt) {
     //.width("100%")
     .margin({ top: 5, right: 20, bottom: 20, left: 55 })
     .sizeRatio(.75)
-    .tooltip(function(d) {
-      return d[1];
-    });
+
 
   let data;
 
@@ -183,7 +251,7 @@ function core(opt) {
     render();
   }
 
-  return { el: docFrag, update };
+  return { el: docFrag, update, chart };
 }
 
 
