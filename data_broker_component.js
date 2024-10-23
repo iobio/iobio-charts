@@ -62,6 +62,14 @@ class DataBrokerElement extends HTMLElement {
     this.setAttribute('server', _);
   }
 
+  get bedText() {
+    return this.broker.bedText;
+  }
+
+  set bedText(_) {
+    this.broker.bedText = _;
+  }
+
   connectedCallback() {
 
     const options = {};

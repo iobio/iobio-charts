@@ -61,6 +61,15 @@ class DataBroker extends EventTarget {
     this._tryUpdate(this._doUpdate.bind(this));
   }
 
+  get bedText() {
+    return this._bedText;
+  }
+
+  set bedText(_) {
+    this._bedText = _;
+    this._updateStats();
+  }
+
 
   get regions() {
     return this._regions;
@@ -218,6 +227,11 @@ class DataBroker extends EventTarget {
     let allRegions = validRegions;
     if (this._bedData) {
       allRegions = filterRegions(this._bedData.regions, validRegions);
+    }
+
+    if (this._bedText) {
+      this._bedTextData = parseBedFile(this._bedText, this._header);
+      allRegions = filterRegions(this._bedTextData.regions, validRegions);
     }
 
     const regions = sample(allRegions);
