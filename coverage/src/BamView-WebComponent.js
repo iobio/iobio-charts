@@ -31,6 +31,7 @@ rect {
     height: 100%;
     border: 1px solid #ccc;
     padding: 5px 0;
+    position: relative;
 }
 
 #title-container {
@@ -71,6 +72,14 @@ rect {
 .bar, .circle {
     fill: var(--data-color);
 }
+
+.brush rect.selection {
+    stroke: red;
+}
+
+.hidden {
+    visibility: hidden;
+}
 </style>
 <div id="bamview">
     <div id="bamview-chart-container">
@@ -91,8 +100,8 @@ rect {
             </iobio-label-info-button>
             <span id="title-text"></span>
         </div>
+        <iobio-loading-indicator label="Initializing data"></iobio-loading-indicator>
         <div id="chart-container">
-            <iobio-loading-indicator label="Initializing data"></iobio-loading-indicator>
         </div>
     </div>
 </div>
@@ -120,6 +129,14 @@ class BamViewChart extends HTMLElement {
         this.setAttribute('label', _);
     }
 
+    set backendUrl(url) {
+        this._backendUrl = url;
+    }
+
+    get backendUrl() {
+        return this._backendUrl;
+    }
+
     initDOMElements() {
         this.bamViewContainer = this.shadowRoot.querySelector('#chart-container');
         this.tooltipButton = this.shadowRoot.querySelector('iobio-label-info-button');
@@ -133,33 +150,42 @@ class BamViewChart extends HTMLElement {
         if (this.label) {
             this.shadowRoot.querySelector('#title-text').innerText = this.label;
         }
-
+  
         if (this.broker) {
-            const readDepthPromise = new Promise((resolve, reject) => {
-              this.broker.addEventListener('read-depth', (evt) => {
-                resolve(evt.detail);
-              });
+            this.broker.addEventListener('reset', () => {
+                this.toggleSVGContainerAndIndicator(false);
             });
 
-            const headerPromise = new Promise((resolve, reject) => {
-              this.broker.addEventListener('header', (evt) => {
-                resolve(evt.detail);
-              });
+            this.broker.addEventListener('alignment-data', (event) => {
+                const { header, readDepthData } = event.detail;
+                this.bamHeader = header;
+                this.bamReadDepth = readDepthData;
+
+                this.toggleSVGContainerAndIndicator(true);
+                this.updateBamView();
             });
 
-            this.bamReadDepth = await readDepthPromise;
-            this.bamHeader = await headerPromise;
-            this.validBamHeader = getValidRefs(this.bamHeader, this.bamReadDepth);
-            this.validBamReadDepth = this.getBamReadDepthByValidRefs(this.validBamHeader, this.bamReadDepth);
-            this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, this.broker);
-            this.shadowRoot.querySelector("iobio-loading-indicator").style.display = 'none';
-
-            // Listen for global custom events dispatched from BamControls
-            document.addEventListener('region-selected', (e) => this.handleGoClick(e.detail));
-            document.addEventListener('gene-entered', (e) => this.handleSearchClick(e.detail));
-
-            this.setupResizeObserver();
+            document.addEventListener('region-selected', (event) => this.handleGoClick(event.detail));
+            document.addEventListener('gene-entered', (event) => this.handleSearchClick(event.detail));
         }
+    }
+
+    toggleSVGContainerAndIndicator(showSVG) {
+        const indicator = this.shadowRoot.querySelector('iobio-loading-indicator');
+        const svgContainer = this.shadowRoot.querySelector('#chart-container');
+        
+        svgContainer.classList.toggle('hidden', !showSVG);
+        indicator.style.display = showSVG ? 'none' : 'block';
+    }
+
+    updateBamView() {
+        this.validBamHeader = getValidRefs(this.bamHeader, this.bamReadDepth);
+        this.validBamReadDepth = this.getBamReadDepthByValidRefs(this.validBamHeader, this.bamReadDepth);
+
+        // Create the new BAM view
+        this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, this.broker);
+
+        this.setupResizeObserver();
     }
 
     getBamReadDepthByValidRefs(bamHeader, bamReadDepth) {
@@ -177,11 +203,10 @@ class BamViewChart extends HTMLElement {
             resizeTimeout = setTimeout(() => {
                 entries.forEach(entry => {
                     if (entry.target === this.bamViewContainer) {
-                        this.bamViewContainer.innerHTML = ''; // Clear the current SVG
-                        this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, this.broker);
+                        this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, this.broker);  
                     }
                 });
-            }, 200);
+            }, 100);
         });
         this.resizeObserver.observe(this.bamViewContainer);
     }
@@ -222,7 +247,7 @@ class BamViewChart extends HTMLElement {
 
     async fetchGeneInfo(geneName, source, species, build) {
         try {
-            const response = await fetch(`https://backend.iobio.io/geneinfo/${geneName}?source=${source}&species=${species}&build=${build}`);
+            const response = await fetch(`${this._backendUrl}/geneinfo/${geneName}?source=${source}&species=${species}&build=${build}`);
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }

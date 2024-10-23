@@ -1,22 +1,15 @@
 import * as d3 from 'd3';
 
-function createBamView(bamHeader, data, element, broker) {
+function createBamView(bamHeader, data, container, broker) {
 
     let xScale, yScale, xNavScale, yNavScale, svg, main, nav, color, brush, yAxis,
         margin, margin2, mainHeight, navHeight, innerWidth, innerHeight, indexMap;
 
-    function createBamViewInner(bamHeader, data, element) {
-        const average = calculateMeanCoverage(data);
-        const aggregatedDataArray = aggregateData(data, 30);
-        const totalLength = d3.sum(bamHeader, d => d.length);
+    function createSvg() {
+        d3.select(container).selectAll("*").remove();
 
-        indexMap = bamHeader.reduce((acc, ref, index) => {
-            acc[ref.sn] = index;
-            return acc;
-          }, {});
-
-        const width = element.offsetWidth;
-        const height = element.offsetHeight;
+        const width = container.offsetWidth;
+        const height = container.offsetHeight;
         margin = { top: 60, right: 20, bottom: 20, left: 60 };
         margin2 = { top: 10, right: 20, bottom: 20, left: 60 };
         innerWidth = width - margin.left - margin.right;
@@ -27,60 +20,21 @@ function createBamView(bamHeader, data, element, broker) {
         mainHeight = innerHeight - navHeight - 10;
 
         // Create SVG container
-        svg = d3.select(element)
+        svg = d3.select(container)
                 .append('svg')
                 .attr('width', '100%')
                 .attr('height', '100%')
                 .attr('viewBox', `0 0 ${width} ${height}`);
 
-        // Aggregate data by bins of 30 for each group
-        function aggregateData(data, aggregationSize) {
-            const aggregatedDataArray = [];
+        // Get the variables by helper function
+        const average = calculateMeanCoverage(data);
+        const aggregatedDataArray = aggregateData(data, 30);
+        const totalLength = d3.sum(bamHeader, d => d.length);
 
-            for (const [group, arr] of Object.entries(data)) {
-                for (let i = 0; i < arr.length; i += aggregationSize) {
-                    let chunk = arr.slice(i, i + aggregationSize);
-                    const totalReads = d3.sum(chunk, d => d.reads);
-                    const chunkLength = chunk.length;
-                    const avgCoverage = totalReads / (chunkLength * 16384);
-                    aggregatedDataArray.push({
-                        offset: chunk[0].offset,  // new offset for the chunk data
-                        avgCoverage: avgCoverage,
-                        chunkLength: chunkLength,
-                        group: group
-                    });
-                }
-            }
-
-            return aggregatedDataArray;
-        }
-
-
-        // Calculate mean coverage
-        function calculateMeanCoverage(data) {
-            let totalCoverage = 0;
-            let totalLength = 0;
-            let meanCoverage = 0;
-            for (const key in data) {
-                for (let i = 0; i < data[key].length; i++) {
-                    totalCoverage += data[key][i].avgCoverage;
-                }
-                totalLength += data[key].length;
-            }
-            meanCoverage = totalCoverage / totalLength;
-            return meanCoverage;
-        }
-
-
-        // Get the start position of each chromosome in the total length
-        function getChromosomeStart(sn) {
-            let start = 0;
-            for (let i = 0; i < bamHeader.length; i++) {
-                if (i == sn) break;
-                start += bamHeader[i].length;
-            }
-            return start;
-        }
+        indexMap = bamHeader.reduce((acc, ref, index) => {
+            acc[ref.sn] = index;
+            return acc;
+        }, {});
 
 
         // Reset to all chromosomes
@@ -93,7 +47,10 @@ function createBamView(bamHeader, data, element, broker) {
                 .attr('transform', 'translate(30, 20)')
                 .on('click', (event, d) => {
                     // Redraw the chart
-                    drawChart(svg);
+                    drawBarChart(svg);
+
+                    // Redraw the reference buttons
+                    drawRefButtons(svg);
 
                     // Dispatch custom event from the shadow DOM element
                     dispatchCustomEvent('selected-regions-change', bamHeader);
@@ -132,17 +89,10 @@ function createBamView(bamHeader, data, element, broker) {
         }
 
 
-        // Draw the bar chart
-        function drawChart(svg) {
-            // Remove existing elements to avoid duplication
-            svg.selectAll('.bar').remove();
-            svg.selectAll('.brush').remove();
-            svg.selectAll('.y-axis').remove();
-            svg.selectAll('.y-axis-label').remove();
+        function drawRefButtons(svg) {
             svg.selectAll('.chromosome-button-small').remove();
             svg.selectAll('.chromosome-label').remove();
             svg.selectAll('.chromosome-button-big').remove();
-            svg.selectAll('.gene-region-highlight, .gene-region-label').remove();
 
             // Create button group
             const buttons_xScale = d3.scaleLinear()
@@ -184,6 +134,17 @@ function createBamView(bamHeader, data, element, broker) {
                 .attr('fill', 'white')
                 .attr('font-size', '10px')
                 .text(d => d.sn);
+
+        }
+
+        
+        function drawBarChart(svg) {
+            // Remove existing elements to avoid duplication
+            svg.selectAll('.bar').remove();
+            svg.selectAll('.brush').remove();
+            svg.selectAll('.y-axis').remove();
+            svg.selectAll('.y-axis-label').remove();
+            svg.selectAll('.gene-region-highlight, .gene-region-label').remove();
 
             // Scales for the main chart
             xScale = d3.scaleLinear()
@@ -234,7 +195,7 @@ function createBamView(bamHeader, data, element, broker) {
             const end = totalLength;
 
             // Aggregate data into bins
-            const aggregatedData = aggreateDataIntoBins(aggregatedDataArray, start, end, numBins, getChromosomeStart);
+            const aggregatedData = aggregateDataIntoBins(aggregatedDataArray, start, end, numBins, getChromosomeStart);
 
             // Main bars
             main.selectAll('.bar')
@@ -327,19 +288,23 @@ function createBamView(bamHeader, data, element, broker) {
                 .call(brush);
 
 
-
             function brushed(event) {
                 let startIndex;
                 let endIndex;
                 if (event.selection) {
                     const [x0, x1] = event.selection.map(xNavScale.invert);
+
                     startIndex = aggregatedData.findIndex(d => d.binStart >= x0);
                     endIndex = aggregatedData.findIndex(d => d.binStart > x1);
-
                     if (endIndex === -1) {
                         endIndex = aggregatedData.length - 1;
                     }
                     const brushedData = aggregatedData.slice(startIndex, endIndex + 1);
+                    if (brushedData.length === 0) {
+                        return;
+                    }
+
+                    xScale.domain([x0, x1]);
 
                     // Get the brushed bin data in navigation chart to update the main chart bars
                     const brushedBinData = aggregatedDataArray.filter(d => {
@@ -347,13 +312,7 @@ function createBamView(bamHeader, data, element, broker) {
                         return position >= x0 && position < x1;
                     });
 
-                    if (brushedData.length === 0) {
-                        return;
-                    }
-
-                    xScale.domain([x0, x1]);
-
-                    const aggregatedBinData = aggreateDataIntoBins(brushedBinData, x0, x1, numBins, getChromosomeStart);
+                    const aggregatedBinData = aggregateDataIntoBins(brushedBinData, x0, x1, numBins, getChromosomeStart);
 
                     // remove existing bars
                     main.selectAll('.bar').remove();
@@ -403,9 +362,11 @@ function createBamView(bamHeader, data, element, broker) {
         }
         
         // Draw the chart
-        drawChart(svg);
+        drawBarChart(svg);
         // Create circle button for reset chromosomes and redraw the chart
         drawCircleButton(svg);
+        // Draw reference buttons 
+        drawRefButtons(svg);
     }
 
 
@@ -473,7 +434,7 @@ function createBamView(bamHeader, data, element, broker) {
         const barWidth = 1;
         const numBins = innerWidth;
         // Aggregate data into bins
-        const aggregatedData = aggreateDataIntoBins(selectedChromosomeData, 1, chromosomeLength, numBins, null);
+        const aggregatedData = aggregateDataIntoBins(selectedChromosomeData, 1, chromosomeLength, numBins, null);
     
         // Update the bars for the selected chromosome in the main and navigation charts
         updateBars(main, aggregatedData, xScale, yScale, barWidth, mainHeight);
@@ -513,7 +474,7 @@ function createBamView(bamHeader, data, element, broker) {
     
         // Draw gene region if provided
         if (geneName !== null) {
-            drawGeneRegion(xScale, margin, svg, originStart, originEnd, geneName, chromosome);
+            drawGeneRegion(xScale, originStart, originEnd, geneName, chromosome);
         }
     
         function brushed(event) {
@@ -526,10 +487,10 @@ function createBamView(bamHeader, data, element, broker) {
                 if (brushedData.length === 0) return;
     
                 if (geneName !== null) {
-                    drawGeneRegion(xScale, margin, svg, originStart, originEnd, geneName, chromosome);
+                    drawGeneRegion(xScale, originStart, originEnd, geneName, chromosome);
                 }
     
-                const aggregatedBrushData = aggreateDataIntoBins(brushedData, x0, x1, numBins, null);
+                const aggregatedBrushData = aggregateDataIntoBins(brushedData, x0, x1, numBins, null);
     
                 main.selectAll('.bar').remove();
                 updateBars(main, brushedData.length > numBins ? aggregatedBrushData : brushedData, xScale, yScale, barWidth, mainHeight);
@@ -546,12 +507,13 @@ function createBamView(bamHeader, data, element, broker) {
                 resetView();
             }
         }
+
     
         function resetView() {
             xScale.domain([1, chromosomeLength]);
 
             if (geneName !== null) {
-                drawGeneRegion(xScale, margin, svg, start, end, geneName, chromosome);
+                drawGeneRegion(xScale, start, end, geneName, chromosome);
             }
 
             main.selectAll('.bar').remove();
@@ -587,7 +549,7 @@ function createBamView(bamHeader, data, element, broker) {
     }
     
 
-    function drawGeneRegion(xScale, margin, svg, start, end, geneName, chromosome) {
+    function drawGeneRegion(xScale, start, end, geneName, chromosome) {
         const yPos = margin.top - 10;
         const rectHeight = 5;
         svg.selectAll(".gene-region-highlight, .gene-region-label").remove();
@@ -646,7 +608,7 @@ function createBamView(bamHeader, data, element, broker) {
     }
 
 
-    function aggreateDataIntoBins(data, start, end, numBins, getChromosomeStart) {
+    function aggregateDataIntoBins(data, start, end, numBins, getChromosomeStart) {
         const brushedRange = end - start + 1;
         const aggregationfactor =  brushedRange / numBins;
         return new Array(numBins).fill(0).map((_, i) => {
@@ -665,6 +627,56 @@ function createBamView(bamHeader, data, element, broker) {
     }
 
 
+    // Aggregate data by bins of 30 for each group
+    function aggregateData(data, aggregationSize) {
+        const aggregatedDataArray = [];
+
+        for (const [group, arr] of Object.entries(data)) {
+            for (let i = 0; i < arr.length; i += aggregationSize) {
+                let chunk = arr.slice(i, i + aggregationSize);
+                const totalReads = d3.sum(chunk, d => d.reads);
+                const chunkLength = chunk.length;
+                const avgCoverage = totalReads / (chunkLength * 16384);
+                aggregatedDataArray.push({
+                    offset: chunk[0].offset,  // new offset for the chunk data
+                    avgCoverage: avgCoverage,
+                    chunkLength: chunkLength,
+                    group: group
+                });
+            }
+        }
+
+        return aggregatedDataArray;
+    }
+
+
+    // Calculate mean coverage
+    function calculateMeanCoverage(data) {
+        let totalCoverage = 0;
+        let totalLength = 0;
+        let meanCoverage = 0;
+        for (const key in data) {
+            for (let i = 0; i < data[key].length; i++) {
+                totalCoverage += data[key][i].avgCoverage;
+            }
+            totalLength += data[key].length;
+        }
+        meanCoverage = totalCoverage / totalLength;
+        return meanCoverage;
+    }
+
+
+    // Get the start position of each chromosome in the total length
+    function getChromosomeStart(sn) {
+        let start = 0;
+        for (let i = 0; i < bamHeader.length; i++) {
+            if (i == sn) break;
+            start += bamHeader[i].length;
+        }
+        return start;
+    }
+
+
     // Dispatch custom event from the shadow DOM element, set to bubble up and be composed to cross shadow DOM boundaries
     function dispatchCustomEvent(eventName, detail) {
         const customEvent = new CustomEvent(eventName, {
@@ -676,11 +688,12 @@ function createBamView(bamHeader, data, element, broker) {
         shadowRoot.dispatchEvent(customEvent);
     }
 
-    createBamViewInner(bamHeader, data, element)
+    createSvg()
+
     return { zoomToChromomsomeRegion }
 }
 
 
-export {createBamView}
+export { createBamView }
 
 

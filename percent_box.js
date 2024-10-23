@@ -24,6 +24,7 @@ function genHtml(styles) {
       .iobio-percent-box-svg-container {
         width: 100%;
         height: 80%;
+        container-type: size;
       }
 
       .hidden {
@@ -88,6 +89,8 @@ class PercentBoxElement extends HTMLElement {
       svgContainer.classList.toggle('hidden', !showSVG);
       indicator.style.display = showSVG ? 'none' : 'block';
     }
+
+    broker.addEventListener('reset', () => toggleSVGContainerAndIndicator.call(this, false));
     
     broker.addEventListener('stats-stream-request', () => toggleSVGContainerAndIndicator.call(this, false));
     broker.addEventListener('stats-stream-start', () => toggleSVGContainerAndIndicator.call(this, true));

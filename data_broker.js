@@ -23,6 +23,7 @@ class DataBroker extends EventTarget {
 
     this._callbacks = {};
     this._latestUpdates = {};
+    this._lastAlignmentUrl = null;
 
     this.alignmentUrl = alignmentUrl;
   }
@@ -60,6 +61,15 @@ class DataBroker extends EventTarget {
     this._tryUpdate(this._doUpdate.bind(this));
   }
 
+  get bedText() {
+    return this._bedText;
+  }
+
+  set bedText(_) {
+    this._bedText = _;
+    this._updateStats();
+  }
+
 
   get regions() {
     return this._regions;
@@ -93,6 +103,10 @@ class DataBroker extends EventTarget {
     if (this._latestUpdates[eventName]) {
       callback(this._latestUpdates[eventName]);
     }
+  }
+
+  reset() {
+    this.emitEvent('reset', null);
   }
 
   async _iobioRequest(endpoint, params) {
@@ -151,7 +165,12 @@ class DataBroker extends EventTarget {
       return;
     }
 
-    if (!this._header) {
+    const alignmentUrlChanged = this.alignmentUrl !== this._lastAlignmentUrl;
+
+    if (alignmentUrlChanged) {
+
+      this._lastAlignmentUrl = this.alignmentUrl;
+
       const parsedUrl = new URL(this.alignmentUrl);
 
       const isCram = parsedUrl.pathname.endsWith(".cram"); 
@@ -185,16 +204,20 @@ class DataBroker extends EventTarget {
       const headerText = await headerTextRes.text();
 
       this._readDepthData = parseReadDepthData(coverageText);
-      this.emitEvent('read-depth', this._readDepthData);
-
       this._header = parseBamHeaderData(headerText);
-      this.emitEvent('header', this._header);
+      this.emitEvent('alignment-data', {
+        header: this._header,
+        readDepthData: this._readDepthData,
+      });
 
       if (bedText) {
         this._bedData = parseBedFile(bedText, this._header);
       }
-    }
 
+      if (this._regions) {
+        this._regions = null;
+      }
+    }
     this._updateStats();
   }
 
@@ -204,6 +227,11 @@ class DataBroker extends EventTarget {
     let allRegions = validRegions;
     if (this._bedData) {
       allRegions = filterRegions(this._bedData.regions, validRegions);
+    }
+
+    if (this._bedText) {
+      this._bedTextData = parseBedFile(this._bedText, this._header);
+      allRegions = filterRegions(this._bedTextData.regions, validRegions);
     }
 
     const regions = sample(allRegions);
