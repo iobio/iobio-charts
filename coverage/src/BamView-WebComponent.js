@@ -120,6 +120,11 @@ class BamViewChart extends HTMLElement {
         this.validBamReadDepth = null;
         upgradeProperty(this, 'label');
 
+        this._chr = null;
+        this._start = null;
+        this._end = null;
+        this._rname = null;
+        this._geneName = null;
     }
 
     get label() {
@@ -167,6 +172,9 @@ class BamViewChart extends HTMLElement {
 
             document.addEventListener('region-selected', (event) => this.handleGoClick(event.detail));
             document.addEventListener('gene-entered', (event) => this.handleSearchClick(event.detail));
+
+            document.addEventListener('brushed-region-change', (event) => this.handleRegionsInput(event));
+            document.addEventListener('selected-gene-change', (event) => this.handleGeneInput(event));
         }
     }
 
@@ -197,13 +205,23 @@ class BamViewChart extends HTMLElement {
     }
 
     setupResizeObserver() {
+        console.log('testing1')
         let resizeTimeout;
         this.resizeObserver = new ResizeObserver(entries => {
             if (resizeTimeout) clearTimeout(resizeTimeout);
             resizeTimeout = setTimeout(() => {
                 entries.forEach(entry => {
                     if (entry.target === this.bamViewContainer) {
-                        this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, this.broker);  
+                        if (!this._rname && !this._start && !this._end && !this._geneName) {
+                            console.log('testing2')
+                            this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, this.broker);
+                        } else {
+                            console.log("testing3")
+                            console.log('Initial values:', { _chr: this._chr, _start: this._start, _end: this._end, _rname: this._rname, _geneName: this._geneName });
+                            this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, this.broker);
+                            this._bamView.zoomToChromomsomeRegion(this.validBamReadDepth, this._rname, this._start, this._end, this._geneName);
+                        }
+                         
                     }
                 });
             }, 100);
@@ -221,6 +239,11 @@ class BamViewChart extends HTMLElement {
     
     handleGoClick(detail) {
         const { rname, start, end } = detail;
+        this._rname = rname;
+        this._start = start;
+        this._end = end;
+
+        console.log('Setup values:', { _chr: this._chr, _start: this._start, _end: this._end, _rname: this._rname, _geneName: this._geneName });
 
         // Validate chromosome number first
         if (!this.isValidChromosome(rname)) {
@@ -230,18 +253,20 @@ class BamViewChart extends HTMLElement {
 
         // Check if only the chromosome is provided and start and end inputs are empty
         if (start === "" && end === "") {
-            this._bamView.zoomToChromomsomeRegion(this.validBamReadDepth, rname);
+            this._bamView.zoomToChromomsomeRegion(this.validBamReadDepth, this._rname);
         } else if (this.validateInput(start, end)) {
-            this._bamView.zoomToChromomsomeRegion(this.validBamReadDepth, rname, start, end, null);
+            this._bamView.zoomToChromomsomeRegion(this.validBamReadDepth, this._rname , this._start, this._end, null);
         }
     }
 
     handleSearchClick(detail) {
         const { geneName, source } = detail;
+        this._geneName = geneName;
+
         const build = this.bamHeader[0].length === 249250621 ? 'GRCh37' : 'GRCh38';
 
         if (geneName) {
-            this.fetchGeneInfo(geneName, source, 'homo_sapiens', build);
+            this.fetchGeneInfo(this._geneName, source, 'homo_sapiens', build);
         }
     }
 
@@ -256,10 +281,15 @@ class BamViewChart extends HTMLElement {
                 alert(`Gene ${geneName} is not in ${source} for build ${build}`);
                 return;
             }
-            const chr = data[0].chr;
-            const start = parseInt(data[0].start);
-            const end = parseInt(data[0].end);
-            this._bamView.zoomToChromomsomeRegion(this.validBamReadDepth, chr, start, end, geneName);
+            // const chr = data[0].chr;
+            // const start = parseInt(data[0].start);
+            // const end = parseInt(data[0].end);
+
+            this._rname = data[0].chr;
+            this._start = parseInt(data[0].start);
+            this._end = parseInt(data[0].end);
+            console.log('Setup values:', { _chr: this._chr, _start: this._start, _end: this._end, _rname: this._rname, _geneName: this._geneName });
+            this._bamView.zoomToChromomsomeRegion(this.validBamReadDepth, this._rname, this._start, this._end, geneName);
 
         } catch (error) {
             console.error('Error fetching gene information:', error);
@@ -286,6 +316,18 @@ class BamViewChart extends HTMLElement {
             return false;
         }
         return true;
+    }
+    
+    handleRegionsInput(event) {
+        const { rname, start, end } = event.detail;
+        this._rname = rname;
+        this._start = start;
+        this._end = end;
+    }
+
+    handleGeneInput(event) {
+        const { geneName } = event.detail;
+        this._geneName = geneName;
     }
 
     

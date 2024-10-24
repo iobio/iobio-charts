@@ -371,6 +371,8 @@ function createBamView(bamHeader, data, container, broker) {
 
 
     function zoomToChromomsomeRegion(data, chromosome, start = null, end = null, geneName = null) {
+        console.log('testing4')
+        console.log(data, chromosome, start, end, geneName)
         let chromosomeIndex = indexMap[chromosome] !== undefined ? indexMap[chromosome] : indexMap[chromosome.replace('chr', '')];
         const selectedChromosomeData = data[chromosomeIndex];
         const chromosomeLength = bamHeader[chromosomeIndex].length;
