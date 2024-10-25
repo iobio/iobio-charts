@@ -162,7 +162,7 @@ function createBamView(bamHeader, data, container, broker) {
 
             yNavScale = d3.scaleLinear()
                                 .range([navHeight, 0])
-                                .domain(yScale.domain());          
+                                .domain(yScale.domain());     
 
             // Append Y-axis label
             svg.append('text')
@@ -371,8 +371,6 @@ function createBamView(bamHeader, data, container, broker) {
 
 
     function zoomToChromomsomeRegion(data, chromosome, start = null, end = null, geneName = null) {
-        console.log('testing4')
-        console.log(data, chromosome, start, end, geneName)
         let chromosomeIndex = indexMap[chromosome] !== undefined ? indexMap[chromosome] : indexMap[chromosome.replace('chr', '')];
         const selectedChromosomeData = data[chromosomeIndex];
         const chromosomeLength = bamHeader[chromosomeIndex].length;
@@ -380,7 +378,7 @@ function createBamView(bamHeader, data, container, broker) {
 
         const originStart = start;
         const originEnd = end;
-        if (start !== null && end !== null) {
+        if (start && end) {
             // Calculate the center of the selected region and adjust to ensure a minimum range of 500,000 bp
             let center = (start + end) / 2;
             let range = end - start;
@@ -470,13 +468,23 @@ function createBamView(bamHeader, data, container, broker) {
             .call(brush);
     
         // If start and end are provided, set the brush to that region
-        if (start !== null && end !== null) {
+        if (start && end) {
+            if (start == 1 && end == chromosomeLength) {
+                return
+            }
             brushGroup.call(brush.move, [xScale(start), xScale(end)]);
         }
     
         // Draw gene region if provided
-        if (geneName !== null) {
+        if (geneName) {
             drawGeneRegion(xScale, originStart, originEnd, geneName, chromosome);
+        } else {
+            svg.selectAll(".gene-region-highlight, .gene-region-label").remove();
+             // Dispatch custom event for resetting the gene input
+             const geneInput = {
+                geneName: ''
+            };
+            dispatchCustomEvent('selected-gene-change', geneInput);
         }
     
         function brushed(event) {
@@ -488,8 +496,15 @@ function createBamView(bamHeader, data, container, broker) {
     
                 if (brushedData.length === 0) return;
     
-                if (geneName !== null) {
+                if (geneName) {
                     drawGeneRegion(xScale, originStart, originEnd, geneName, chromosome);
+                } else {
+                    svg.selectAll(".gene-region-highlight, .gene-region-label").remove();
+                     // Dispatch custom event for resetting the gene input
+                     const geneInput = {
+                        geneName: ''
+                    };
+                    dispatchCustomEvent('selected-gene-change', geneInput);
                 }
     
                 const aggregatedBrushData = aggregateDataIntoBins(brushedData, x0, x1, numBins, null);
@@ -514,8 +529,15 @@ function createBamView(bamHeader, data, container, broker) {
         function resetView() {
             xScale.domain([1, chromosomeLength]);
 
-            if (geneName !== null) {
-                drawGeneRegion(xScale, start, end, geneName, chromosome);
+            if (geneName) {
+                drawGeneRegion(xScale, originStart, originEnd, geneName, chromosome);
+            } else {
+                svg.selectAll(".gene-region-highlight, .gene-region-label").remove();
+                 // Dispatch custom event for resetting the gene input
+                 const geneInput = {
+                    geneName: ''
+                };
+                dispatchCustomEvent('selected-gene-change', geneInput);
             }
 
             main.selectAll('.bar').remove();

@@ -120,7 +120,6 @@ class BamViewChart extends HTMLElement {
         this.validBamReadDepth = null;
         upgradeProperty(this, 'label');
 
-        this._chr = null;
         this._start = null;
         this._end = null;
         this._rname = null;
@@ -205,7 +204,6 @@ class BamViewChart extends HTMLElement {
     }
 
     setupResizeObserver() {
-        console.log('testing1')
         let resizeTimeout;
         this.resizeObserver = new ResizeObserver(entries => {
             if (resizeTimeout) clearTimeout(resizeTimeout);
@@ -213,15 +211,15 @@ class BamViewChart extends HTMLElement {
                 entries.forEach(entry => {
                     if (entry.target === this.bamViewContainer) {
                         if (!this._rname && !this._start && !this._end && !this._geneName) {
-                            console.log('testing2')
                             this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, this.broker);
                         } else {
-                            console.log("testing3")
-                            console.log('Initial values:', { _chr: this._chr, _start: this._start, _end: this._end, _rname: this._rname, _geneName: this._geneName });
                             this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, this.broker);
-                            this._bamView.zoomToChromomsomeRegion(this.validBamReadDepth, this._rname, this._start, this._end, this._geneName);
+                            if (this._geneName) {
+                                this._bamView.zoomToChromomsomeRegion(this.validBamReadDepth, this._rname, this._geneStart, this._geneEnd, this._geneName);
+                            } else {
+                                this._bamView.zoomToChromomsomeRegion(this.validBamReadDepth, this._rname, this._start, this._end, this._geneName);
+                            }    
                         }
-                         
                     }
                 });
             }, 100);
@@ -243,8 +241,6 @@ class BamViewChart extends HTMLElement {
         this._start = start;
         this._end = end;
 
-        console.log('Setup values:', { _chr: this._chr, _start: this._start, _end: this._end, _rname: this._rname, _geneName: this._geneName });
-
         // Validate chromosome number first
         if (!this.isValidChromosome(rname)) {
             alert('Invalid chromosome number');
@@ -253,9 +249,9 @@ class BamViewChart extends HTMLElement {
 
         // Check if only the chromosome is provided and start and end inputs are empty
         if (start === "" && end === "") {
-            this._bamView.zoomToChromomsomeRegion(this.validBamReadDepth, this._rname);
+            this._bamView.zoomToChromomsomeRegion(this.validBamReadDepth, rname, null, null, null);
         } else if (this.validateInput(start, end)) {
-            this._bamView.zoomToChromomsomeRegion(this.validBamReadDepth, this._rname , this._start, this._end, null);
+            this._bamView.zoomToChromomsomeRegion(this.validBamReadDepth, rname , start, end, null);
         }
     }
 
@@ -266,7 +262,7 @@ class BamViewChart extends HTMLElement {
         const build = this.bamHeader[0].length === 249250621 ? 'GRCh37' : 'GRCh38';
 
         if (geneName) {
-            this.fetchGeneInfo(this._geneName, source, 'homo_sapiens', build);
+            this.fetchGeneInfo(geneName, source, 'homo_sapiens', build);
         }
     }
 
@@ -281,15 +277,15 @@ class BamViewChart extends HTMLElement {
                 alert(`Gene ${geneName} is not in ${source} for build ${build}`);
                 return;
             }
-            // const chr = data[0].chr;
-            // const start = parseInt(data[0].start);
-            // const end = parseInt(data[0].end);
 
-            this._rname = data[0].chr;
-            this._start = parseInt(data[0].start);
-            this._end = parseInt(data[0].end);
-            console.log('Setup values:', { _chr: this._chr, _start: this._start, _end: this._end, _rname: this._rname, _geneName: this._geneName });
-            this._bamView.zoomToChromomsomeRegion(this.validBamReadDepth, this._rname, this._start, this._end, geneName);
+            const rname = data[0].chr;
+            const start = parseInt(data[0].start);
+            const end = parseInt(data[0].end);
+
+            this._rname = rname;
+            this._geneStart = start;
+            this._geneEnd = end;
+            this._bamView.zoomToChromomsomeRegion(this.validBamReadDepth, rname, start, end, geneName);
 
         } catch (error) {
             console.error('Error fetching gene information:', error);
@@ -317,7 +313,7 @@ class BamViewChart extends HTMLElement {
         }
         return true;
     }
-    
+
     handleRegionsInput(event) {
         const { rname, start, end } = event.detail;
         this._rname = rname;
