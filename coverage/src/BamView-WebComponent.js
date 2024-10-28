@@ -124,6 +124,7 @@ class BamViewChart extends HTMLElement {
         this._end = null;
         this._rname = null;
         this._geneName = null;
+        this._meanCoverage = null;
     }
 
     get label() {
@@ -169,6 +170,16 @@ class BamViewChart extends HTMLElement {
                 this.updateBamView();
             });
 
+            this.broker.addEventListener('stats-stream-data', (event) => {
+                const data = event.detail.coverage_hist;
+                let coverageMean = 0;
+                for (const coverage in data) {
+                    const freq = data[coverage];
+                    coverageMean += (coverage * freq);
+                }
+                this._meanCoverage = Math.floor(coverageMean);
+            });
+
             document.addEventListener('region-selected', (event) => this.handleGoClick(event.detail));
             document.addEventListener('gene-entered', (event) => this.handleSearchClick(event.detail));
 
@@ -211,9 +222,9 @@ class BamViewChart extends HTMLElement {
                 entries.forEach(entry => {
                     if (entry.target === this.bamViewContainer) {
                         if (!this._rname && !this._start && !this._end && !this._geneName) {
-                            this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, this.broker);
+                            this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, this.broker, this._meanCoverage);
                         } else {
-                            this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, this.broker);
+                            this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, this.broker, this._meanCoverage);
                             if (this._geneName) {
                                 this._bamView.zoomToChromomsomeRegion(this.validBamReadDepth, this._rname, this._geneStart, this._geneEnd, this._geneName);
                             } else {

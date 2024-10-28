@@ -1,6 +1,6 @@
 import * as d3 from 'd3';
 
-function createBamView(bamHeader, data, container, broker) {
+function createBamView(bamHeader, data, container, broker, meanCoverage) {
 
     let xScale, yScale, xNavScale, yNavScale, svg, main, nav, color, brush, yAxis,
         margin, margin2, mainHeight, navHeight, innerWidth, innerHeight, indexMap;
@@ -217,6 +217,10 @@ function createBamView(bamHeader, data, container, broker) {
                 .attr('width', barWidth)
                 .attr('height', d => navHeight - yNavScale(d.avgCoverage));
 
+            if (meanCoverage) {
+                updateMeanLineAndYaxis(meanCoverage);
+            }
+
             broker.addEventListener('stats-stream-data', (evt) => {
                 const data = evt.detail.coverage_hist;
                 let coverageMean = 0;
@@ -224,10 +228,14 @@ function createBamView(bamHeader, data, container, broker) {
                     const freq = data[coverage];
                     coverageMean += (coverage * freq);
                 }
-                const meanCoverage = Math.floor(coverageMean);
-                /* Draw the y-axis and mean line dynamically based on the stream coverageMean 
-                */
+                meanCoverage = Math.floor(coverageMean);
 
+                updateMeanLineAndYaxis(meanCoverage);
+            });
+
+            /* Draw the y-axis and mean line dynamically based on the stream coverageMean 
+            */
+            function updateMeanLineAndYaxis (meanCoverage) {
                 // Remove existing mean line and y-axis
                 svg.selectAll('.mean-line-group').remove();
                 svg.selectAll('.y-axis').remove();
@@ -276,7 +284,7 @@ function createBamView(bamHeader, data, container, broker) {
                     .style('fill', 'red') 
                     .text(`${meanCoverage}x`)
                     .style('font-size', '12px');           
-            });
+            }
 
             // Brush
             brush = d3.brushX()
