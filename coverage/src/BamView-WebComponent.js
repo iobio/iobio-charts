@@ -1,5 +1,5 @@
 import { createBamView} from "./BamViewChart.js";
-import { getDataBroker, upgradeProperty, commonCss, getMeanCoverageFromReadDistribution} from '../../common.js';
+import { getDataBroker, upgradeProperty, commonCss} from '../../common.js';
 import { getValidRefs } from "./BamData.js";
 import { InfoButton } from "../../info_button.js";
 
@@ -123,7 +123,11 @@ class BamViewChart extends HTMLElement {
         this._start = null;
         this._end = null;
         this._rname = null;
+
+        this._geneStart = null;
+        this._geneEnd = null;
         this._geneName = null;
+
         this._meanCoverage = null;
     }
 
@@ -172,7 +176,13 @@ class BamViewChart extends HTMLElement {
 
             this.broker.addEventListener('stats-stream-data', (event) => {
                 const data = event.detail.coverage_hist;
-                this._meanCoverage = getMeanCoverageFromReadDistribution(data);
+                let coverageMean = 0;
+                for (const coverage in data) {
+                    const freq = data[coverage];
+                    coverageMean += (coverage * freq);
+                }
+                this._meanCoverage = Math.floor(coverageMean);
+                this._bamView.updateMeanLineAndYaxis(this._meanCoverage);
             });
 
             document.addEventListener('region-selected', (event) => this.handleGoClick(event.detail));
@@ -196,7 +206,7 @@ class BamViewChart extends HTMLElement {
         this.validBamReadDepth = this.getBamReadDepthByValidRefs(this.validBamHeader, this.bamReadDepth);
 
         // Create the new BAM view
-        this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, this.broker);
+        this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer);
 
         this.setupResizeObserver();
     }
@@ -211,21 +221,29 @@ class BamViewChart extends HTMLElement {
 
     setupResizeObserver() {
         let resizeTimeout;
+
+        // Resize observer to handle resizing of the BAM view chart
+        const resizeHandler = () => {
+            // Create the BAM view with the new dimensions of the container
+            this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer);
+            this._bamView.updateMeanLineAndYaxis(this._meanCoverage);
+
+            // Zoom to a specific region if a region or gene name is provided
+            if (this._rname || this._geneName) {
+                const start = this._geneName ? this._geneStart : this._start;
+                const end = this._geneName ? this._geneEnd : this._end;
+              
+                this._bamView.zoomToChromomsomeRegion(this.validBamReadDepth, this._rname, start, end, this._geneName);
+            }
+        };
+
+        // Setting up the resize observer
         this.resizeObserver = new ResizeObserver(entries => {
             if (resizeTimeout) clearTimeout(resizeTimeout);
             resizeTimeout = setTimeout(() => {
                 entries.forEach(entry => {
                     if (entry.target === this.bamViewContainer) {
-                        if (!this._rname && !this._start && !this._end && !this._geneName) {
-                            this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, this.broker, this._meanCoverage);
-                        } else {
-                            this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, this.broker, this._meanCoverage);
-                            if (this._geneName) {
-                                this._bamView.zoomToChromomsomeRegion(this.validBamReadDepth, this._rname, this._geneStart, this._geneEnd, this._geneName);
-                            } else {
-                                this._bamView.zoomToChromomsomeRegion(this.validBamReadDepth, this._rname, this._start, this._end, this._geneName);
-                            }    
-                        }
+                        resizeHandler();
                     }
                 });
             }, 100);
@@ -243,6 +261,7 @@ class BamViewChart extends HTMLElement {
     
     handleGoClick(detail) {
         const { rname, start, end } = detail;
+        // Store the region values for later use in resize observer
         this._rname = rname;
         this._start = start;
         this._end = end;
@@ -263,6 +282,7 @@ class BamViewChart extends HTMLElement {
 
     handleSearchClick(detail) {
         const { geneName, source } = detail;
+        // Store the gene name state for later use in resize observer
         this._geneName = geneName;
 
         const build = this.bamHeader[0].length === 249250621 ? 'GRCh37' : 'GRCh38';
@@ -322,6 +342,7 @@ class BamViewChart extends HTMLElement {
 
     handleRegionsInput(event) {
         const { rname, start, end } = event.detail;
+        // Store the region values for later use in resize observer
         this._rname = rname;
         this._start = start;
         this._end = end;
@@ -329,6 +350,7 @@ class BamViewChart extends HTMLElement {
 
     handleGeneInput(event) {
         const { geneName } = event.detail;
+        // Store the gene name state for later use in resize observer
         this._geneName = geneName;
     }
 

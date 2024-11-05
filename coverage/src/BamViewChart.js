@@ -1,10 +1,19 @@
 import * as d3 from 'd3';
-import { getMeanCoverageFromReadDistribution } from '../../common.js';
 
-function createBamView(bamHeader, data, container, broker, meanCoverage) {
+function createBamView(bamHeader, data, container) {
 
     let xScale, yScale, xNavScale, yNavScale, svg, main, nav, color, brush, yAxis,
-        margin, margin2, mainHeight, navHeight, innerWidth, innerHeight, indexMap;
+        margin, margin2, mainHeight, navHeight, innerWidth, innerHeight;
+
+    // Get the variables by helper function
+    const average = calculateMeanCoverage(data);
+    const aggregatedDataArray = aggregateData(data, 30);
+    const totalLength = d3.sum(bamHeader, d => d.length);
+    const indexMap = bamHeader.reduce((acc, ref, index) => {
+        acc[ref.sn] = index;
+        return acc;
+    }, {});
+
 
     function createSvg() {
         d3.select(container).selectAll("*").remove();
@@ -26,16 +35,6 @@ function createBamView(bamHeader, data, container, broker, meanCoverage) {
                 .attr('width', '100%')
                 .attr('height', '100%')
                 .attr('viewBox', `0 0 ${width} ${height}`);
-
-        // Get the variables by helper function
-        const average = calculateMeanCoverage(data);
-        const aggregatedDataArray = aggregateData(data, 30);
-        const totalLength = d3.sum(bamHeader, d => d.length);
-
-        indexMap = bamHeader.reduce((acc, ref, index) => {
-            acc[ref.sn] = index;
-            return acc;
-        }, {});
 
 
         // Reset to all chromosomes
@@ -218,69 +217,7 @@ function createBamView(bamHeader, data, container, broker, meanCoverage) {
                 .attr('width', barWidth)
                 .attr('height', d => navHeight - yNavScale(d.avgCoverage));
 
-            if (meanCoverage) {
-                updateMeanLineAndYaxis(meanCoverage);
-            }
-
-            broker.addEventListener('stats-stream-data', (evt) => {
-                const data = evt.detail.coverage_hist;
-                const meanCoverage = getMeanCoverageFromReadDistribution(data);
-                updateMeanLineAndYaxis(meanCoverage);
-            });
-
-            /* Draw the y-axis and mean line dynamically based on the stream coverageMean 
-            */
-            function updateMeanLineAndYaxis (meanCoverage) {
-                // Remove existing mean line and y-axis
-                svg.selectAll('.mean-line-group').remove();
-                svg.selectAll('.y-axis').remove();
-
-                const conversionRatio = average / meanCoverage;
-
-                const yAxis_scale = d3.scaleLinear()
-                            .range([mainHeight, 0])
-                            .domain([0, 2 * average / conversionRatio]);
-
-                // Y-axis
-                yAxis = d3.axisLeft(yAxis_scale)
-                        .ticks(Math.floor(mainHeight / 20))
-                        .tickSize(0)
-                        .tickFormat(d => `${d}x`);
-
-                // Append Y-axis
-                svg.append('g')
-                    .attr('class', 'y-axis')
-                    .attr('transform', `translate(${margin.left}, ${margin.top})`)
-                    .call(yAxis); 
-
-                const meanLineGroup = svg.append('g')
-                    .attr('class', 'mean-line-group')
-                    .attr('transform', `translate(${margin.left}, ${margin.top})`);
-
-                // Add mean line
-                meanLineGroup.append('line')
-                    .attr('class', 'mean-line')
-                    .attr('x1', 0)
-                    .attr('x2', innerWidth)
-                    .attr('y1', yAxis_scale(meanCoverage))
-                    .attr('y2', yAxis_scale(meanCoverage))
-                    .attr('stroke', 'red')
-                    .attr('stroke-width', 2)
-                    .attr('stroke-dasharray', '3,3')
-                    .attr('z-index', 1000);
-
-                // label for mean line
-                meanLineGroup.append('text')
-                    .attr('class', 'mean-label')
-                    .attr('x', 0)
-                    .attr('y', yAxis_scale(meanCoverage))
-                    .attr('dy', "0.35em") 
-                    .attr('text-anchor', 'end') 
-                    .style('fill', 'red') 
-                    .text(`${meanCoverage}x`)
-                    .style('font-size', '12px');           
-            }
-
+            
             // Brush
             brush = d3.brushX()
                         .extent([[0, 0], [innerWidth, navHeight]])
@@ -370,6 +307,59 @@ function createBamView(bamHeader, data, container, broker, meanCoverage) {
         drawCircleButton(svg);
         // Draw reference buttons 
         drawRefButtons(svg);
+    }
+
+
+    /* Draw the y-axis and mean line dynamically based on the stream coverageMean */
+    function updateMeanLineAndYaxis (meanCoverage) {
+        // Remove existing mean line and y-axis
+        svg.selectAll('.mean-line-group').remove();
+        svg.selectAll('.y-axis').remove();
+
+        const conversionRatio = average / meanCoverage;
+
+        const yAxis_scale = d3.scaleLinear()
+                    .range([mainHeight, 0])
+                    .domain([0, 2 * average / conversionRatio]);
+
+        // Y-axis
+        yAxis = d3.axisLeft(yAxis_scale)
+                .ticks(Math.floor(mainHeight / 20))
+                .tickSize(0)
+                .tickFormat(d => `${d}x`);
+
+        // Append Y-axis
+        svg.append('g')
+            .attr('class', 'y-axis')
+            .attr('transform', `translate(${margin.left}, ${margin.top})`)
+            .call(yAxis); 
+
+        const meanLineGroup = svg.append('g')
+            .attr('class', 'mean-line-group')
+            .attr('transform', `translate(${margin.left}, ${margin.top})`);
+
+        // Add mean line
+        meanLineGroup.append('line')
+            .attr('class', 'mean-line')
+            .attr('x1', 0)
+            .attr('x2', innerWidth)
+            .attr('y1', yAxis_scale(meanCoverage))
+            .attr('y2', yAxis_scale(meanCoverage))
+            .attr('stroke', 'red')
+            .attr('stroke-width', 2)
+            .attr('stroke-dasharray', '3,3')
+            .attr('z-index', 1000);
+
+        // label for mean line
+        meanLineGroup.append('text')
+            .attr('class', 'mean-label')
+            .attr('x', 0)
+            .attr('y', yAxis_scale(meanCoverage))
+            .attr('dy', "0.35em") 
+            .attr('text-anchor', 'end') 
+            .style('fill', 'red') 
+            .text(`${meanCoverage}x`)
+            .style('font-size', '12px');           
     }
 
 
@@ -717,7 +707,7 @@ function createBamView(bamHeader, data, container, broker, meanCoverage) {
 
     createSvg()
 
-    return { zoomToChromomsomeRegion }
+    return { zoomToChromomsomeRegion, updateMeanLineAndYaxis }
 }
 
 

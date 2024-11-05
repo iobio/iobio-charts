@@ -179,15 +179,6 @@ function getDimensions(el) {
   };
 }
 
-function getMeanCoverageFromReadDistribution(data) {
-    let coverageMean = 0;
-    for (const coverage in data) {
-        const freq = data[coverage];
-        coverageMean += (coverage * freq);
-    }
-    return Math.floor(coverageMean);
-}
-
 
 export {
   commonCss,
@@ -198,5 +189,4 @@ export {
   getDataBroker,
   upgradeProperty,
   getDimensions,
-  getMeanCoverageFromReadDistribution,
 };
