@@ -1,4 +1,5 @@
 import * as d3 from 'd3';
+import { getMeanCoverageFromReadDistribution } from '../../common.js';
 
 function createBamView(bamHeader, data, container, broker, meanCoverage) {
 
@@ -223,13 +224,7 @@ function createBamView(bamHeader, data, container, broker, meanCoverage) {
 
             broker.addEventListener('stats-stream-data', (evt) => {
                 const data = evt.detail.coverage_hist;
-                let coverageMean = 0;
-                for (const coverage in data) {
-                    const freq = data[coverage];
-                    coverageMean += (coverage * freq);
-                }
-                meanCoverage = Math.floor(coverageMean);
-
+                const meanCoverage = getMeanCoverageFromReadDistribution(data);
                 updateMeanLineAndYaxis(meanCoverage);
             });
 

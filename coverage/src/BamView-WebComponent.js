@@ -1,5 +1,5 @@
 import { createBamView} from "./BamViewChart.js";
-import { getDataBroker, upgradeProperty, commonCss} from '../../common.js';
+import { getDataBroker, upgradeProperty, commonCss, getMeanCoverageFromReadDistribution} from '../../common.js';
 import { getValidRefs } from "./BamData.js";
 import { InfoButton } from "../../info_button.js";
 
@@ -172,12 +172,7 @@ class BamViewChart extends HTMLElement {
 
             this.broker.addEventListener('stats-stream-data', (event) => {
                 const data = event.detail.coverage_hist;
-                let coverageMean = 0;
-                for (const coverage in data) {
-                    const freq = data[coverage];
-                    coverageMean += (coverage * freq);
-                }
-                this._meanCoverage = Math.floor(coverageMean);
+                this._meanCoverage = getMeanCoverageFromReadDistribution(data);
             });
 
             document.addEventListener('region-selected', (event) => this.handleGoClick(event.detail));
