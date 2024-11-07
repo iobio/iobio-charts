@@ -226,14 +226,12 @@ function createBamView(bamHeader, data, container) {
             brushGroup = nav.append('g')
                                 .attr('class', 'brush')
                                 .call(brush);
-                                
+
             function brushed(event) {
                 let startIndex;
                 let endIndex;
                 if (event.selection) {
                     const [x0, x1] = event.selection.map(xNavScale.invert);
-
-                    console.log(x0, x1);
 
                     // Dispatch custom event for the brushed region
                     dispatchCustomEvent('brushed-region-whole-genome', {
