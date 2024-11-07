@@ -73,6 +73,10 @@ rect {
     fill: var(--data-color);
 }
 
+.brush rect.selection {
+    stroke: red;
+}
+
 .hidden {
     visibility: hidden;
 }
@@ -123,6 +127,14 @@ class BamViewChart extends HTMLElement {
       }
     set label(_) {
         this.setAttribute('label', _);
+    }
+
+    set backendUrl(url) {
+        this._backendUrl = url;
+    }
+
+    get backendUrl() {
+        return this._backendUrl;
     }
 
     initDOMElements() {
@@ -235,7 +247,7 @@ class BamViewChart extends HTMLElement {
 
     async fetchGeneInfo(geneName, source, species, build) {
         try {
-            const response = await fetch(`https://backend.iobio.io/geneinfo/${geneName}?source=${source}&species=${species}&build=${build}`);
+            const response = await fetch(`${this._backendUrl}/geneinfo/${geneName}?source=${source}&species=${species}&build=${build}`);
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
