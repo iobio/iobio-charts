@@ -2,7 +2,7 @@ import * as d3 from 'd3';
 
 function createBamView(bamHeader, data, container) {
 
-    let xScale, yScale, xNavScale, yNavScale, svg, main, nav, color, brush, yAxis,
+    let xScale, yScale, xNavScale, yNavScale, svg, main, nav, color, brush, brushGroup, yAxis,
         margin, margin2, mainHeight, navHeight, innerWidth, innerHeight;
 
     // Get the variables by helper function
@@ -223,16 +223,23 @@ function createBamView(bamHeader, data, container) {
                         .extent([[0, 0], [innerWidth, navHeight]])
                         .on('brush end', brushed);
 
-            nav.append('g')
-                .attr('class', 'brush')
-                .call(brush);
-
-
+            brushGroup = nav.append('g')
+                                .attr('class', 'brush')
+                                .call(brush);
+                                
             function brushed(event) {
                 let startIndex;
                 let endIndex;
                 if (event.selection) {
                     const [x0, x1] = event.selection.map(xNavScale.invert);
+
+                    console.log(x0, x1);
+
+                    // Dispatch custom event for the brushed region
+                    dispatchCustomEvent('brushed-region-whole-genome', {
+                        start: Math.round(x0),
+                        end: Math.round(x1)
+                    });
 
                     startIndex = aggregatedData.findIndex(d => d.binStart >= x0);
                     endIndex = aggregatedData.findIndex(d => d.binStart > x1);
@@ -308,6 +315,11 @@ function createBamView(bamHeader, data, container) {
         // Draw reference buttons 
         drawRefButtons(svg);
     }
+
+
+    function updateBrushedRegion(start, end) {
+        brushGroup.call(brush.move, [xScale(start), xScale(end)]);
+    };
 
 
     /* Draw the y-axis and mean line dynamically based on the stream coverageMean */
@@ -707,7 +719,7 @@ function createBamView(bamHeader, data, container) {
 
     createSvg()
 
-    return { zoomToChromomsomeRegion, updateMeanLineAndYaxis }
+    return { zoomToChromomsomeRegion, updateMeanLineAndYaxis, updateBrushedRegion }
 }
 
 

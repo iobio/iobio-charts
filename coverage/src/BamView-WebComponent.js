@@ -120,13 +120,16 @@ class BamViewChart extends HTMLElement {
         this.validBamReadDepth = null;
         upgradeProperty(this, 'label');
 
-        this._start = null;
-        this._end = null;
+        this._regionStart = null;
+        this._regionEnd = null;
         this._rname = null;
 
         this._geneStart = null;
         this._geneEnd = null;
         this._geneName = null;
+
+        this._regionStart_WG = null;
+        this._regionEnd_WG = null;
 
         this._meanCoverage = null;
     }
@@ -190,6 +193,10 @@ class BamViewChart extends HTMLElement {
 
             document.addEventListener('brushed-region-change', (event) => this.handleRegionsInput(event));
             document.addEventListener('selected-gene-change', (event) => this.handleGeneInput(event));
+            document.addEventListener('brushed-region-whole-genome', (event) => {
+                this._regionStart_WG= event.detail.start;
+                this._regionEnd_WG = event.detail.end;
+            });
         }
     }
 
@@ -228,10 +235,15 @@ class BamViewChart extends HTMLElement {
             this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer);
             this._bamView.updateMeanLineAndYaxis(this._meanCoverage);
 
-            // Zoom to a specific region if a region or gene name is provided
+            // Re-zoom to the region if a region on whole genome is brushed
+            if (this._regionStart_WG && this._regionEnd_WG) {
+                this._bamView.updateBrushedRegion(this._regionStart_WG, this._regionEnd_WG);
+            }
+
+            // Re-zoom to a specific region if a region or gene name is provided
             if (this._rname || this._geneName) {
-                const start = this._geneName ? this._geneStart : this._start;
-                const end = this._geneName ? this._geneEnd : this._end;
+                const start = this._geneName ? this._geneStart : this._regionStart;
+                const end = this._geneName ? this._geneEnd : this._regionEnd;
               
                 this._bamView.zoomToChromomsomeRegion(this.validBamReadDepth, this._rname, start, end, this._geneName);
             }
@@ -263,8 +275,8 @@ class BamViewChart extends HTMLElement {
         const { rname, start, end } = detail;
         // Store the region values for later use in resize observer
         this._rname = rname;
-        this._start = start;
-        this._end = end;
+        this._regionStart = start;
+        this._regionEnd = end;
 
         // Validate chromosome number first
         if (!this.isValidChromosome(rname)) {
@@ -344,8 +356,8 @@ class BamViewChart extends HTMLElement {
         const { rname, start, end } = event.detail;
         // Store the region values for later use in resize observer
         this._rname = rname;
-        this._start = start;
-        this._end = end;
+        this._regionStart = start;
+        this._regionEnd = end;
     }
 
     handleGeneInput(event) {
