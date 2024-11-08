@@ -68,6 +68,12 @@ function createBamView(bamHeader, data, container) {
                         geneName: ''
                     };
                     dispatchCustomEvent('selected-gene-change', geneInput);
+
+                    // Dispatch custom event for resetting the brushed region on global view
+                    dispatchCustomEvent('global-brushed-region-change', {
+                        start: null,
+                        end: null
+                    });
                 });
 
             // Create a circle for the reset button
@@ -234,7 +240,7 @@ function createBamView(bamHeader, data, container) {
                     const [x0, x1] = event.selection.map(xNavScale.invert);
 
                     // Dispatch custom event for the brushed region
-                    dispatchCustomEvent('brushed-region-whole-genome', {
+                    dispatchCustomEvent('global-brushed-region-change', {
                         start: Math.round(x0),
                         end: Math.round(x1)
                     });

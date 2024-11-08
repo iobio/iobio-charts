@@ -128,8 +128,8 @@ class BamViewChart extends HTMLElement {
         this._geneEnd = null;
         this._geneName = null;
 
-        this._regionStart_WG = null;
-        this._regionEnd_WG = null;
+        this._regionStartGlobal = null;
+        this._regionEndGlobal = null;
 
         this._meanCoverage = null;
     }
@@ -193,9 +193,9 @@ class BamViewChart extends HTMLElement {
 
             document.addEventListener('brushed-region-change', (event) => this.handleRegionsInput(event));
             document.addEventListener('selected-gene-change', (event) => this.handleGeneInput(event));
-            document.addEventListener('brushed-region-whole-genome', (event) => {
-                this._regionStart_WG= event.detail.start;
-                this._regionEnd_WG = event.detail.end;
+            document.addEventListener('global-brushed-region-change', (event) => {
+                this._regionStartGlobal= event.detail.start;
+                this._regionEndGlobal = event.detail.end;
             });
         }
     }
@@ -235,12 +235,12 @@ class BamViewChart extends HTMLElement {
             this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer);
             this._bamView.updateMeanLineAndYaxis(this._meanCoverage);
 
-            // Re-zoom to the region if a region on whole genome is brushed
-            if (this._regionStart_WG && this._regionEnd_WG) {
-                this._bamView.updateBrushedRegion(this._regionStart_WG, this._regionEnd_WG);
+            // Re-zoom to the region if a region on global view is brushed
+            if (this._regionStartGlobal && this._regionEndGlobal) {
+                this._bamView.updateBrushedRegion(this._regionStartGlobal, this._regionEndGlobal);
             }
 
-            // Re-zoom to a specific region if a region or gene name is provided
+            // Re-zoom to a specific region if a region or gene name on chromosome view is provided
             if (this._rname || this._geneName) {
                 const start = this._geneName ? this._geneStart : this._regionStart;
                 const end = this._geneName ? this._geneEnd : this._regionEnd;
