@@ -321,13 +321,17 @@ class DataBroker extends EventTarget {
         continue;
       }
 
+      if (mappedReads !== undefined && unmappedReads !== undefined) {
+        this._update.calculated_mapped_reads = mappedReads;
+        this._update.calculated_total_reads = mappedReads + unmappedReads;
+      } else {
+        this._update.calculated_mapped_reads = this._update.mapped_reads;
+        this._update.calculated_total_reads = this._update.total_reads;
+      }
+
       this.dispatchEvent(new CustomEvent('stats-stream-data', {
         detail: {
           stats: this._update,
-          mapDataFromIndex: { 
-            mappedReads:mappedReads, 
-            unmappedReads:unmappedReads 
-          }
         }
       }));
 
