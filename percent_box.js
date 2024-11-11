@@ -116,11 +116,11 @@ class PercentBoxElement extends HTMLElement {
       broker.addEventListener('stats-stream-data', (evt) => {
         const stats = evt.detail.stats;
         // Determine if the values come from index mapped reads or sampled mapped reads
-        if (this.percentKey === "calculated_mapped_reads" && stats.calculated_mapped_reads !== stats.mapped_reads &&
-            stats.calculated_total_reads !== stats.total_reads) {
-            this.style.setProperty('--iobio-data-color', 'rgb(9,176,135)');
-            this.style.setProperty('--iobio-data-color-secondary', 'rgba(9,176,135,0.5)');
-          }
+        // if (this.percentKey === "calculated_mapped_reads" && stats.calculated_mapped_reads !== stats.mapped_reads &&
+        //     stats.calculated_total_reads !== stats.total_reads) {
+        //     this.style.setProperty('--iobio-data-color', 'rgb(9,176,135)');
+        //     this.style.setProperty('--iobio-data-color-secondary', 'rgba(9,176,135,0.5)');
+        //   }
           const val = stats[this.percentKey];
           const total = stats[this.totalKey];
           data = [ val, total - val ];
