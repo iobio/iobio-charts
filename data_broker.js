@@ -245,14 +245,6 @@ class DataBroker extends EventTarget {
       });
     }
 
-    console.log("Mapped reads", mappedReads);
-    console.log("Unmapped reads", unmappedReads);
-
-    this.emitEvent('mapped-reads-from-index-file', {
-      mappedReads: mappedReads,
-      unmappedReads: unmappedReads,
-    });
-
     if (this._bedData) {
       allRegions = filterRegions(this._bedData.regions, validRegions);
     }
@@ -329,17 +321,18 @@ class DataBroker extends EventTarget {
         continue;
       }
 
-      // if (mappedReads !== undefined && unmappedReads !== undefined) {
-      //   this._update.calculated_mapped_reads = mappedReads;
-      //   this._update.calculated_total_reads = mappedReads + unmappedReads;
-      // } else {
-      //   this._update.calculated_mapped_reads = this._update.mapped_reads;
-      //   this._update.calculated_total_reads = this._update.total_reads;
-      // }
-
       this.dispatchEvent(new CustomEvent('stats-stream-data', {
         detail: {
           stats: this._update,
+          mappedReads: mappedReads,
+          unmappedReads: unmappedReads,
+        }
+      }));
+
+      this.dispatchEvent(new CustomEvent('mapped-reads-from-index-file', {
+        detail: {
+          mappedReads: mappedReads,
+          unmappedReads: unmappedReads,
         }
       }));
 

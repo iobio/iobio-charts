@@ -131,7 +131,7 @@
               </div>
             </iobio-label-info-button>
 
-            <iobio-percent-box percent-key="calculated_mapped_reads" total-key="calculated_total_reads"></iobio-percent-box>
+            <iobio-percent-box id="mapped-reads-chart" percent-key="mapped_reads" total-key="total_reads"></iobio-percent-box>
           </iobio-panel>
           
           <iobio-panel>
@@ -338,12 +338,6 @@
       const readDepthComponent = document.querySelector('iobio-coverage-depth');
       readDepthComponent.backendUrl = backendUrl;
 
-
-      const broker_ = getDataBroker(broker);
-      broker_.addEventListener('mapped-reads-from-index-file', (event) => {
-        console.log(event.detail);
-      });
-
       function mosaicRequesterForProject(server, projectId, token) {
 
         async function request(path) {
@@ -378,10 +372,20 @@
         broker.bedText = event.detail;
       });
 
-      // broker.addEventListener('mapped-reads-from-index-file', (event) => {
-      //   console.log(event.detail);
-      // });
+      const broker_ = getDataBroker(broker);
+      broker_.addEventListener('mapped-reads-from-index-file', (event) => {
+        // Determine the number of mapped reads and unmapped reads from the index file
+        if (event.detail.mappedReads && event.detail.unmappedReads) {
+          const val = event.detail.mappedReads;
+          const total = event.detail.mappedReads + event.detail.unmappedReads;
+          const data = [ val, total - val ];
 
+          const chart = document.querySelector('#mapped-reads-chart');
+          chart.update(data);
+          chart.style.setProperty('--iobio-data-color', 'rgb(9,176,135)');
+          chart.style.setProperty('--iobio-data-color-secondary', 'rgba(9,176,135,0.5)');
+        }
+      });
     </script>
   </body>
 
