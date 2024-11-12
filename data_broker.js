@@ -324,8 +324,6 @@ class DataBroker extends EventTarget {
       this.dispatchEvent(new CustomEvent('stats-stream-data', {
         detail: {
           stats: this._update,
-          mappedReads: mappedReads,
-          unmappedReads: unmappedReads,
         }
       }));
 
