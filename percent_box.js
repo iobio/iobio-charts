@@ -203,7 +203,7 @@ function core(opt) {
     return chart.getStyles();
   }
 
-  return { el: docFrag, update, getStyles };
+  return { el: docFrag, update, getStyles, chart};
 }
 
 
