@@ -322,9 +322,7 @@ class DataBroker extends EventTarget {
       }
 
       this.dispatchEvent(new CustomEvent('stats-stream-data', {
-        detail: {
-          stats: this._update,
-        }
+        detail: this._update
       }));
 
       this.dispatchEvent(new CustomEvent('mapped-reads-from-index-file', {

@@ -114,7 +114,7 @@ class PercentBoxElement extends HTMLElement {
       this._pbox.update(data);
       toggleSVGContainerAndIndicator.call(this, false);
       broker.addEventListener('stats-stream-data', (evt) => {
-        const stats = evt.detail.stats;
+        const stats = evt.detail;
         const val = stats[this.percentKey];
         const total = stats[this.totalKey];
         data = [ val, total - val ];

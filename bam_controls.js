@@ -243,7 +243,7 @@ class BamControls extends HTMLElement {
             });
 
             this.broker.addEventListener('stats-stream-data', (evt) => {
-                const stats = evt.detail.stats;
+                const stats = evt.detail;
                 this.total_reads = stats["total_reads"] / 1000;
 
                 this.updateSampleReads();

@@ -178,7 +178,7 @@ class BamViewChart extends HTMLElement {
             });
 
             this.broker.addEventListener('stats-stream-data', (event) => {
-                const data = event.detail.stats.coverage_hist;
+                const data = event.detail.coverage_hist;
                 let coverageMean = 0;
                 for (const coverage in data) {
                     const freq = data[coverage];
