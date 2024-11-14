@@ -188,6 +188,9 @@ class BamViewChart extends HTMLElement {
                 this._bamView.updateMeanLineAndYaxis(this._meanCoverage);
             });
 
+            // reset state
+            this.broker.addEventListener('reset', () => this.resetState());
+
             document.addEventListener('region-selected', (event) => this.handleGoClick(event.detail));
             document.addEventListener('gene-entered', (event) => this.handleSearchClick(event.detail));
 
@@ -364,6 +367,18 @@ class BamViewChart extends HTMLElement {
         const { geneName } = event.detail;
         // Store the gene name state for later use in resize observer
         this._geneName = geneName;
+    }
+
+    resetState() {
+        this._rname = null;
+        this._regionStart = null;
+        this._regionEnd = null;
+        this._geneName = null;
+        this._geneStart = null;
+        this._geneEnd = null;
+        this._regionStartGlobal = null;
+        this._regionEndGlobal = null;
+        this._meanCoverage = null;
     }
 
     
