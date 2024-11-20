@@ -305,9 +305,9 @@ class BamControls extends HTMLElement {
         let filePath;
 
         if (this.build === "GRCh37") {
-            filePath = '/grch37.bed';
+            filePath = 'https://s3.us-east-1.amazonaws.com/static.iobio.io/prod/bam.iobio.io/bam2.0/20130108.exome.targets.bed';
         } else if (this.build === "GRCh38") {
-            filePath = '/grch38.bed';
+            filePath = 'https://s3.us-east-1.amazonaws.com/static.iobio.io/prod/bam.iobio.io/bam2.0/20130108.exome.targets.grch38.bed';
         } else {
             alert('Unable to determine reference genome version.');
             return;
