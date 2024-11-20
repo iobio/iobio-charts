@@ -87,6 +87,8 @@ class HistogramElement extends HTMLElement {
     this.shadowRoot.appendChild(this._histo.el);
     const broker = getDataBroker(this);
 
+    const externalData = this.hasAttribute('data') || this.hasAttribute('data-script-id') || this.hasAttribute('data-url');
+
     function toggleSVGContainerAndIndicator(showSVG) {
       const indicator = this.shadowRoot.querySelector('iobio-loading-indicator');
       const svgContainer = this.shadowRoot.querySelector('.iobio-histogram-svg-container');
@@ -100,7 +102,7 @@ class HistogramElement extends HTMLElement {
     broker.addEventListener('stats-stream-request', () => toggleSVGContainerAndIndicator.call(this, false));
     broker.addEventListener('stats-stream-start', () => toggleSVGContainerAndIndicator.call(this, true));
     
-    if (broker) {
+    if (!externalData) {
       let data = [];
       this._histo.update(data);
       toggleSVGContainerAndIndicator.call(this, false);
@@ -167,6 +169,11 @@ function core(opt) {
   function render() {
     const dim = getDimensions(chartEl);
     // console.log(dim);
+
+    // Prevent rendering if dimensions are not valid
+    if (!dim || dim.contentWidth <= 0 || dim.contentHeight <= 0) {
+      return;
+    }
 
     chart.width(dim.contentWidth);
     chart.height(dim.contentHeight);

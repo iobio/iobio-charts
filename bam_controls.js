@@ -187,8 +187,7 @@ button:hover {
                     <div slot="content">
                         <p>Bam.iobio does not read the entire bam file, rather, it samples reads from across the entire genome.
                             The number of reads that have been sampled are shown here, and should be at least in the tens of thousands
-                            to have confidence in the statistics. Click the arrow beneath the displayed number to increase the number
-                            of sampled reads.
+                            to have confidence in the statistics. Click the "Sample More" button to increase the number of sampled reads.
                         </p>
                     </div>
                 </iobio-label-info-button>
