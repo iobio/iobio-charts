@@ -120,14 +120,30 @@ class HistogramElement extends HTMLElement {
         this._histo.update(d);
       });
     }
-    else {
-      (async () => {
-        const data = await getDataFromAttr(this);
-        if (data) {
-          this._histo.update(data);
+
+    const renderHistogramWhenVisible = () => {
+        if (externalData) {
+          (async () => {
+            const data = await getDataFromAttr(this);
+            if (data) {
+              this._histo.update(data);
+            }
+          })();
         }
-      })();
-    }
+    };
+  
+    // Use an observer to track when the element is visible
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          renderHistogramWhenVisible();
+          observer.disconnect(); // Stop observing once rendered
+        }
+      });
+    }, { threshold: 0.1 });
+  
+    observer.observe(this);
+    
   }
 
   update(data) {
@@ -171,7 +187,7 @@ function core(opt) {
     // console.log(dim);
 
     // Prevent rendering if dimensions are not valid
-    if (!dim || dim.contentWidth <= 0 || dim.contentHeight <= 0) {
+    if (!dim || dim.contentWidth <= 0 || dim.contentHeight <= 0 || !data) {
       return;
     }
 
