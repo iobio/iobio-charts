@@ -87,7 +87,7 @@ class HistogramElement extends HTMLElement {
     this.shadowRoot.appendChild(this._histo.el);
     const broker = getDataBroker(this);
 
-    const externalData = this.hasAttribute('data') || this.hasAttribute('data-script-id') || this.hasAttribute('data-url');
+    const useBroker = !(this.hasAttribute('data') || this.hasAttribute('data-script-id') || this.hasAttribute('data-url'));
 
     function toggleSVGContainerAndIndicator(showSVG) {
       const indicator = this.shadowRoot.querySelector('iobio-loading-indicator');
@@ -102,7 +102,7 @@ class HistogramElement extends HTMLElement {
     broker.addEventListener('stats-stream-request', () => toggleSVGContainerAndIndicator.call(this, false));
     broker.addEventListener('stats-stream-start', () => toggleSVGContainerAndIndicator.call(this, true));
     
-    if (!externalData) {
+    if (useBroker) {
       let data = [];
       this._histo.update(data);
       toggleSVGContainerAndIndicator.call(this, false);
@@ -122,7 +122,7 @@ class HistogramElement extends HTMLElement {
     }
 
     const renderHistogramWhenVisible = () => {
-        if (externalData) {
+        if (!useBroker) {
           (async () => {
             const data = await getDataFromAttr(this);
             if (data) {
