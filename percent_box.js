@@ -92,6 +92,8 @@ class PercentBoxElement extends HTMLElement {
       title: this.label,
     });
 
+    const externalData = this.hasAttribute('data') || this.hasAttribute('data-script-id') || this.hasAttribute('data-url');
+
     const sheet = new CSSStyleSheet();
     this.shadowRoot.appendChild(this._pbox.el);
     const broker = getDataBroker(this);
@@ -109,7 +111,7 @@ class PercentBoxElement extends HTMLElement {
     broker.addEventListener('stats-stream-request', () => toggleSVGContainerAndIndicator.call(this, false));
     broker.addEventListener('stats-stream-start', () => toggleSVGContainerAndIndicator.call(this, true));
 
-    if (broker) {
+    if (!externalData) {
       let data = [0, 0];
       this._pbox.update(data);
       toggleSVGContainerAndIndicator.call(this, false);
@@ -120,7 +122,7 @@ class PercentBoxElement extends HTMLElement {
         data = [ val, total - val ];
         this._pbox.update(data);
       });
-    }
+    } 
     else {
       (async () => {
         const data = await getDataFromAttr(this);
@@ -179,6 +181,11 @@ function core(opt) {
 
     const dim = getDimensions(chartEl);
     //console.log(chartEl, dim);
+
+    // Prevent rendering if dimensions are not valid
+    if (!dim || dim.contentWidth <= 0 || dim.contentHeight <= 0) {
+      return;
+    }
 
     let smallest = dim.contentWidth < dim.contentHeight ? dim.contentWidth : dim.contentHeight;
     const radius = smallest / 2;

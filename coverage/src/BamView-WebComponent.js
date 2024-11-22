@@ -90,11 +90,11 @@ rect {
                 </div>
                 <div slot="content">
                     <p>The read coverage shows how the read coverage varies across the entire genome. The coloured
-                    numbers beneath represent chromosomes in the reference genome used and can be selected to view
+                    numbers above represent chromosomes in the reference genome used and can be selected to view
                     the read coverage in an individual chromosome. Selecting a different chromosome will cause
                     all other metrics in bam.iobio to be recalculated based on reads sampled from that chromosome only.
-                    Once a chromosome is selected, you can also focus on a smaller region by dragging over the region
-                    of interest; again, all other metrics will then be recalculated for that region only.
+                    You can also focus on a smaller region by dragging over the region of interest. 
+                    The mean coverage across the entire genome or sigle chromosome is shown as a red line.
                     </p>
                 </div>
             </iobio-label-info-button>

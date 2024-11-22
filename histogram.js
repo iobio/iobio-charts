@@ -87,6 +87,8 @@ class HistogramElement extends HTMLElement {
     this.shadowRoot.appendChild(this._histo.el);
     const broker = getDataBroker(this);
 
+    const useBroker = !(this.hasAttribute('data') || this.hasAttribute('data-script-id') || this.hasAttribute('data-url'));
+
     function toggleSVGContainerAndIndicator(showSVG) {
       const indicator = this.shadowRoot.querySelector('iobio-loading-indicator');
       const svgContainer = this.shadowRoot.querySelector('.iobio-histogram-svg-container');
@@ -100,7 +102,7 @@ class HistogramElement extends HTMLElement {
     broker.addEventListener('stats-stream-request', () => toggleSVGContainerAndIndicator.call(this, false));
     broker.addEventListener('stats-stream-start', () => toggleSVGContainerAndIndicator.call(this, true));
     
-    if (broker) {
+    if (useBroker) {
       let data = [];
       this._histo.update(data);
       toggleSVGContainerAndIndicator.call(this, false);
@@ -118,14 +120,31 @@ class HistogramElement extends HTMLElement {
         this._histo.update(d);
       });
     }
-    else {
-      (async () => {
-        const data = await getDataFromAttr(this);
-        if (data) {
-          this._histo.update(data);
+
+    const renderHistogramWhenVisible = async () => {
+      if (!useBroker) {
+        try {
+          const data = await getDataFromAttr(this);
+          if (data) {
+            this._histo.update(data);
+          }
+        } catch (error) {
+          console.error("Failed to fetch data from attribute:", error);
         }
-      })();
-    }
+      }
+    };
+
+    // Use an observer to track when the element is visible
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          renderHistogramWhenVisible();
+          observer.disconnect(); // Stop observing once rendered
+        }
+      });
+    }, { threshold: 0.1 });
+    observer.observe(this);
+    
   }
 
   update(data) {
@@ -167,6 +186,11 @@ function core(opt) {
   function render() {
     const dim = getDimensions(chartEl);
     // console.log(dim);
+
+    // Prevent rendering if dimensions are not valid
+    if (!dim || dim.contentWidth <= 0 || dim.contentHeight <= 0 || !data) {
+      return;
+    }
 
     chart.width(dim.contentWidth);
     chart.height(dim.contentHeight);
