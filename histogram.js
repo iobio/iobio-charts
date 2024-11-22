@@ -123,17 +123,17 @@ class HistogramElement extends HTMLElement {
 
     const renderHistogramWhenVisible = async () => {
       if (!useBroker) {
-          try {
-              const data = await getDataFromAttr(this);
-              if (data) {
-                  this._histo.update(data);
-              }
-          } catch (error) {
-              console.error("Failed to fetch data from attribute:", error);
+        try {
+          const data = await getDataFromAttr(this);
+          if (data) {
+            this._histo.update(data);
           }
+        } catch (error) {
+          console.error("Failed to fetch data from attribute:", error);
+        }
       }
     };
-    
+
     // Use an observer to track when the element is visible
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
@@ -143,7 +143,6 @@ class HistogramElement extends HTMLElement {
         }
       });
     }, { threshold: 0.1 });
-  
     observer.observe(this);
     
   }
