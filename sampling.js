@@ -1,7 +1,9 @@
-const TARGET_BIN_SIZE = 10000;
+let TARGET_BIN_SIZE = 10000;
 const SECONDARY_BIN_SIZE = 5000;
 const TERTIARY_BIN_SIZE = 2500;
-const NUM_SAMPLES = 20;
+let NUM_SAMPLES = 20;
+const sampleMultiplierLimit = 4;
+let sampleMultiplier = 1;
 
 function sample(inRegions) {
 
@@ -144,6 +146,19 @@ function sampleFromRegions(inRegions, numSamples, binSize) {
   return sampledRegions;
 }
 
+function sampleMore (inRegions) {
+  if (sampleMultiplier < sampleMultiplierLimit) {
+    sampleMultiplier += 1;
+    TARGET_BIN_SIZE = TARGET_BIN_SIZE + (TARGET_BIN_SIZE / 4) * sampleMultiplier;
+    NUM_SAMPLES = NUM_SAMPLES + (NUM_SAMPLES / 4) * sampleMultiplier;
+    return sample(inRegions);
+  } else {
+    alert("You've reached the sampling limit");
+    return
+  }
+}
+
 export {
   sample,
+  sampleMore
 };

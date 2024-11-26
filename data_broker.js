@@ -1,5 +1,5 @@
 import { parseReadDepthData, parseBamHeaderData, parseBedFile, getValidRefs } from './coverage/src/BamData.js';
-import { sample } from './sampling.js';
+import { sample, sampleMore } from './sampling.js';
 
 /**
  * @typedef {object} Region
@@ -67,7 +67,7 @@ class DataBroker extends EventTarget {
 
   set bedText(_) {
     this._bedText = _;
-    this._updateStats();
+    this.updateStats();
   }
 
 
@@ -218,10 +218,10 @@ class DataBroker extends EventTarget {
         this._regions = null;
       }
     }
-    this._updateStats();
+    this.updateStats();
   }
 
-  async _updateStats() {
+  async updateStats(useSampleMore = false) {
     const validBamHeader = getValidRefs(this._header, this._readDepthData);
     const validRegions = this.regions ? this.regions : validBamHeader
 
@@ -254,7 +254,12 @@ class DataBroker extends EventTarget {
       allRegions = filterRegions(this._bedTextData.regions, validRegions);
     }
 
-    const regions = sample(allRegions);
+    console.log("allRegions", allRegions);
+
+    // Call either sample or sampleMore based on the parameter
+    const regions = useSampleMore ? sampleMore(allRegions) : sample(allRegions);
+
+    console.log("sampledRegions", regions);
 
     this.emitEvent('stats-stream-request', null);
 
