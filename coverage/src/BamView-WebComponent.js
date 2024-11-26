@@ -90,11 +90,11 @@ rect {
                 </div>
                 <div slot="content">
                     <p>The read coverage shows how the read coverage varies across the entire genome. The coloured
-                    numbers beneath represent chromosomes in the reference genome used and can be selected to view
+                    numbers above represent chromosomes in the reference genome used and can be selected to view
                     the read coverage in an individual chromosome. Selecting a different chromosome will cause
                     all other metrics in bam.iobio to be recalculated based on reads sampled from that chromosome only.
-                    Once a chromosome is selected, you can also focus on a smaller region by dragging over the region
-                    of interest; again, all other metrics will then be recalculated for that region only.
+                    You can also focus on a smaller region by dragging over the region of interest. 
+                    The mean coverage across the entire genome or sigle chromosome is shown as a red line.
                     </p>
                 </div>
             </iobio-label-info-button>
@@ -120,6 +120,18 @@ class BamViewChart extends HTMLElement {
         this.validBamReadDepth = null;
         upgradeProperty(this, 'label');
 
+        this._regionStart = null;
+        this._regionEnd = null;
+        this._rname = null;
+
+        this._geneStart = null;
+        this._geneEnd = null;
+        this._geneName = null;
+
+        this._regionStartGlobal = null;
+        this._regionEndGlobal = null;
+
+        this._meanCoverage = null;
     }
 
     get label() {
@@ -165,8 +177,29 @@ class BamViewChart extends HTMLElement {
                 this.updateBamView();
             });
 
+            this.broker.addEventListener('stats-stream-data', (event) => {
+                const data = event.detail.coverage_hist;
+                let coverageMean = 0;
+                for (const coverage in data) {
+                    const freq = data[coverage];
+                    coverageMean += (coverage * freq);
+                }
+                this._meanCoverage = Math.floor(coverageMean);
+                this._bamView.updateMeanLineAndYaxis(this._meanCoverage);
+            });
+
+            // reset state
+            this.broker.addEventListener('reset', () => this.resetState());
+
             document.addEventListener('region-selected', (event) => this.handleGoClick(event.detail));
             document.addEventListener('gene-entered', (event) => this.handleSearchClick(event.detail));
+
+            document.addEventListener('brushed-region-change', (event) => this.handleRegionsInput(event));
+            document.addEventListener('selected-gene-change', (event) => this.handleGeneInput(event));
+            document.addEventListener('global-brushed-region-change', (event) => {
+                this._regionStartGlobal= event.detail.start;
+                this._regionEndGlobal = event.detail.end;
+            });
         }
     }
 
@@ -183,7 +216,7 @@ class BamViewChart extends HTMLElement {
         this.validBamReadDepth = this.getBamReadDepthByValidRefs(this.validBamHeader, this.bamReadDepth);
 
         // Create the new BAM view
-        this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, this.broker);
+        this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer);
 
         this.setupResizeObserver();
     }
@@ -198,12 +231,34 @@ class BamViewChart extends HTMLElement {
 
     setupResizeObserver() {
         let resizeTimeout;
+
+        // Resize observer to handle resizing of the BAM view chart
+        const resizeHandler = () => {
+            // Create the BAM view with the new dimensions of the container
+            this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer);
+            this._bamView.updateMeanLineAndYaxis(this._meanCoverage);
+
+            // Re-zoom to the region if a region on global view is brushed
+            if (this._regionStartGlobal && this._regionEndGlobal) {
+                this._bamView.updateBrushedRegion(this._regionStartGlobal, this._regionEndGlobal);
+            }
+
+            // Re-zoom to a specific region if a region or gene name on chromosome view is provided
+            if (this._rname || this._geneName) {
+                const start = this._geneName ? this._geneStart : this._regionStart;
+                const end = this._geneName ? this._geneEnd : this._regionEnd;
+              
+                this._bamView.zoomToChromomsomeRegion(this.validBamReadDepth, this._rname, start, end, this._geneName);
+            }
+        };
+
+        // Setting up the resize observer
         this.resizeObserver = new ResizeObserver(entries => {
             if (resizeTimeout) clearTimeout(resizeTimeout);
             resizeTimeout = setTimeout(() => {
                 entries.forEach(entry => {
                     if (entry.target === this.bamViewContainer) {
-                        this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, this.broker);  
+                        resizeHandler();
                     }
                 });
             }, 100);
@@ -221,6 +276,10 @@ class BamViewChart extends HTMLElement {
     
     handleGoClick(detail) {
         const { rname, start, end } = detail;
+        // Store the region values for later use in resize observer
+        this._rname = rname;
+        this._regionStart = start;
+        this._regionEnd = end;
 
         // Validate chromosome number first
         if (!this.isValidChromosome(rname)) {
@@ -230,14 +289,17 @@ class BamViewChart extends HTMLElement {
 
         // Check if only the chromosome is provided and start and end inputs are empty
         if (start === "" && end === "") {
-            this._bamView.zoomToChromomsomeRegion(this.validBamReadDepth, rname);
+            this._bamView.zoomToChromomsomeRegion(this.validBamReadDepth, rname, null, null, null);
         } else if (this.validateInput(start, end)) {
-            this._bamView.zoomToChromomsomeRegion(this.validBamReadDepth, rname, start, end, null);
+            this._bamView.zoomToChromomsomeRegion(this.validBamReadDepth, rname , start, end, null);
         }
     }
 
     handleSearchClick(detail) {
         const { geneName, source } = detail;
+        // Store the gene name state for later use in resize observer
+        this._geneName = geneName;
+
         const build = this.bamHeader[0].length === 249250621 ? 'GRCh37' : 'GRCh38';
 
         if (geneName) {
@@ -256,10 +318,15 @@ class BamViewChart extends HTMLElement {
                 alert(`Gene ${geneName} is not in ${source} for build ${build}`);
                 return;
             }
-            const chr = data[0].chr;
+
+            const rname = data[0].chr;
             const start = parseInt(data[0].start);
             const end = parseInt(data[0].end);
-            this._bamView.zoomToChromomsomeRegion(this.validBamReadDepth, chr, start, end, geneName);
+
+            this._rname = rname;
+            this._geneStart = start;
+            this._geneEnd = end;
+            this._bamView.zoomToChromomsomeRegion(this.validBamReadDepth, rname, start, end, geneName);
 
         } catch (error) {
             console.error('Error fetching gene information:', error);
@@ -286,6 +353,32 @@ class BamViewChart extends HTMLElement {
             return false;
         }
         return true;
+    }
+
+    handleRegionsInput(event) {
+        const { rname, start, end } = event.detail;
+        // Store the region values for later use in resize observer
+        this._rname = rname;
+        this._regionStart = start;
+        this._regionEnd = end;
+    }
+
+    handleGeneInput(event) {
+        const { geneName } = event.detail;
+        // Store the gene name state for later use in resize observer
+        this._geneName = geneName;
+    }
+
+    resetState() {
+        this._rname = null;
+        this._regionStart = null;
+        this._regionEnd = null;
+        this._geneName = null;
+        this._geneStart = null;
+        this._geneEnd = null;
+        this._regionStartGlobal = null;
+        this._regionEndGlobal = null;
+        this._meanCoverage = null;
     }
 
     

@@ -131,7 +131,7 @@
               </div>
             </iobio-label-info-button>
 
-            <iobio-percent-box percent-key="mapped_reads" total-key="total_reads"></iobio-percent-box>
+            <iobio-percent-box id="mapped-reads-chart" percent-key="mapped_reads" total-key="total_reads"></iobio-percent-box>
           </iobio-panel>
           
           <iobio-panel>
@@ -336,7 +336,6 @@
       const readDepthComponent = document.querySelector('iobio-coverage-depth');
       readDepthComponent.backendUrl = backendUrl;
 
-
       function mosaicRequesterForProject(server, projectId, token) {
 
         async function request(path) {
@@ -386,7 +385,6 @@
       document.addEventListener('bed-file-removed', (event) => {
         broker.bedText = event.detail;
       });
-
     </script>
   </body>
 

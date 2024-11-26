@@ -39,7 +39,7 @@ modalTemplate.innerHTML = `
       text-align: justify;
       padding: 0 30px;
       font-size: 13px;
-      max-height: 200px;
+      max-height: 400px;
       line-height: 1.5;
       width: 100%;
       box-sizing: border-box;
@@ -91,7 +91,6 @@ modalTemplate.innerHTML = `
       </div>
       <div class="modal-body">
         <slot name="content">
-          <p>Default content...</p>
         </slot>
       </div>
       <div class="modal-footer">

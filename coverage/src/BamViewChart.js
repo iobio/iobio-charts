@@ -1,9 +1,19 @@
 import * as d3 from 'd3';
 
-function createBamView(bamHeader, data, container, broker) {
+function createBamView(bamHeader, data, container) {
 
-    let xScale, yScale, xNavScale, yNavScale, svg, main, nav, color, brush, yAxis,
-        margin, margin2, mainHeight, navHeight, innerWidth, innerHeight, indexMap;
+    let xScale, yScale, xNavScale, yNavScale, svg, main, nav, color, brush, brushGroup, yAxis,
+        margin, margin2, mainHeight, navHeight, innerWidth, innerHeight;
+
+    // Get the variables by helper function
+    const average = calculateMeanCoverage(data);
+    const aggregatedDataArray = aggregateData(data, 30);
+    const totalLength = d3.sum(bamHeader, d => d.length);
+    const indexMap = bamHeader.reduce((acc, ref, index) => {
+        acc[ref.sn] = index;
+        return acc;
+    }, {});
+
 
     function createSvg() {
         d3.select(container).selectAll("*").remove();
@@ -25,16 +35,6 @@ function createBamView(bamHeader, data, container, broker) {
                 .attr('width', '100%')
                 .attr('height', '100%')
                 .attr('viewBox', `0 0 ${width} ${height}`);
-
-        // Get the variables by helper function
-        const average = calculateMeanCoverage(data);
-        const aggregatedDataArray = aggregateData(data, 30);
-        const totalLength = d3.sum(bamHeader, d => d.length);
-
-        indexMap = bamHeader.reduce((acc, ref, index) => {
-            acc[ref.sn] = index;
-            return acc;
-        }, {});
 
 
         // Reset to all chromosomes
@@ -68,6 +68,12 @@ function createBamView(bamHeader, data, container, broker) {
                         geneName: ''
                     };
                     dispatchCustomEvent('selected-gene-change', geneInput);
+
+                    // Dispatch custom event for resetting the brushed region on global view
+                    dispatchCustomEvent('global-brushed-region-change', {
+                        start: null,
+                        end: null
+                    });
                 });
 
             // Create a circle for the reset button
@@ -162,7 +168,7 @@ function createBamView(bamHeader, data, container, broker) {
 
             yNavScale = d3.scaleLinear()
                                 .range([navHeight, 0])
-                                .domain(yScale.domain());          
+                                .domain(yScale.domain());     
 
             // Append Y-axis label
             svg.append('text')
@@ -217,82 +223,27 @@ function createBamView(bamHeader, data, container, broker) {
                 .attr('width', barWidth)
                 .attr('height', d => navHeight - yNavScale(d.avgCoverage));
 
-            broker.addEventListener('stats-stream-data', (evt) => {
-                const data = evt.detail.coverage_hist;
-                let coverageMean = 0;
-                for (const coverage in data) {
-                    const freq = data[coverage];
-                    coverageMean += (coverage * freq);
-                }
-                const meanCoverage = Math.floor(coverageMean);
-                /* Draw the y-axis and mean line dynamically based on the stream coverageMean 
-                */
-
-                // Remove existing mean line and y-axis
-                svg.selectAll('.mean-line-group').remove();
-                svg.selectAll('.y-axis').remove();
-
-                const conversionRatio = average / meanCoverage;
-
-                const yAxis_scale = d3.scaleLinear()
-                            .range([mainHeight, 0])
-                            .domain([0, 2 * average / conversionRatio]);
-
-                // Y-axis
-                yAxis = d3.axisLeft(yAxis_scale)
-                        .ticks(Math.floor(mainHeight / 20))
-                        .tickSize(0)
-                        .tickFormat(d => `${d}x`);
-
-                // Append Y-axis
-                svg.append('g')
-                    .attr('class', 'y-axis')
-                    .attr('transform', `translate(${margin.left}, ${margin.top})`)
-                    .call(yAxis); 
-
-                const meanLineGroup = svg.append('g')
-                    .attr('class', 'mean-line-group')
-                    .attr('transform', `translate(${margin.left}, ${margin.top})`);
-
-                // Add mean line
-                meanLineGroup.append('line')
-                    .attr('class', 'mean-line')
-                    .attr('x1', 0)
-                    .attr('x2', innerWidth)
-                    .attr('y1', yAxis_scale(meanCoverage))
-                    .attr('y2', yAxis_scale(meanCoverage))
-                    .attr('stroke', 'red')
-                    .attr('stroke-width', 2)
-                    .attr('stroke-dasharray', '3,3')
-                    .attr('z-index', 1000);
-
-                // label for mean line
-                meanLineGroup.append('text')
-                    .attr('class', 'mean-label')
-                    .attr('x', 0)
-                    .attr('y', yAxis_scale(meanCoverage))
-                    .attr('dy', "0.35em") 
-                    .attr('text-anchor', 'end') 
-                    .style('fill', 'red') 
-                    .text(`${meanCoverage}x`)
-                    .style('font-size', '12px');           
-            });
-
+            
             // Brush
             brush = d3.brushX()
                         .extent([[0, 0], [innerWidth, navHeight]])
                         .on('brush end', brushed);
 
-            nav.append('g')
-                .attr('class', 'brush')
-                .call(brush);
-
+            brushGroup = nav.append('g')
+                                .attr('class', 'brush')
+                                .call(brush);
 
             function brushed(event) {
                 let startIndex;
                 let endIndex;
                 if (event.selection) {
                     const [x0, x1] = event.selection.map(xNavScale.invert);
+
+                    // Dispatch custom event for the brushed region
+                    dispatchCustomEvent('global-brushed-region-change', {
+                        start: Math.round(x0),
+                        end: Math.round(x1)
+                    });
 
                     startIndex = aggregatedData.findIndex(d => d.binStart >= x0);
                     endIndex = aggregatedData.findIndex(d => d.binStart > x1);
@@ -370,6 +321,64 @@ function createBamView(bamHeader, data, container, broker) {
     }
 
 
+    function updateBrushedRegion(start, end) {
+        brushGroup.call(brush.move, [xScale(start), xScale(end)]);
+    };
+
+
+    /* Draw the y-axis and mean line dynamically based on the stream coverageMean */
+    function updateMeanLineAndYaxis (meanCoverage) {
+        // Remove existing mean line and y-axis
+        svg.selectAll('.mean-line-group').remove();
+        svg.selectAll('.y-axis').remove();
+
+        const conversionRatio = average / meanCoverage;
+
+        const yAxis_scale = d3.scaleLinear()
+                    .range([mainHeight, 0])
+                    .domain([0, 2 * average / conversionRatio]);
+
+        // Y-axis
+        yAxis = d3.axisLeft(yAxis_scale)
+                .ticks(Math.floor(mainHeight / 20))
+                .tickSize(0)
+                .tickFormat(d => `${d}x`);
+
+        // Append Y-axis
+        svg.append('g')
+            .attr('class', 'y-axis')
+            .attr('transform', `translate(${margin.left}, ${margin.top})`)
+            .call(yAxis); 
+
+        const meanLineGroup = svg.append('g')
+            .attr('class', 'mean-line-group')
+            .attr('transform', `translate(${margin.left}, ${margin.top})`);
+
+        // Add mean line
+        meanLineGroup.append('line')
+            .attr('class', 'mean-line')
+            .attr('x1', 0)
+            .attr('x2', innerWidth)
+            .attr('y1', yAxis_scale(meanCoverage))
+            .attr('y2', yAxis_scale(meanCoverage))
+            .attr('stroke', 'red')
+            .attr('stroke-width', 2)
+            .attr('stroke-dasharray', '3,3')
+            .attr('z-index', 1000);
+
+        // label for mean line
+        meanLineGroup.append('text')
+            .attr('class', 'mean-label')
+            .attr('x', 0)
+            .attr('y', yAxis_scale(meanCoverage))
+            .attr('dy', "0.35em") 
+            .attr('text-anchor', 'end') 
+            .style('fill', 'red') 
+            .text(`${meanCoverage}x`)
+            .style('font-size', '12px');           
+    }
+
+
     function zoomToChromomsomeRegion(data, chromosome, start = null, end = null, geneName = null) {
         let chromosomeIndex = indexMap[chromosome] !== undefined ? indexMap[chromosome] : indexMap[chromosome.replace('chr', '')];
         const selectedChromosomeData = data[chromosomeIndex];
@@ -378,7 +387,7 @@ function createBamView(bamHeader, data, container, broker) {
 
         const originStart = start;
         const originEnd = end;
-        if (start !== null && end !== null) {
+        if (start && end) {
             // Calculate the center of the selected region and adjust to ensure a minimum range of 500,000 bp
             let center = (start + end) / 2;
             let range = end - start;
@@ -468,13 +477,23 @@ function createBamView(bamHeader, data, container, broker) {
             .call(brush);
     
         // If start and end are provided, set the brush to that region
-        if (start !== null && end !== null) {
+        if (start && end) {
+            if (start == 1 && end == chromosomeLength) {
+                return
+            }
             brushGroup.call(brush.move, [xScale(start), xScale(end)]);
         }
     
         // Draw gene region if provided
-        if (geneName !== null) {
+        if (geneName) {
             drawGeneRegion(xScale, originStart, originEnd, geneName, chromosome);
+        } else {
+            svg.selectAll(".gene-region-highlight, .gene-region-label").remove();
+             // Dispatch custom event for resetting the gene input
+             const geneInput = {
+                geneName: ''
+            };
+            dispatchCustomEvent('selected-gene-change', geneInput);
         }
     
         function brushed(event) {
@@ -486,8 +505,15 @@ function createBamView(bamHeader, data, container, broker) {
     
                 if (brushedData.length === 0) return;
     
-                if (geneName !== null) {
+                if (geneName) {
                     drawGeneRegion(xScale, originStart, originEnd, geneName, chromosome);
+                } else {
+                    svg.selectAll(".gene-region-highlight, .gene-region-label").remove();
+                     // Dispatch custom event for resetting the gene input
+                     const geneInput = {
+                        geneName: ''
+                    };
+                    dispatchCustomEvent('selected-gene-change', geneInput);
                 }
     
                 const aggregatedBrushData = aggregateDataIntoBins(brushedData, x0, x1, numBins, null);
@@ -512,8 +538,15 @@ function createBamView(bamHeader, data, container, broker) {
         function resetView() {
             xScale.domain([1, chromosomeLength]);
 
-            if (geneName !== null) {
-                drawGeneRegion(xScale, start, end, geneName, chromosome);
+            if (geneName) {
+                drawGeneRegion(xScale, originStart, originEnd, geneName, chromosome);
+            } else {
+                svg.selectAll(".gene-region-highlight, .gene-region-label").remove();
+                 // Dispatch custom event for resetting the gene input
+                 const geneInput = {
+                    geneName: ''
+                };
+                dispatchCustomEvent('selected-gene-change', geneInput);
             }
 
             main.selectAll('.bar').remove();
@@ -690,7 +723,7 @@ function createBamView(bamHeader, data, container, broker) {
 
     createSvg()
 
-    return { zoomToChromomsomeRegion }
+    return { zoomToChromomsomeRegion, updateMeanLineAndYaxis, updateBrushedRegion }
 }
 
 
