@@ -1,11 +1,9 @@
-let TARGET_BIN_SIZE = 10000;
+const TARGET_BIN_SIZE = 10000;
 const SECONDARY_BIN_SIZE = 5000;
 const TERTIARY_BIN_SIZE = 2500;
-let NUM_SAMPLES = 20;
-const sampleMultiplierLimit = 4;
-let sampleMultiplier = 1;
+const NUM_SAMPLES = 20;
 
-function sample(inRegions) {
+function sample(inRegions, sampleMultiplier) {
 
   let idealRegions = [];
   const secondaryRegions = [];
@@ -33,7 +31,16 @@ function sample(inRegions) {
     }
   }
 
-  let sampledRegions = sampleFromRegions(idealRegions, NUM_SAMPLES, TARGET_BIN_SIZE);
+  let sampledRegions = [];
+  if (sampleMultiplier == undefined) {
+    sampledRegions = sampleFromRegions(idealRegions, NUM_SAMPLES, TARGET_BIN_SIZE);
+  }
+
+  if (sampleMultiplier > 1) {
+    const targetBinSize = TARGET_BIN_SIZE + (TARGET_BIN_SIZE / 4) * sampleMultiplier;
+    const numSamples = NUM_SAMPLES + (NUM_SAMPLES / 4) * sampleMultiplier;
+    sampledRegions = sampleFromRegions(idealRegions, numSamples, targetBinSize);
+  }
 
   if (sampledRegions.length < NUM_SAMPLES) {
     const remaining = NUM_SAMPLES - sampledRegions.length;
@@ -146,19 +153,6 @@ function sampleFromRegions(inRegions, numSamples, binSize) {
   return sampledRegions;
 }
 
-function sampleMore (inRegions) {
-  if (sampleMultiplier < sampleMultiplierLimit) {
-    sampleMultiplier += 1;
-    TARGET_BIN_SIZE = TARGET_BIN_SIZE + (TARGET_BIN_SIZE / 4) * sampleMultiplier;
-    NUM_SAMPLES = NUM_SAMPLES + (NUM_SAMPLES / 4) * sampleMultiplier;
-    return sample(inRegions);
-  } else {
-    alert("You've reached the sampling limit");
-    return
-  }
-}
-
 export {
-  sample,
-  sampleMore
+  sample
 };

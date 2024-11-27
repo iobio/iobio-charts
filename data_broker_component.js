@@ -70,6 +70,14 @@ class DataBrokerElement extends HTMLElement {
     this.broker.bedText = _;
   }
 
+  get samplingMultiplier() {
+    return this.broker.samplingMultiplier;
+  }
+
+  set samplingMultiplier(_) {
+    this.broker.samplingMultiplier = _;
+  }
+
   connectedCallback() {
 
     const options = {};
