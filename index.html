@@ -193,7 +193,7 @@
                 <p>This is custom content for the Read Coverage Distribution histogram.</p>
               </div>
             </iobio-label-info-button>
-            <iobio-histogram broker-key="coverage_hist" id="read-coverage-histogram"></iobio-histogram>
+            <iobio-histogram broker-key="coverage_hist"></iobio-histogram>
           </iobio-panel>
 
           <iobio-panel>
@@ -352,23 +352,7 @@
 
         return request;
       }
-
-      document.addEventListener('DOMContentLoaded', () => {
-        const chart = document.querySelector('#read-coverage-histogram');
-
-        // Set the custom formatters for the histogram
-        if (chart) {
-          chart.tooltipFormatter = (d) => `${d[0]}, ${precisionRound(d[1] * 100, 2)}%`;
-          chart.xAxisTickFormatter = (d) => `${d}X`;
-          chart.yAxisTickFormatter = (d) => `${d * 100}%`;
-        }
-        
-        function precisionRound(number, precision) {
-          const factor = Math.pow(10, precision);
-          return Math.round(number * factor) / factor;
-        }
-
-      });
+      
       function determineBackendUrl() {
         // Determine backend URL dynamically
         return 'https://backend.iobio.io'; // Default URL
