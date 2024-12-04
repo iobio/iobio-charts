@@ -206,6 +206,9 @@ class BamControls extends HTMLElement {
         this.attachShadow({ mode: 'open' });
         this.shadowRoot.appendChild(template.content.cloneNode(true));
         this.initDOMElements();
+
+        this.samplingMultiplier = 1;
+        this.samplingMultiplierLimit = 4;
     }
 
     initDOMElements() {
@@ -364,7 +367,14 @@ class BamControls extends HTMLElement {
     }
     
     handleSampleMoreReads() {
+        if (this.samplingMultiplier >= this.samplingMultiplierLimit) {
+            alert("You've reached the sampling limit");
+            return;
+        }
+        this.samplingMultiplier += 1;
+
         const event = new CustomEvent('sample-more-reads', {
+            detail: { samplingMultiplier: this.samplingMultiplier },
             bubbles: true,
             composed: true
         });

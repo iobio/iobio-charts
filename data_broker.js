@@ -79,6 +79,15 @@ class DataBroker extends EventTarget {
     this._tryUpdate(this._doUpdate.bind(this));
   }
 
+  get samplingMultiplier() {
+    return this._samplingMultiplier;
+  }
+
+  set samplingMultiplier(_) {
+    this._samplingMultiplier = _;
+    this._updateStats();
+  }
+
   emitEvent(eventName, data) {
 
     this.dispatchEvent(new CustomEvent(eventName, {
@@ -253,8 +262,8 @@ class DataBroker extends EventTarget {
       this._bedTextData = parseBedFile(this._bedText, this._header);
       allRegions = filterRegions(this._bedTextData.regions, validRegions);
     }
-
-    const regions = sample(allRegions);
+    
+    const regions = sample(allRegions, this.samplingMultiplier);
 
     this.emitEvent('stats-stream-request', null);
 
