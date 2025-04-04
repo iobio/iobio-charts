@@ -190,10 +190,12 @@ class BamViewChart extends HTMLElement {
     async connectedCallback() {
 
         this.broker = getDataBroker(this);
-        
-        if (this.label) {
         const opts = this.options;
+
+        if (this.label && opts.showChartLabel) {
             this.shadowRoot.querySelector('#title-text').innerText = this.label;
+        } else {
+            this.shadowRoot.querySelector('#title-container').remove()
         }
   
         if (this.broker) {
@@ -245,11 +247,12 @@ class BamViewChart extends HTMLElement {
     }
 
     updateBamView() {
+        const opts = this.options;
         this.validBamHeader = getValidRefs(this.bamHeader, this.bamReadDepth);
         this.validBamReadDepth = this.getBamReadDepthByValidRefs(this.validBamHeader, this.bamReadDepth);
 
         // Create the new BAM view
-        this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer);
+        this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, opts);
 
         this.setupResizeObserver();
     }
@@ -264,11 +267,12 @@ class BamViewChart extends HTMLElement {
 
     setupResizeObserver() {
         let resizeTimeout;
+        const opts = this.options;
 
         // Resize observer to handle resizing of the BAM view chart
         const resizeHandler = () => {
             // Create the BAM view with the new dimensions of the container
-            this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer);
+            this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, opts);
             this._bamView.updateMeanLineAndYaxis(this._meanCoverage);
 
             // Re-zoom to the region if a region on global view is brushed
