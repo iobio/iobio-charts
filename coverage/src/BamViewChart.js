@@ -1,7 +1,6 @@
 import * as d3 from 'd3';
 
-function createBamView(bamHeader, data, container) {
-
+function createBamView(bamHeader, data, container, options={}) {
     let xScale, yScale, xNavScale, yNavScale, svg, main, nav, color, brush, brushGroup, yAxis,
         margin, margin2, mainHeight, navHeight, innerWidth, innerHeight;
 
@@ -14,6 +13,7 @@ function createBamView(bamHeader, data, container) {
         return acc;
     }, {});
 
+    const opts = options;
 
     function createSvg() {
         d3.select(container).selectAll("*").remove();
