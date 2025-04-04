@@ -170,13 +170,15 @@ function createBamView(bamHeader, data, container, options={}) {
                                 .range([navHeight, 0])
                                 .domain(yScale.domain());     
 
-            // Append Y-axis label
-            svg.append('text')
-                .attr('class', 'y-axis-label')
-                .attr('transform', `translate(${margin.left - 40}, ${margin.top + mainHeight / 2}) rotate(-90)`)
-                .attr('text-anchor', 'middle')
-                .text('Coverage (rough estimate)')
-                .style('font-size', '12px');
+            if (opts.showYLabel) {
+                // Append Y-axis label
+                svg.append('text')
+                    .attr('class', 'y-axis-label')
+                    .attr('transform', `translate(${margin.left - 40}, ${margin.top + mainHeight / 2}) rotate(-90)`)
+                    .attr('text-anchor', 'middle')
+                    .text('Coverage (rough estimate)')
+                    .style('font-size', '12px');
+            }
 
             // Clip path
             svg.append('defs')
