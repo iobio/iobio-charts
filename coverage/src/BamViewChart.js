@@ -15,7 +15,7 @@ function createBamView(bamHeader, data, container, options={}) {
 
     const opts = options;
 
-    function createSvg() {
+    function createSvg(opts) {
         d3.select(container).selectAll("*").remove();
 
         const width = container.offsetWidth;
@@ -314,10 +314,17 @@ function createBamView(bamHeader, data, container, options={}) {
         
         // Draw the chart
         drawBarChart(svg);
-        // Create circle button for reset chromosomes and redraw the chart
-        drawCircleButton(svg);
-        // Draw reference buttons 
-        drawRefButtons(svg);
+
+        if (opts.showAllButton) {
+            // Create circle button for reset chromosomes and redraw the chart
+            drawCircleButton(svg);
+        }
+
+        if (opts.showChromosomes) {
+            // Draw reference buttons 
+            drawRefButtons(svg);            
+        }
+
     }
 
 
@@ -721,7 +728,7 @@ function createBamView(bamHeader, data, container, options={}) {
         shadowRoot.dispatchEvent(customEvent);
     }
 
-    createSvg()
+    createSvg(opts)
 
     return { zoomToChromomsomeRegion, updateMeanLineAndYaxis, updateBrushedRegion }
 }
