@@ -107,6 +107,18 @@ rect {
 </div>
 `;
 
+const DEFAULT_OPTIONS = {
+    showChartLabel: false,
+    showZoomableChart: false,
+    showChromosomes: false,
+    showAllButton: false,
+    showYAxis: true,
+    showYAxisLabel: false,
+    margin: 0, //px
+    padding: 0, //px
+    height: 100, //%
+    width: 100, //%
+}
 
 class BamViewChart extends HTMLElement {
     constructor() {
@@ -118,7 +130,8 @@ class BamViewChart extends HTMLElement {
         this.bamHeader = null;
         this.validBamHeader = null;
         this.validBamReadDepth = null;
-        upgradeProperty(this, 'label');
+        upgradeProperty(this, 'label'); //Keeping as is for backwards compatability
+        upgradeProperty(this, 'options')
 
         this._regionStart = null;
         this._regionEnd = null;
@@ -134,6 +147,25 @@ class BamViewChart extends HTMLElement {
         this._meanCoverage = null;
     }
 
+    get options() {
+        const raw = this.getAttribute('options');
+        let parsed = {};
+        try {
+          parsed = raw ? JSON.parse(raw) : {};
+        } catch (e) {
+          console.warn('Invalid options JSON', raw);
+        }
+        //Return the merge of default options and parsed so that we always have the options even if not passed
+        return { ...DEFAULT_OPTIONS, ...parsed };
+    }
+
+    set options(val) {
+        //Sanitize the typing, we expect strings but want to be able to work with the options as a json/object
+        const str = typeof val === 'string' ? val : JSON.stringify(val);
+        this.setAttribute('options', str);
+    }
+
+    //Keeping label as is for backwards compatablility
     get label() {
         return this.getAttribute('label');
       }
@@ -160,6 +192,7 @@ class BamViewChart extends HTMLElement {
         this.broker = getDataBroker(this);
         
         if (this.label) {
+        const opts = this.options;
             this.shadowRoot.querySelector('#title-text').innerText = this.label;
         }
   
