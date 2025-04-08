@@ -340,14 +340,10 @@ function createBamView(bamHeader, data, container, options={}) {
         // Draw the chart
         drawBarChart(svg);
 
-        if (opts.showAllButton) {
-            // Create circle button for reset chromosomes and redraw the chart
-            drawCircleButton(svg);
-        }
-
         if (opts.showChromosomes) {
             // Draw reference buttons 
-            drawRefButtons(svg);            
+            drawRefButtons(svg);   
+            drawCircleButton(svg);         
         }
 
     }
