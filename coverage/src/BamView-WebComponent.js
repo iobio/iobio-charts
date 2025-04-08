@@ -108,22 +108,11 @@ rect {
 `;
 
 const DEFAULT_OPTIONS = {
-    showChartLabel: false,
-    showZoomableChart: false,
-    showChromosomes: false,
-    showAllButton: false,
+    showChartLabel: true,
+    showZoomableChart: true,
+    showChromosomes: true,
     showYAxis: true,
-    yAxisPosition: 'right', // 'left' or 'right'
-    averageCovLabelPosition: 'right-inside', // 'left-outside' 'right-outside' 'left-inside' 'right-inside'
-    showYAxisLabel: false,
-    margin: {
-        top: 8, //px
-        right: 0, //px
-        bottom: 8, //px
-        left: 0, //px
-    },
-    height: 100, //%
-    width: 100, //%
+    showYAxisLabel: true,
 }
 
 class BamViewChart extends HTMLElement {
