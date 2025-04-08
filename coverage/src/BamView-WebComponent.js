@@ -113,8 +113,8 @@ const DEFAULT_OPTIONS = {
     showChromosomes: true,
     showYAxis: true,
     showYAxisLabel: true,
-    yAxisPosition: 'left',
-    averageCovLabelPosition: 'left-external',
+    yAxisPosition: 'external', // 'external' or 'internal'
+    averageCovLabelPosition: 'left-external', // 'left-external', 'right-external', 'left-internal', 'right-internal'
     margin: {
         top: 0,
         right: 20,
