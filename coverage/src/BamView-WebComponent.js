@@ -113,9 +113,15 @@ const DEFAULT_OPTIONS = {
     showChromosomes: false,
     showAllButton: false,
     showYAxis: true,
+    yAxisPosition: 'right', // 'left' or 'right'
+    averageCovLabelPosition: 'right-inside', // 'left-outside' 'right-outside' 'left-inside' 'right-inside'
     showYAxisLabel: false,
-    margin: 0, //px
-    padding: 0, //px
+    margin: {
+        top: 8, //px
+        right: 0, //px
+        bottom: 8, //px
+        left: 0, //px
+    },
     height: 100, //%
     width: 100, //%
 }

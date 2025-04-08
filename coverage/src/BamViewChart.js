@@ -18,16 +18,39 @@ function createBamView(bamHeader, data, container, options={}) {
     function createSvg(opts) {
         d3.select(container).selectAll("*").remove();
 
-        const width = container.offsetWidth;
-        const height = container.offsetHeight;
-        margin = { top: 60, right: 20, bottom: 20, left: 60 };
-        margin2 = { top: 10, right: 20, bottom: 20, left: 60 };
+        let width = container.offsetWidth;
+        let height = container.offsetHeight;
+
+        // Height and width are expected to be percentage of the container
+        if (opts.height) {
+            let calcHeight = (opts.height/100) * height;
+            height = calcHeight;
+        }
+        if (opts.width) {
+            let calcWidth = (opts.width/100) * width;
+            width = calcWidth;
+        }
+
+        // Set margins
+        if (opts.margin) {
+            margin = opts.margin;
+            margin2 = { top: 10, right: opts.margin.right, bottom: opts.margin.bottom, left: opts.margin.left };
+        } else {
+            margin = { top: 60, right: 20, bottom: 20, left: 60 };
+            margin2 = { top: 10, right: 20, bottom: 20, left: 60 };
+        }
+
         innerWidth = width - margin.left - margin.right;
         innerHeight = height - margin.top - margin.bottom;
 
-        // Split heights for main and navigation charts
-        navHeight = 0.2 * innerHeight;
-        mainHeight = innerHeight - navHeight - 10;
+        if (opts.showZoomableChart) {
+            // Split heights for main and navigation charts
+            navHeight = 0.2 * innerHeight;
+            mainHeight = innerHeight - navHeight - 10;
+        } else {
+            navHeight = 0;
+            mainHeight = innerHeight;
+        }
 
         // Create SVG container
         svg = d3.select(container)
