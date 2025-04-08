@@ -370,7 +370,6 @@ function createBamView(bamHeader, data, container, options={}) {
                     .range([mainHeight, 0])
                     .domain([0, 2 * average / conversionRatio]);
 
-        console.log(opts.yAxisPosition);
         if (opts.yAxisPosition && opts.yAxisPosition === 'internal') {
             // Y-axis
             yAxis = d3.axisRight(yAxis_scale)
@@ -399,8 +398,8 @@ function createBamView(bamHeader, data, container, options={}) {
 
                 tick.append('rect')
                     .attr('class', 'tick-rect')
-                    .attr('x', `${rectX + 6}px`)
-                    .attr('y', `-${rectHeight/2}px`)
+                    .attr('x', `${rectX + 6}`)
+                    .attr('y', `-${rectHeight/2}`)
                     .attr('width', rectWidth)
                     .attr('height', rectHeight)
                     .attr('fill', 'white')
