@@ -440,16 +440,49 @@ function createBamView(bamHeader, data, container, options={}) {
             .attr('stroke-dasharray', '3,3')
             .attr('z-index', 1000);
 
-        // label for mean line
-        meanLineGroup.append('text')
-            .attr('class', 'mean-label')
-            .attr('x', 0)
-            .attr('y', yAxis_scale(meanCoverage))
-            .attr('dy', "0.35em") 
-            .attr('text-anchor', 'end') 
-            .style('fill', 'red') 
-            .text(`${meanCoverage}x`)
-            .style('font-size', '12px');           
+        if (opts.averageCovLabelPosition && (opts.averageCovLabelPosition === 'right-internal' || opts.averageCovLabelPosition === 'left-internal')) {
+            meanLineGroup.append('rect')
+                .attr('x', function() {
+                    if (opts.averageCovLabelPosition === 'left-internal') {
+                        return 25 - 2; // 2px offset for the rectangle vs text
+                    } else if (opts.averageCovLabelPosition === 'right-internal') {
+                        return innerWidth - 32 - 2; // 2px offset for the rectangle vs text
+                    }
+                })
+                .attr('y', yAxis_scale(meanCoverage) - 7.5)
+                .attr('width', 25)
+                .attr('height', 15)
+                .style('fill', 'white')
+                .style('opacity', 0.7)
+                .attr('rx', 3);
+
+            // label for mean line
+            meanLineGroup.append('text')
+                .attr('class', 'mean-label')
+                .attr('x', function() {
+                    if (opts.averageCovLabelPosition === 'left-internal') {
+                        return 25;
+                    } else if (opts.averageCovLabelPosition === 'right-internal') {
+                        return innerWidth - 32;
+                    }
+                })
+                .attr('y', yAxis_scale(meanCoverage))
+                .attr('dy', "0.35em") 
+                .style('fill', 'red') 
+                .text(`${meanCoverage}x`)
+                .style('font-size', '12px');    
+        } else {
+            // label for mean line
+            meanLineGroup.append('text')
+                .attr('class', 'mean-label')
+                .attr('x', 0)
+                .attr('y', yAxis_scale(meanCoverage))
+                .attr('dy', "0.35em") 
+                .attr('text-anchor', 'end') 
+                .style('fill', 'red') 
+                .text(`${meanCoverage}x`)
+                .style('font-size', '12px');    
+        }
     }
 
 
