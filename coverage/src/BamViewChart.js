@@ -21,20 +21,34 @@ function createBamView(bamHeader, data, container, options={}) {
         let width = container.offsetWidth;
         let height = container.offsetHeight;
 
-        // Height and width are expected to be percentage of the container
-        if (opts.height) {
-            let calcHeight = (opts.height/100) * height;
-            height = calcHeight;
-        }
-        if (opts.width) {
-            let calcWidth = (opts.width/100) * width;
-            width = calcWidth;
-        }
-
         // Set margins
         if (opts.margin) {
-            margin = opts.margin;
-            margin2 = { top: 10, right: opts.margin.right, bottom: opts.margin.bottom, left: opts.margin.left };
+            margin = {};
+            
+            // If we have a Y-axis label, an axis, or an average coverage label rendered externally to the left we need space for that
+            if (opts.showYLabel || (opts.showYAxis && opts.yAxisPosition && opts.yAxisPosition === 'external') || (opts.averageCovLabelPosition && opts.averageCovLabelPosition === 'left-external')) {
+                margin.left = opts.margin.left + 60;
+            } else {
+                margin.left = opts.margin.left;
+            }
+            
+            // If we render the average coverage label externally to the right we need space for that
+            if (opts.averageCovLabelPosition && opts.averageCovLabelPosition === 'right-external') {
+                margin.right = opts.margin.right + 30;
+            } else {
+                margin.right = opts.margin.right;
+            }
+
+            // If we have the chromosomes bar we have to have space for the bar and the all button to the top and left
+            if (opts.showChromosomes) {
+                margin.top = opts.margin.top + 40;
+                margin.left = opts.margin.left + 60;
+            } else {
+                margin.top = opts.margin.top;
+            }
+
+            margin.bottom = opts.margin.bottom;
+            margin2 = { top: 10, right: margin.right, bottom: margin.bottom, left: margin.left };
         } else {
             margin = { top: 60, right: 20, bottom: 20, left: 60 };
             margin2 = { top: 10, right: 20, bottom: 20, left: 60 };
@@ -193,7 +207,7 @@ function createBamView(bamHeader, data, container, options={}) {
                                 .range([navHeight, 0])
                                 .domain(yScale.domain());     
 
-            if (opts.showYLabel) {
+            if (opts.showYAxisLabel) {
                 // Append Y-axis label
                 svg.append('text')
                     .attr('class', 'y-axis-label')
