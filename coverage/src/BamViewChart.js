@@ -369,21 +369,12 @@ function createBamView(bamHeader, data, container, options={}) {
         const yAxis_scale = d3.scaleLinear()
                     .range([mainHeight, 0])
                     .domain([0, 2 * average / conversionRatio]);
-        
-        if (opts.yAxisPosition && opts.yAxisPosition === 'right') {
-            // Y-axis
-            yAxis = d3.axisRight(yAxis_scale)
-                .ticks(Math.floor(mainHeight / 20))
-                .tickSize(0)
-                .tickFormat(d => `${d}x`);
 
-        } else {
-            // Y-axis
-            yAxis = d3.axisLeft(yAxis_scale)
+        // Y-axis
+        yAxis = d3.axisLeft(yAxis_scale)
                 .ticks(Math.floor(mainHeight / 20))
                 .tickSize(0)
                 .tickFormat(d => `${d}x`);
-        }
 
         // Append Y-axis
         svg.append('g')
@@ -407,42 +398,10 @@ function createBamView(bamHeader, data, container, options={}) {
             .attr('stroke-dasharray', '3,3')
             .attr('z-index', 1000);
 
-        // If we are on the inside of the chart we need to add a white rectangle behind the mean line label
-        if (opts.averageCovLabelPosition === 'left-inside' || opts.averageCovLabelPosition === 'right-inside') {
-            meanLineGroup.append('rect')
-                .attr('x', function() {
-                    if (opts.averageCovLabelPosition === 'left-inside') {
-                        return 10 + 'px';
-                    } else if (opts.averageCovLabelPosition === 'right-inside') {
-                        return innerWidth - 32 + 'px';
-                    }
-                })
-                .attr('y', yAxis_scale(meanCoverage) - 10)
-                .attr('width', 25)
-                .attr('height', 20)
-                .style('fill', 'white')
-                .style('opacity', 0.7)
-                .attr('rx', 5);
-        }
-
         // label for mean line
         meanLineGroup.append('text')
             .attr('class', 'mean-label')
-            .attr('x', function() {
-                if (opts.averageCovLabelPosition) {
-                    if (opts.averageCovLabelPosition === 'left-outside') {
-                        return 0 + 'px';
-                    } else if (opts.averageCovLabelPosition === 'right-outside') {
-                        return innerWidth + 'px';
-                    } else if (opts.averageCovLabelPosition === 'left-inside') {
-                        return 10 + 'px';
-                    } else if (opts.averageCovLabelPosition === 'right-inside') {
-                        return innerWidth - 10 + 'px';
-                    }
-                } else {
-                    return 0 + 'px';
-                }
-            })
+            .attr('x', 0)
             .attr('y', yAxis_scale(meanCoverage))
             .attr('dy', "0.35em") 
             .attr('text-anchor', 'end') 
