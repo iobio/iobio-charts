@@ -370,17 +370,60 @@ function createBamView(bamHeader, data, container, options={}) {
                     .range([mainHeight, 0])
                     .domain([0, 2 * average / conversionRatio]);
 
-        // Y-axis
-        yAxis = d3.axisLeft(yAxis_scale)
+        console.log(opts.yAxisPosition);
+        if (opts.yAxisPosition && opts.yAxisPosition === 'internal') {
+            // Y-axis
+            yAxis = d3.axisRight(yAxis_scale)
                 .ticks(Math.floor(mainHeight / 20))
                 .tickSize(0)
                 .tickFormat(d => `${d}x`);
 
-        // Append Y-axis
-        svg.append('g')
-            .attr('class', 'y-axis')
-            .attr('transform', `translate(${margin.left}, ${margin.top})`)
-            .call(yAxis); 
+            // Append Y-axis (done inside of the logic so that we can also add our rectangles)
+            svg.append('g')
+                .attr('class', 'y-axis')
+                .attr('transform', `translate(${margin.left}, ${margin.top})`)
+                .call(yAxis);
+            
+            // Add rectangles for the y-axis
+            let ticks = svg.selectAll('.tick')
+            
+            // Add rectangles for each tick
+            ticks.each(function(d, i) {
+                const tick = d3.select(this);
+                const text = tick.select('text');
+
+                //the rect should just be where the text is
+                const rectWidth = text.node().getBBox().width + 10;
+                const rectHeight = 10;
+                const rectX = parseFloat(text.attr('x')) - rectWidth / 2;
+
+                tick.append('rect')
+                    .attr('class', 'tick-rect')
+                    .attr('x', `${rectX + 6}px`)
+                    .attr('y', `-${rectHeight/2}px`)
+                    .attr('width', rectWidth)
+                    .attr('height', rectHeight)
+                    .attr('fill', 'white')
+                    .attr('opacity', 0.5)
+                    .attr('rx', 3);
+                
+                //Raise the text above the rectangle
+                text.raise();
+            });
+
+        } else {
+            // Y-axis
+            yAxis = d3.axisLeft(yAxis_scale)
+                    .ticks(Math.floor(mainHeight / 20))
+                    .tickSize(0)
+                    .tickFormat(d => `${d}x`);
+            
+            // Append Y-axis 
+            svg.append('g')
+                .attr('class', 'y-axis')
+                .attr('transform', `translate(${margin.left}, ${margin.top})`)
+                .call(yAxis); 
+        }
 
         const meanLineGroup = svg.append('g')
             .attr('class', 'mean-line-group')
