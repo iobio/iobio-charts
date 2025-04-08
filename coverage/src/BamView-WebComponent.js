@@ -113,6 +113,14 @@ const DEFAULT_OPTIONS = {
     showChromosomes: true,
     showYAxis: true,
     showYAxisLabel: true,
+    yAxisPosition: 'left',
+    averageCovLabelPosition: 'left-external',
+    margin: {
+        top: 0,
+        right: 20,
+        bottom: 20,
+        left: 0,
+    }
 }
 
 class BamViewChart extends HTMLElement {
