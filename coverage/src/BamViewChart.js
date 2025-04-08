@@ -21,7 +21,7 @@ function createBamView(bamHeader, data, container, options={}) {
         let width = container.offsetWidth;
         let height = container.offsetHeight;
 
-        // Set margins
+        // Set margins based on options and user specified values
         if (opts.margin) {
             margin = {};
             
