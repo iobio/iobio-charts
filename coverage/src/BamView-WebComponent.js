@@ -241,6 +241,7 @@ class BamViewChart extends HTMLElement {
             document.addEventListener('global-brushed-region-update-manual', (event) => {
                 this._regionStartGlobal = event.detail.start;
                 this._regionEndGlobal = event.detail.end;
+                console.log('global brushed region updated manually');
                 this.updateBamView();
             });
         }
