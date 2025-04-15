@@ -238,6 +238,11 @@ class BamViewChart extends HTMLElement {
                 this._regionStartGlobal= event.detail.start;
                 this._regionEndGlobal = event.detail.end;
             });
+            document.addEventListener('global-brushed-region-update-manual', (event) => {
+                this._regionStartGlobal = event.detail.start;
+                this._regionEndGlobal = event.detail.end;
+                this._bamView.updateBrushedRegion(this._regionStartGlobal, this._regionEndGlobal);
+            });
         }
     }
 
