@@ -112,6 +112,7 @@ const DEFAULT_OPTIONS = {
     showZoomableChart: true,
     showChromosomes: true,
     showYAxis: true,
+    showYAxisLine: true,
     showYAxisLabel: true,
     yAxisPosition: 'external', // 'external' or 'internal'
     averageCovLabelPosition: 'left-external', // 'left-external', 'right-external', 'left-internal', 'right-internal'
