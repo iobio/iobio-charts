@@ -107,6 +107,22 @@ rect {
 </div>
 `;
 
+const DEFAULT_OPTIONS = {
+    showChartLabel: true,
+    showZoomableChart: true,
+    showChromosomes: true,
+    showYAxis: true,
+    showYAxisLine: true,
+    showYAxisLabel: true,
+    yAxisPosition: 'external', // 'external' or 'internal'
+    averageCovLabelPosition: 'left-external', // 'left-external', 'right-external', 'left-internal', 'right-internal'
+    margin: {
+        top: 0,
+        right: 20,
+        bottom: 20,
+        left: 0,
+    }
+}
 
 class BamViewChart extends HTMLElement {
     constructor() {
@@ -118,7 +134,8 @@ class BamViewChart extends HTMLElement {
         this.bamHeader = null;
         this.validBamHeader = null;
         this.validBamReadDepth = null;
-        upgradeProperty(this, 'label');
+        upgradeProperty(this, 'label'); //Keeping as is for backwards compatability
+        upgradeProperty(this, 'options')
 
         this._regionStart = null;
         this._regionEnd = null;
@@ -134,6 +151,25 @@ class BamViewChart extends HTMLElement {
         this._meanCoverage = null;
     }
 
+    get options() {
+        const raw = this.getAttribute('options');
+        let parsed = {};
+        try {
+          parsed = raw ? JSON.parse(raw) : {};
+        } catch (e) {
+          console.warn('Invalid options JSON', raw);
+        }
+        //Return the merge of default options and parsed so that we always have the options even if not passed
+        return { ...DEFAULT_OPTIONS, ...parsed };
+    }
+
+    set options(val) {
+        //Sanitize the typing, we expect strings but want to be able to work with the options as a json/object
+        const str = typeof val === 'string' ? val : JSON.stringify(val);
+        this.setAttribute('options', str);
+    }
+
+    //Keeping label as is for backwards compatablility
     get label() {
         return this.getAttribute('label');
       }
@@ -158,9 +194,12 @@ class BamViewChart extends HTMLElement {
     async connectedCallback() {
 
         this.broker = getDataBroker(this);
-        
-        if (this.label) {
+        const opts = this.options;
+
+        if (this.label && opts.showChartLabel) {
             this.shadowRoot.querySelector('#title-text').innerText = this.label;
+        } else {
+            this.shadowRoot.querySelector('#title-container').remove()
         }
   
         if (this.broker) {
@@ -212,11 +251,12 @@ class BamViewChart extends HTMLElement {
     }
 
     updateBamView() {
+        const opts = this.options;
         this.validBamHeader = getValidRefs(this.bamHeader, this.bamReadDepth);
         this.validBamReadDepth = this.getBamReadDepthByValidRefs(this.validBamHeader, this.bamReadDepth);
 
         // Create the new BAM view
-        this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer);
+        this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, opts);
 
         this.setupResizeObserver();
     }
@@ -231,11 +271,12 @@ class BamViewChart extends HTMLElement {
 
     setupResizeObserver() {
         let resizeTimeout;
+        const opts = this.options;
 
         // Resize observer to handle resizing of the BAM view chart
         const resizeHandler = () => {
             // Create the BAM view with the new dimensions of the container
-            this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer);
+            this._bamView = createBamView(this.validBamHeader, this.validBamReadDepth, this.bamViewContainer, opts);
             this._bamView.updateMeanLineAndYaxis(this._meanCoverage);
 
             // Re-zoom to the region if a region on global view is brushed
