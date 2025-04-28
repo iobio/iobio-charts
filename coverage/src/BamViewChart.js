@@ -1,7 +1,6 @@
 import * as d3 from 'd3';
 
-function createBamView(bamHeader, data, container) {
-
+function createBamView(bamHeader, data, container, options={}) {
     let xScale, yScale, xNavScale, yNavScale, svg, main, nav, color, brush, brushGroup, yAxis,
         margin, margin2, mainHeight, navHeight, innerWidth, innerHeight;
 
@@ -14,20 +13,58 @@ function createBamView(bamHeader, data, container) {
         return acc;
     }, {});
 
+    const opts = options;
 
-    function createSvg() {
+    function createSvg(opts) {
         d3.select(container).selectAll("*").remove();
 
-        const width = container.offsetWidth;
-        const height = container.offsetHeight;
-        margin = { top: 60, right: 20, bottom: 20, left: 60 };
-        margin2 = { top: 10, right: 20, bottom: 20, left: 60 };
+        let width = container.offsetWidth;
+        let height = container.offsetHeight;
+
+        // Set margins based on options and user specified values
+        if (opts.margin) {
+            margin = {};
+            
+            // If we have a Y-axis label, an axis, or an average coverage label rendered externally to the left we need space for that
+            if (opts.showYLabel || (opts.showYAxis && opts.yAxisPosition && opts.yAxisPosition === 'external') || (opts.averageCovLabelPosition && opts.averageCovLabelPosition === 'left-external')) {
+                margin.left = opts.margin.left + 60;
+            } else {
+                margin.left = opts.margin.left;
+            }
+            
+            // If we render the average coverage label externally to the right we need space for that
+            if (opts.averageCovLabelPosition && opts.averageCovLabelPosition === 'right-external') {
+                margin.right = opts.margin.right + 30;
+            } else {
+                margin.right = opts.margin.right;
+            }
+
+            // If we have the chromosomes bar we have to have space for the bar and the all button to the top and left
+            if (opts.showChromosomes) {
+                margin.top = opts.margin.top + 40;
+                margin.left = opts.margin.left + 60;
+            } else {
+                margin.top = opts.margin.top;
+            }
+
+            margin.bottom = opts.margin.bottom;
+            margin2 = { top: 10, right: margin.right, bottom: margin.bottom, left: margin.left };
+        } else {
+            margin = { top: 60, right: 20, bottom: 20, left: 60 };
+            margin2 = { top: 10, right: 20, bottom: 20, left: 60 };
+        }
+
         innerWidth = width - margin.left - margin.right;
         innerHeight = height - margin.top - margin.bottom;
 
-        // Split heights for main and navigation charts
-        navHeight = 0.2 * innerHeight;
-        mainHeight = innerHeight - navHeight - 10;
+        if (opts.showZoomableChart) {
+            // Split heights for main and navigation charts
+            navHeight = 0.2 * innerHeight;
+            mainHeight = innerHeight - navHeight - 10;
+        } else {
+            navHeight = 0;
+            mainHeight = innerHeight;
+        }
 
         // Create SVG container
         svg = d3.select(container)
@@ -170,13 +207,15 @@ function createBamView(bamHeader, data, container) {
                                 .range([navHeight, 0])
                                 .domain(yScale.domain());     
 
-            // Append Y-axis label
-            svg.append('text')
-                .attr('class', 'y-axis-label')
-                .attr('transform', `translate(${margin.left - 40}, ${margin.top + mainHeight / 2}) rotate(-90)`)
-                .attr('text-anchor', 'middle')
-                .text('Coverage (rough estimate)')
-                .style('font-size', '12px');
+            if (opts.showYAxisLabel) {
+                // Append Y-axis label
+                svg.append('text')
+                    .attr('class', 'y-axis-label')
+                    .attr('transform', `translate(${margin.left - 40}, ${margin.top + mainHeight / 2}) rotate(-90)`)
+                    .attr('text-anchor', 'middle')
+                    .text('Coverage (rough estimate)')
+                    .style('font-size', '12px');
+            }
 
             // Clip path
             svg.append('defs')
@@ -314,10 +353,13 @@ function createBamView(bamHeader, data, container) {
         
         // Draw the chart
         drawBarChart(svg);
-        // Create circle button for reset chromosomes and redraw the chart
-        drawCircleButton(svg);
-        // Draw reference buttons 
-        drawRefButtons(svg);
+
+        if (opts.showChromosomes) {
+            // Draw reference buttons 
+            drawRefButtons(svg);   
+            drawCircleButton(svg);         
+        }
+
     }
 
 
@@ -338,17 +380,66 @@ function createBamView(bamHeader, data, container) {
                     .range([mainHeight, 0])
                     .domain([0, 2 * average / conversionRatio]);
 
-        // Y-axis
-        yAxis = d3.axisLeft(yAxis_scale)
-                .ticks(Math.floor(mainHeight / 20))
-                .tickSize(0)
-                .tickFormat(d => `${d}x`);
+        if (opts.showYAxis) {
+            if (opts.yAxisPosition && opts.yAxisPosition === 'internal') {
+                // Y-axis
+                yAxis = d3.axisRight(yAxis_scale)
+                    .ticks(Math.floor(mainHeight / 20))
+                    .tickSize(0)
+                    .tickFormat(d => `${d}x`);
 
-        // Append Y-axis
-        svg.append('g')
-            .attr('class', 'y-axis')
-            .attr('transform', `translate(${margin.left}, ${margin.top})`)
-            .call(yAxis); 
+                // Append Y-axis (done inside of the logic so that we can also add our rectangles)
+                svg.append('g')
+                    .attr('class', 'y-axis')
+                    .attr('transform', `translate(${margin.left}, ${margin.top})`)
+                    .call(yAxis);
+                
+                // Add rectangles for the y-axis
+                let ticks = svg.selectAll('.tick')
+                
+                // Add rectangles for each tick
+                ticks.each(function(d, i) {
+                    const tick = d3.select(this);
+                    const text = tick.select('text');
+
+                    //the rect should just be where the text is
+                    const rectWidth = text.node().getBBox().width + 10;
+                    const rectHeight = 10;
+                    const rectX = parseFloat(text.attr('x')) - rectWidth / 2;
+
+                    tick.append('rect')
+                        .attr('class', 'tick-rect')
+                        .attr('x', `${rectX + 6}`)
+                        .attr('y', `-${rectHeight/2}`)
+                        .attr('width', rectWidth)
+                        .attr('height', rectHeight)
+                        .attr('fill', 'white')
+                        .attr('opacity', 0.5)
+                        .attr('rx', 3);
+                    
+                    //Raise the text above the rectangle
+                    text.raise();
+                });
+
+            } else {
+                // Y-axis
+                yAxis = d3.axisLeft(yAxis_scale)
+                        .ticks(Math.floor(mainHeight / 20))
+                        .tickSize(0)
+                        .tickFormat(d => `${d}x`);
+                
+                // Append Y-axis 
+                svg.append('g')
+                    .attr('class', 'y-axis')
+                    .attr('transform', `translate(${margin.left}, ${margin.top})`)
+                    .call(yAxis); 
+            }
+
+            //If we dont want to see or render the y axis main line 
+            if (opts.showYAxisLine == false) {
+                svg.selectAll('.domain').remove();
+            }
+        }
 
         const meanLineGroup = svg.append('g')
             .attr('class', 'mean-line-group')
@@ -366,16 +457,49 @@ function createBamView(bamHeader, data, container) {
             .attr('stroke-dasharray', '3,3')
             .attr('z-index', 1000);
 
-        // label for mean line
-        meanLineGroup.append('text')
-            .attr('class', 'mean-label')
-            .attr('x', 0)
-            .attr('y', yAxis_scale(meanCoverage))
-            .attr('dy', "0.35em") 
-            .attr('text-anchor', 'end') 
-            .style('fill', 'red') 
-            .text(`${meanCoverage}x`)
-            .style('font-size', '12px');           
+        if (opts.averageCovLabelPosition && (opts.averageCovLabelPosition === 'right-internal' || opts.averageCovLabelPosition === 'left-internal')) {
+            meanLineGroup.append('rect')
+                .attr('x', function() {
+                    if (opts.averageCovLabelPosition === 'left-internal') {
+                        return 25 - 2; // 2px offset for the rectangle vs text
+                    } else if (opts.averageCovLabelPosition === 'right-internal') {
+                        return innerWidth - 32 - 2; // 2px offset for the rectangle vs text
+                    }
+                })
+                .attr('y', yAxis_scale(meanCoverage) - 7.5)
+                .attr('width', 25)
+                .attr('height', 15)
+                .style('fill', 'white')
+                .style('opacity', 0.7)
+                .attr('rx', 3);
+
+            // label for mean line
+            meanLineGroup.append('text')
+                .attr('class', 'mean-label')
+                .attr('x', function() {
+                    if (opts.averageCovLabelPosition === 'left-internal') {
+                        return 25;
+                    } else if (opts.averageCovLabelPosition === 'right-internal') {
+                        return innerWidth - 32;
+                    }
+                })
+                .attr('y', yAxis_scale(meanCoverage))
+                .attr('dy', "0.35em") 
+                .style('fill', 'red') 
+                .text(`${meanCoverage}x`)
+                .style('font-size', '12px');    
+        } else {
+            // label for mean line
+            meanLineGroup.append('text')
+                .attr('class', 'mean-label')
+                .attr('x', 0)
+                .attr('y', yAxis_scale(meanCoverage))
+                .attr('dy', "0.35em") 
+                .attr('text-anchor', 'end') 
+                .style('fill', 'red') 
+                .text(`${meanCoverage}x`)
+                .style('font-size', '12px');    
+        }
     }
 
 
@@ -721,7 +845,7 @@ function createBamView(bamHeader, data, container) {
         shadowRoot.dispatchEvent(customEvent);
     }
 
-    createSvg()
+    createSvg(opts)
 
     return { zoomToChromomsomeRegion, updateMeanLineAndYaxis, updateBrushedRegion }
 }
