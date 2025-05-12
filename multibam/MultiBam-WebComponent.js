@@ -1,5 +1,4 @@
 import { getDataBroker, upgradeProperty, commonCss} from '../../common.js';
-import { getValidRefs } from "../coverage/src/BamData.js";
 import { createMultiBam } from './MultiBamChart.js';
 
 const template = document.createElement('template');
@@ -47,13 +46,15 @@ class MultiBamChart extends HTMLElement {
                 this.bamHeader = header;
                 this.bamReadDepth = readDepthData;
 
-                this.validBamHeader = getValidRefs(this.bamHeader, this.bamReadDepth);
+                this.validBamHeader = this.getValidRefs(this.bamHeader, this.bamReadDepth);
                 this.validBamReadDepth = this.getBamReadDepthByValidRefs(this.validBamHeader, this.bamReadDepth);
+
+                let multiBam = createMultiBam(this.multiBamChart, this.validBamHeader, this.validBamReadDepth);
+                this.multiBamChart.appendChild(multiBam.node());
+
+                this.setupResizeObserver();
             });
         }
-
-        let multiBam = createMultiBam(this.multiBamChart);
-        this.multiBamChart.appendChild(multiBam.node());
     }
 
     getBamReadDepthByValidRefs(bamHeader, bamReadDepth) {
@@ -62,6 +63,47 @@ class MultiBamChart extends HTMLElement {
             validBamReadDepth[i] = bamReadDepth[i];
         }
        return validBamReadDepth;
+    }
+
+    getValidRefs(header, readDepthData) {
+        const refsWithCoverage = Object.keys(readDepthData).filter((key) => {
+                return readDepthData[key].length > 1000;
+            });
+        
+            const validRefs = [];
+            for (let i = 0; i < refsWithCoverage.length; i++) {
+            validRefs.push(header[i]);
+            }
+        
+            return validRefs;
+    }
+
+    setupResizeObserver() {
+        let resizeTimeout;
+
+        const resizeHandler = () => {
+            let multiBam = createMultiBam(this.multiBamChart, this.validBamHeader, this.validBamReadDepth);
+            this.multiBamChart.appendChild(multiBam.node());
+        };
+
+        // Setting up the resize observer
+        this.resizeObserver = new ResizeObserver(entries => {
+            if (resizeTimeout) clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                entries.forEach(entry => {
+                    if (entry.target === this.multiBamChart) {
+                        resizeHandler();
+                    }
+                });
+            }, 100);
+        });
+        this.resizeObserver.observe(this.multiBamChart);
+    }
+
+    disconnectedCallback() {
+        if (this.resizeObserver) {
+            this.resizeObserver.disconnect();
+        }
     }
 }
 
