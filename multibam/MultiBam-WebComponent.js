@@ -1,4 +1,4 @@
-import { getDataBroker, upgradeProperty, commonCss} from '../../common.js';
+import { getDataBroker } from '../common.js';
 import { createMultiBam } from './MultiBamChart.js';
 
 const template = document.createElement('template');
