@@ -13,18 +13,12 @@ function createMultiBam(parent, header, readDepthData) {
     const height = parentHeight;
     const margin = { top: 5, right: 5, bottom: 5, left: 5 };
     const totalLength = d3.sum(header, (d) => d.length);
-    
-    // Order the header
-    header.sort((a, b) => a.sn - b.sn)
 
-    const accMap = _createAccumulatedMap(header);
-    console.log('accMap', accMap);
+    const accMap = _createAccumulatedMap(header); //We are going to accumulate based on the header order
 
     let allBins = [];
     Object.entries(readDepthData).forEach(([sn, bins]) => {
-        let newSn = parseInt(sn) + 1;
-        console.log('newSn', newSn);
-        let chr = accMap[newSn];
+        let chr = accMap[sn];
         let newBins = bins.map((bin) => {
             bin['start'] = chr.start + bin.offset;
             return bin
