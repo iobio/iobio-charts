@@ -18,10 +18,12 @@ function createMultiBam(parent, header, readDepthData) {
     header.sort((a, b) => a.sn - b.sn)
 
     const accMap = _createAccumulatedMap(header);
+    console.log('accMap', accMap);
 
     let allBins = [];
     Object.entries(readDepthData).forEach(([sn, bins]) => {
         let newSn = parseInt(sn) + 1;
+        console.log('newSn', newSn);
         let chr = accMap[newSn];
         let newBins = bins.map((bin) => {
             bin['start'] = chr.start + bin.offset;
