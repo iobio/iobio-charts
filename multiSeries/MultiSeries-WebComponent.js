@@ -1,5 +1,5 @@
 import { getDataBroker } from '../common.js';
-import { createMultiBam } from './MultiBamChart.js';
+import { createMultiSeries } from './MultiSeriesChart.js';
 
 const template = document.createElement('template');
 template.innerHTML = `
@@ -10,15 +10,15 @@ template.innerHTML = `
         height: 100%;
         box-sizing: border-box;
     }
-    #multi-bam-container {
+    #multi-series-container {
         width: 100%;
         height: 100%;
     }
 </style>
-    <div id="multi-bam-container"></div>
+    <div id="multi-series-container"></div>
 `;
 
-class MultiBamChart extends HTMLElement {
+class MultiSeriesChart extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
@@ -32,7 +32,7 @@ class MultiBamChart extends HTMLElement {
     }
 
     initDOMElements() {
-        this.multiBamChart = this.shadowRoot.querySelector('#multi-bam-container');
+        this.multiBamChart = this.shadowRoot.querySelector('#multi-series-container');
     }
 
     async connectedCallback() {
@@ -47,7 +47,7 @@ class MultiBamChart extends HTMLElement {
                 this.validBamHeader = this.getValidRefs(this.bamHeader, this.bamReadDepth);
                 this.validBamReadDepth = this.getBamReadDepthByValidRefs(this.validBamHeader, this.bamReadDepth);
 
-                let multiBam = createMultiBam(this.multiBamChart, this.validBamHeader, this.validBamReadDepth);
+                let multiBam = createMultiSeries(this.multiBamChart, this.validBamHeader, this.validBamReadDepth);
                 this.multiBamChart.appendChild(multiBam.node());
 
                 this.setupResizeObserver();
@@ -80,7 +80,7 @@ class MultiBamChart extends HTMLElement {
         let resizeTimeout;
 
         const resizeHandler = () => {
-            let multiBam = createMultiBam(this.multiBamChart, this.validBamHeader, this.validBamReadDepth);
+            let multiBam = createMultiSeries(this.multiBamChart, this.validBamHeader, this.validBamReadDepth);
             this.multiBamChart.appendChild(multiBam.node());
         };
 
@@ -105,5 +105,5 @@ class MultiBamChart extends HTMLElement {
     }
 }
 
-window.customElements.define('iobio-multi-bam', MultiBamChart);
-export { MultiBamChart };
+window.customElements.define('iobio-multi-series', MultiSeriesChart);
+export { MultiSeriesChart };
