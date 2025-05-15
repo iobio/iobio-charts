@@ -1,13 +1,12 @@
-import { DataBroker } from "./data_broker.js";
+import { MultiAlignmentBroker } from "./multi_alignment_broker.js";
 import { upgradeProperty } from "./common.js";
 
 class MultiAlignmentBrokerElement extends HTMLElement {
     constructor() {
         super();
 
-        upgradeProperty(this, "alignmentUrl");
-        upgradeProperty(this, "indexUrl");
-        upgradeProperty(this, "bedUrl");
+        upgradeProperty(this, "alignmentUrls");
+        upgradeProperty(this, "indexUrls");
         upgradeProperty(this, "server");
     }
 
@@ -23,35 +22,20 @@ class MultiAlignmentBrokerElement extends HTMLElement {
         this.setAttribute("api-url", _);
     }
 
-    get alignmentUrl() {
-        return this.getAttribute("alignment-url");
+    get alignmentUrls() {
+        return this.getAttribute("alignment-urls");
     }
-    set alignmentUrl(_) {
-        this.broker.alignmentUrl = _;
-        this.setAttribute("alignment-url", _);
-    }
-
-    get indexUrl() {
-        return this.getAttribute("index-url");
-    }
-    set indexUrl(_) {
-        this.broker.indexUrl = _;
-        this.setAttribute("index-url", _);
+    set alignmentUrls(_) {
+        this.broker.alignmentUrls = _;
+        this.setAttribute("alignment-urls", _);
     }
 
-    get bedUrl() {
-        return this.getAttribute("bed-url");
+    get indexUrls() {
+        return this.getAttribute("index-urls");
     }
-    set bedUrl(_) {
-        this.broker.bedUrl = _;
-        this.setAttribute("bed-url", _);
-    }
-
-    get regions() {
-        return this.broker.regions;
-    }
-    set regions(_) {
-        this.broker.regions = _;
+    set indexUrls(_) {
+        this.broker.indexUrls = _;
+        this.setAttribute("index-urls", _);
     }
 
     get server() {
@@ -61,14 +45,6 @@ class MultiAlignmentBrokerElement extends HTMLElement {
         this.setAttribute("server", _);
     }
 
-    get bedText() {
-        return this.broker.bedText;
-    }
-
-    set bedText(_) {
-        this.broker.bedText = _;
-    }
-
     connectedCallback() {
         const options = {};
 
@@ -76,10 +52,10 @@ class MultiAlignmentBrokerElement extends HTMLElement {
             options.server = this.server;
         }
 
-        this._broker = new DataBroker(this.alignmentUrl, options);
+        this._broker = new MultiAlignmentBroker(this.alignmentUrls, options);
     }
 }
 
-customElements.define("iobio-data-broker", DataBrokerElement);
+customElements.define("iobio-multi-alignment-broker", MultiAlignmentBrokerElement);
 
-export { DataBrokerElement };
+export { MultiAlignmentBrokerElement };
