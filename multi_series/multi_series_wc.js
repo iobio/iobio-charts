@@ -59,41 +59,38 @@ class MultiSeriesChart extends HTMLElement {
         this.setAttribute("broker-id", _);
     }
 
-                let multiBam = createMultiSeries(this.multiBamChart, this.validBamHeader, this.validBamReadDepth);
-                this.multiBamChart.appendChild(multiBam.node());
+    initDOMElements() {
+        this.multiSeriesContainer = this.shadowRoot.querySelector("#multi-series-container");
 
-                this.setupResizeObserver();
+        // Initialize the chart no data yet
+        this.multiSeriesD3Chart = createMultiSeries(this.multiSeriesContainer, this.seriesTitles);
+        this.setupResizeObserver();
+    }
+
+    async connectedCallback() {
+        // Get the data broker assigned to this element
+        // Setting the brokerId attribute will automatically set the broker
+        this._broker = getDataBroker(this);
+
+        if (this._broker) {
+            this._broker.addEventListener("new-series-data", (event) => {
+                // The broker is smart in this case the chart is not
+                // the data validation is done in the broker
+                const { sections, seriesValues, index } = event.detail;
+
+                this.seriesSections[index] = sections;
+                this.seriesValues[index] = seriesValues;
+
+                this.multiSeriesD3Chart.addSeries(this.seriesValues[index], this.seriesSections[index]); //TODO: Add a method to add series to the chart
             });
         }
-    }
-
-    getBamReadDepthByValidRefs(bamHeader, bamReadDepth) {
-        let validBamReadDepth = {};
-        for (let i = 0; i < bamHeader.length; i++) {
-            validBamReadDepth[i] = bamReadDepth[i];
-        }
-        return validBamReadDepth;
-    }
-
-    getValidRefs(header, readDepthData) {
-        const refsWithCoverage = Object.keys(readDepthData).filter((key) => {
-            return readDepthData[key].length > 1000;
-        });
-
-        const validRefs = [];
-        for (let i = 0; i < refsWithCoverage.length; i++) {
-            validRefs.push(header[i]);
-        }
-
-        return validRefs;
     }
 
     setupResizeObserver() {
         let resizeTimeout;
 
         const resizeHandler = () => {
-            let multiBam = createMultiSeries(this.multiBamChart, this.validBamHeader, this.validBamReadDepth);
-            this.multiBamChart.appendChild(multiBam.node());
+            this.multiSeriesD3Chart.rescale(); // TODO: Implement a rescale method in the chart
         };
 
         // Setting up the resize observer
@@ -101,13 +98,13 @@ class MultiSeriesChart extends HTMLElement {
             if (resizeTimeout) clearTimeout(resizeTimeout);
             resizeTimeout = setTimeout(() => {
                 entries.forEach((entry) => {
-                    if (entry.target === this.multiBamChart) {
+                    if (entry.target === this.multiSeriesChart) {
                         resizeHandler();
                     }
                 });
             }, 100);
         });
-        this.resizeObserver.observe(this.multiBamChart);
+        this.resizeObserver.observe(this.multiSeriesChart);
     }
 
     disconnectedCallback() {
