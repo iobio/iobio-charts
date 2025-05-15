@@ -1,4 +1,4 @@
-import { getDataBroker } from "../common.js";
+import { getDataBroker, upgradeProperty } from "../common.js";
 import { createMultiSeries } from "./multi_series_chart.js";
 
 const template = document.createElement("template");
@@ -25,27 +25,39 @@ class MultiSeriesChart extends HTMLElement {
         this.shadowRoot.appendChild(template.content.cloneNode(true));
         this.initDOMElements();
 
-        this.bamReadDepth = null;
-        this.bamHeader = null;
-        this.validBamHeader = null;
-        this.validBamReadDepth = null;
+        upgradeProperty(this, "seriesTitles");
+        upgradeProperty(this, "seriesSections");
+        upgradeProperty(this, "seriesValues");
+        upgradeProperty(this, "brokerId");
     }
 
-    initDOMElements() {
-        this.multiBamChart = this.shadowRoot.querySelector("#multi-series-container");
+    get seriesTitles() {
+        return this.getAttribute("series-titles");
+    }
+    set seriesTitles(_) {
+        this.setAttribute("series-titles", _);
     }
 
-    async connectedCallback() {
-        this.broker = getDataBroker(this);
+    get seriesSections() {
+        return this.getAttribute("series-sections");
+    }
+    set seriesSections(_) {
+        this.setAttribute("series-sections", _);
+    }
 
-        if (this.broker) {
-            this.broker.addEventListener("alignment-data", (event) => {
-                const { header, readDepthData } = event.detail;
-                this.bamHeader = header;
-                this.bamReadDepth = readDepthData;
+    get seriesValues() {
+        return this.getAttribute("series-values");
+    }
+    set seriesValues(_) {
+        this.setAttribute("series-values", _);
+    }
 
-                this.validBamHeader = this.getValidRefs(this.bamHeader, this.bamReadDepth);
-                this.validBamReadDepth = this.getBamReadDepthByValidRefs(this.validBamHeader, this.bamReadDepth);
+    get brokerId() {
+        return this.getAttribute("broker-id");
+    }
+    set brokerId(_) {
+        this.setAttribute("broker-id", _);
+    }
 
                 let multiBam = createMultiSeries(this.multiBamChart, this.validBamHeader, this.validBamReadDepth);
                 this.multiBamChart.appendChild(multiBam.node());
