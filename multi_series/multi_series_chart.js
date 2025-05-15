@@ -1,8 +1,8 @@
-import * as d3 from 'd3';
+import * as d3 from "d3";
 
 function createMultiSeries(parent, header, readDepthData) {
     //Remove the multiBam chart if it exists
-    const existingChart = parent.querySelector('#multi-series-chart');
+    const existingChart = parent.querySelector("#multi-series-chart");
     if (existingChart) {
         existingChart.remove();
     }
@@ -20,7 +20,7 @@ function createMultiSeries(parent, header, readDepthData) {
         let chr = accMap[header[i].sn];
         let newBins = bins.map((bin) => {
             bin.start = chr.start + bin.offset;
-            return bin
+            return bin;
         });
         allBins = allBins.concat(newBins);
     });
@@ -31,18 +31,21 @@ function createMultiSeries(parent, header, readDepthData) {
     const maxY = mean * 5; //Five times the mean
 
     // SVG
-    let svg = d3.create('svg')
-        .attr('width', width)
-        .attr('height', height)
-        .attr('viewBox', [0, 0, width, height])
-        .attr('id', 'multi-series-chart');
+    let svg = d3
+        .create("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .attr("viewBox", [0, 0, width, height])
+        .attr("id", "multi-series-chart");
 
-    const x = d3.scaleLinear()
+    const x = d3
+        .scaleLinear()
         .domain([0, totalLength])
         .range([margin.left, width - margin.right]);
-    
+
     // our y scale will... be the height minus the margins and our maximum value of any one bin
-    const y = d3.scaleLinear()
+    const y = d3
+        .scaleLinear()
         .domain([minBinValue, maxY])
         .range([height - margin.bottom, margin.top]);
 
@@ -51,24 +54,24 @@ function createMultiSeries(parent, header, readDepthData) {
         const yPos = y(d.avgCoverage);
         let strokeColor = "gray";
         let opacity = 1;
-        
-        if (d.avgCoverage < mean - .5 * mean || d.avgCoverage > mean + .5 * mean) {
+
+        if (d.avgCoverage < mean - 0.5 * mean || d.avgCoverage > mean + 0.5 * mean) {
             svg.append("path")
-            .attr("d", `M${xPos},${yPos}h0`)
-            .attr("stroke", strokeColor)
-            .attr("stroke-opacity", opacity)
-            .attr("stroke-width", 2)
-            .attr("fill", "none")
-            .attr("stroke-linejoin", "round")
-            .attr("stroke-linecap", "round");
+                .attr("d", `M${xPos},${yPos}h0`)
+                .attr("stroke", strokeColor)
+                .attr("stroke-opacity", opacity)
+                .attr("stroke-width", 2)
+                .attr("fill", "none")
+                .attr("stroke-linejoin", "round")
+                .attr("stroke-linecap", "round");
         }
-    
     });
 
     return svg;
 }
 
-function _createAccumulatedMap(header) { //Segments Not Headers
+function _createAccumulatedMap(header) {
+    //Segments Not Headers
     /**
      * Takes in the header of relative coordinates and returns an object that has the accumulated positions for a linear view
      */
@@ -80,15 +83,14 @@ function _createAccumulatedMap(header) { //Segments Not Headers
         acc[h.sn] = h;
         acc[h.sn].start = total;
         acc[h.sn].end = total + length;
-        acc[h.sn].position = i
+        acc[h.sn].position = i;
 
         total += h.length;
-        i++
-        return acc
+        i++;
+        return acc;
     }, {});
 
-
-    return accumulatedMap
+    return accumulatedMap;
 }
 
 export { createMultiSeries };

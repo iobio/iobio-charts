@@ -1,7 +1,7 @@
 import { parseReadDepthData, parseBamHeaderData, parseBedFile, getValidRefs } from "./coverage/src/BamData.js";
 import { sample } from "./sampling.js";
 
-class DataBroker extends EventTarget {
+class MultiAlignmentBroker extends EventTarget {
     constructor(alignmentUrls, options) {
         super();
 
@@ -31,7 +31,6 @@ class DataBroker extends EventTarget {
     get alignmentUrls() {
         return this._alignmentUrls;
     }
-
     set alignmentUrls(_) {
         this._alignmentUrls = _;
         this._tryUpdate(this._doUpdate.bind(this));
@@ -56,7 +55,6 @@ class DataBroker extends EventTarget {
     get bedTexts() {
         return this._bedTexts;
     }
-
     set bedTexts(_) {
         this._bedTexts = _;
         this._updateStats();
@@ -150,18 +148,23 @@ class DataBroker extends EventTarget {
     }
 
     async _doUpdate() {
-        if (!this.alignmentUrl) {
+        if (!this.alignmentUrls) {
             return;
         }
 
-        const alignmentUrlChanged = this.alignmentUrl !== this._lastAlignmentUrl;
+        const alignmentUrlsChanged = JSON.stringify(this.alignmentUrls) !== JSON.stringify(this._lastAlignmentUrls);
 
-        if (alignmentUrlChanged) {
-            this._lastAlignmentUrl = this.alignmentUrl;
+        if (alignmentUrlsChanged) {
+            this._lastAlignmentUrls = this.alignmentUrls;
 
-            const parsedUrl = new URL(this.alignmentUrl);
+            // Process the alignment URLs
+            for (let i = 0; i < this.alignmentUrls.length; i++) {
+                const alignmentUrl = this.alignmentUrls[i];
+                const parsedUrl = new URL(alignmentUrl);
+            }
+            const parsedUrls = new URL(this.alignmentUrls);
 
-            const isCram = parsedUrl.pathname.endsWith(".cram");
+            const isCram = parsedUrls.pathname.endsWith(".cram");
 
             const indexUrl = this._getIndexUrl();
 
@@ -372,4 +375,4 @@ function filterRegions(allRegions, filterRegs) {
     return result;
 }
 
-export { DataBroker };
+export { MultiAlignmentBroker };

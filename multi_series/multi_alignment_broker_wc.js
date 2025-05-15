@@ -1,7 +1,7 @@
 import { DataBroker } from "./data_broker.js";
 import { upgradeProperty } from "./common.js";
 
-class DataBrokerElement extends HTMLElement {
+class MultiAlignmentBrokerElement extends HTMLElement {
     constructor() {
         super();
 

@@ -1,7 +1,7 @@
-import { getDataBroker } from '../common.js';
-import { createMultiSeries } from './MultiSeriesChart.js';
+import { getDataBroker } from "../common.js";
+import { createMultiSeries } from "./multi_series_chart.js";
 
-const template = document.createElement('template');
+const template = document.createElement("template");
 template.innerHTML = `
 <style>
     :host {
@@ -21,7 +21,7 @@ template.innerHTML = `
 class MultiSeriesChart extends HTMLElement {
     constructor() {
         super();
-        this.attachShadow({ mode: 'open' });
+        this.attachShadow({ mode: "open" });
         this.shadowRoot.appendChild(template.content.cloneNode(true));
         this.initDOMElements();
 
@@ -32,14 +32,14 @@ class MultiSeriesChart extends HTMLElement {
     }
 
     initDOMElements() {
-        this.multiBamChart = this.shadowRoot.querySelector('#multi-series-container');
+        this.multiBamChart = this.shadowRoot.querySelector("#multi-series-container");
     }
 
     async connectedCallback() {
         this.broker = getDataBroker(this);
 
         if (this.broker) {
-            this.broker.addEventListener('alignment-data', (event) => {
+            this.broker.addEventListener("alignment-data", (event) => {
                 const { header, readDepthData } = event.detail;
                 this.bamHeader = header;
                 this.bamReadDepth = readDepthData;
@@ -60,20 +60,20 @@ class MultiSeriesChart extends HTMLElement {
         for (let i = 0; i < bamHeader.length; i++) {
             validBamReadDepth[i] = bamReadDepth[i];
         }
-       return validBamReadDepth;
+        return validBamReadDepth;
     }
 
     getValidRefs(header, readDepthData) {
         const refsWithCoverage = Object.keys(readDepthData).filter((key) => {
-                return readDepthData[key].length > 1000;
-            });
-        
-            const validRefs = [];
-            for (let i = 0; i < refsWithCoverage.length; i++) {
+            return readDepthData[key].length > 1000;
+        });
+
+        const validRefs = [];
+        for (let i = 0; i < refsWithCoverage.length; i++) {
             validRefs.push(header[i]);
-            }
-        
-            return validRefs;
+        }
+
+        return validRefs;
     }
 
     setupResizeObserver() {
@@ -85,10 +85,10 @@ class MultiSeriesChart extends HTMLElement {
         };
 
         // Setting up the resize observer
-        this.resizeObserver = new ResizeObserver(entries => {
+        this.resizeObserver = new ResizeObserver((entries) => {
             if (resizeTimeout) clearTimeout(resizeTimeout);
             resizeTimeout = setTimeout(() => {
-                entries.forEach(entry => {
+                entries.forEach((entry) => {
                     if (entry.target === this.multiBamChart) {
                         resizeHandler();
                     }
@@ -105,5 +105,5 @@ class MultiSeriesChart extends HTMLElement {
     }
 }
 
-window.customElements.define('iobio-multi-series', MultiSeriesChart);
+window.customElements.define("iobio-multi-series", MultiSeriesChart);
 export { MultiSeriesChart };
