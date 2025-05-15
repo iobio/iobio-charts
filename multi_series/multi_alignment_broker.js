@@ -1,4 +1,4 @@
-import { parseReadDepthData, parseBamHeaderData, parseBedFile } from "./coverage/src/BamData.js";
+import { parseReadDepthData, parseBamHeaderData } from "./coverage/src/BamData.js";
 
 class MultiAlignmentBroker extends EventTarget {
     constructor(alignmentUrls, options) {
@@ -155,14 +155,38 @@ class MultiAlignmentBroker extends EventTarget {
                 // Parse the coverage and header data
                 this._readDepthData = parseReadDepthData(coverageText);
                 this._header = parseBamHeaderData(headerText);
+                this._header = this._getValidRefs(this._header, this._readDepthData);
+                this._readDepthData = this._getBamReadDepthByValidRefs(this._header, this._readDepthData);
 
-                this.emitEvent("new-alignment-data", {
-                    header: this._header,
-                    readDepthData: this._readDepthData,
-                    index: i, // The index of the alignment URL we have just processed
+                this.emitEvent("new-series-data", {
+                    segments: this._header,
+                    seriesValues: this._readDepthData,
+                    index: i, // The index of the series URL we have just processed
                 });
             }
         }
+    }
+
+    // We will clean the headers here so that they are valid and the chart can be more generic
+    _getValidRefs(header, readDepthData) {
+        const refsWithCoverage = Object.keys(readDepthData).filter((key) => {
+            return readDepthData[key].length > 1000;
+        });
+
+        const validRefs = [];
+        for (let i = 0; i < refsWithCoverage.length; i++) {
+            validRefs.push(header[i]);
+        }
+
+        return validRefs;
+    }
+
+    _getBamReadDepthByValidRefs(bamHeader, bamReadDepth) {
+        let validBamReadDepth = {};
+        for (let i = 0; i < bamHeader.length; i++) {
+            validBamReadDepth[i] = bamReadDepth[i];
+        }
+        return validBamReadDepth;
     }
 }
 
