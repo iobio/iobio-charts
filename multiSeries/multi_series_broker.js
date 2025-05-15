@@ -139,6 +139,7 @@ class DataBroker extends EventTarget {
             for (let i = 0; i < this.alignmentUrls.length; i++) {
                 const alignmentUrl = this.alignmentUrls[i];
                 const parsedUrl = new URL(alignmentUrl);
+
                 const isCram = parsedUrl.pathname.endsWith(".cram");
                 const pathname = isCram ? parsedUrl.pathname + ".crai" : parsedUrl.pathname + ".bai";
                 parsedUrl.pathname = pathname;
