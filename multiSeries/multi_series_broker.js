@@ -2,7 +2,7 @@ import { parseReadDepthData, parseBamHeaderData, parseBedFile, getValidRefs } fr
 import { sample } from "./sampling.js";
 
 class DataBroker extends EventTarget {
-    constructor(alignmentUrl, options) {
+    constructor(alignmentUrls, options) {
         super();
 
         this._server = "https://backend.iobio.io";
@@ -17,7 +17,7 @@ class DataBroker extends EventTarget {
         this._latestUpdates = {};
         this._lastAlignmentUrl = null;
 
-        this.alignmentUrl = alignmentUrl;
+        this.alignmentUrls = alignmentUrls;
     }
 
     get apiUrl() {
@@ -28,37 +28,37 @@ class DataBroker extends EventTarget {
         this._tryUpdate(this._doUpdate.bind(this));
     }
 
-    get alignmentUrl() {
-        return this._alignmentUrl;
+    get alignmentUrls() {
+        return this._alignmentUrls;
     }
 
-    set alignmentUrl(_) {
-        this._alignmentUrl = _;
+    set alignmentUrls(_) {
+        this._alignmentUrls = _;
         this._tryUpdate(this._doUpdate.bind(this));
     }
 
-    get indexUrl() {
-        return this._indexUrl;
+    get indexUrls() {
+        return this._indexUrls;
     }
-    set indexUrl(_) {
-        this._indexUrl = _;
+    set indexUrls(_) {
+        this._indexUrls = _;
         this._tryUpdate(this._doUpdate.bind(this));
     }
 
-    get bedUrl() {
-        return this._bedUrl;
+    get bedUrls() {
+        return this._bedUrls;
     }
-    set bedUrl(_) {
-        this._bedUrl = _;
+    set bedUrls(_) {
+        this._bedUrls = _;
         this._tryUpdate(this._doUpdate.bind(this));
     }
 
-    get bedText() {
-        return this._bedText;
+    get bedTexts() {
+        return this._bedTexts;
     }
 
-    set bedText(_) {
-        this._bedText = _;
+    set bedTexts(_) {
+        this._bedTexts = _;
         this._updateStats();
     }
 
