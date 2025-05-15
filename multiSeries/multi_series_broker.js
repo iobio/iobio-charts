@@ -131,21 +131,21 @@ class DataBroker extends EventTarget {
         }, 0);
     }
 
-    _getIndexUrl() {
-        const parsedUrl = new URL(this.alignmentUrl);
-        const isCram = parsedUrl.pathname.endsWith(".cram");
-
-        let indexUrl;
-
-        if (this.indexUrl) {
-            indexUrl = this.indexUrl;
+    _getIndexUrls() {
+        let indexUrls = [];
+        if (this.indexUrls) {
+            indexUrls = this.indexUrls;
         } else {
-            const pathname = isCram ? parsedUrl.pathname + ".crai" : parsedUrl.pathname + ".bai";
-            parsedUrl.pathname = pathname;
-            indexUrl = parsedUrl.href;
+            for (let i = 0; i < this.alignmentUrls.length; i++) {
+                const alignmentUrl = this.alignmentUrls[i];
+                const parsedUrl = new URL(alignmentUrl);
+                const isCram = parsedUrl.pathname.endsWith(".cram");
+                const pathname = isCram ? parsedUrl.pathname + ".crai" : parsedUrl.pathname + ".bai";
+                parsedUrl.pathname = pathname;
+                indexUrls.push(parsedUrl.href);
+            }
         }
-
-        return indexUrl;
+        return indexUrls;
     }
 
     async _doUpdate() {
