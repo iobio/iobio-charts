@@ -1,5 +1,5 @@
 import { getDataBroker, upgradeProperty } from "../common.js";
-import { createMultiSeries } from "./multi_series_chart.js";
+import { MultiSeriesChart } from "./multi_series_chart.js";
 
 const template = document.createElement("template");
 template.innerHTML = `
@@ -18,7 +18,7 @@ template.innerHTML = `
     <div id="multi-series-container"></div>
 `;
 
-class MultiSeriesChart extends HTMLElement {
+class MultiSeriesChartComponent extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: "open" });
@@ -63,7 +63,7 @@ class MultiSeriesChart extends HTMLElement {
         this.multiSeriesContainer = this.shadowRoot.querySelector("#multi-series-container");
 
         // Initialize the chart no data yet
-        this.multiSeriesD3Chart = createMultiSeries(this.multiSeriesContainer, this.seriesTitles);
+        this.multiSeriesD3Chart = new MultiSeriesChart(this.multiSeriesContainer, this.seriesTitles);
         this.setupResizeObserver();
     }
 
@@ -81,7 +81,7 @@ class MultiSeriesChart extends HTMLElement {
                 this.seriesSections[index] = sections;
                 this.seriesValues[index] = seriesValues;
 
-                this.multiSeriesD3Chart.addSeries(this.seriesValues[index], this.seriesSections[index]); //TODO: Add a method to add series to the chart
+                this.multiSeriesD3Chart.addSeries(this.seriesValues[index], this.seriesSections[index], this.seriesTitles[index]);
             });
         }
     }
@@ -114,5 +114,5 @@ class MultiSeriesChart extends HTMLElement {
     }
 }
 
-window.customElements.define("iobio-multi-series", MultiSeriesChart);
-export { MultiSeriesChart };
+window.customElements.define("iobio-multi-series", MultiSeriesChartComponent);
+export { MultiSeriesChartComponent };
