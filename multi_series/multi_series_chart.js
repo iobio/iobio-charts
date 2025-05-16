@@ -2,7 +2,7 @@ import * as d3 from "d3";
 
 class MultiSeriesChart {
     constructor(parent) {
-        this.parentElement = parentElement;
+        this.parentElement = parent;
         this.svg = null;
 
         this.width = 0;
@@ -42,9 +42,9 @@ class MultiSeriesChart {
         // SVG
         this.svg = d3
             .create("svg")
-            .attr("width", width)
-            .attr("height", height)
-            .attr("viewBox", [0, 0, width, height])
+            .attr("width", this.width)
+            .attr("height", this.height)
+            .attr("viewBox", [0, 0, this.width, this.height])
             .attr("class", "multi-series-chart");
     }
 
