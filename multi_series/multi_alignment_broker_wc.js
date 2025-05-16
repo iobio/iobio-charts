@@ -1,5 +1,5 @@
 import { MultiAlignmentBroker } from "./multi_alignment_broker.js";
-import { upgradeProperty } from "./common.js";
+import { upgradeProperty } from "../common.js";
 
 class MultiAlignmentBrokerElement extends HTMLElement {
     constructor() {

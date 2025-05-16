@@ -1,4 +1,4 @@
-import { parseReadDepthData, parseBamHeaderData } from "./coverage/src/BamData.js";
+import { parseReadDepthData, parseBamHeaderData } from "../coverage/src/BamData.js";
 
 class MultiAlignmentBroker extends EventTarget {
     constructor(alignmentUrls, options) {
