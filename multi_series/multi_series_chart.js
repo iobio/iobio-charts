@@ -7,7 +7,7 @@ class MultiSeriesChart {
 
         this.width = 0;
         this.height = 0;
-        this.margin = { top: 5, right: 5, bottom: 5, left: 0 };
+        this.margin = { top: 5, right: 10, bottom: 5, left: 10 };
 
         this.yMin = null;
         this.yMean = null;
