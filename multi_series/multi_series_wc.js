@@ -25,31 +25,12 @@ class MultiSeriesChartComponent extends HTMLElement {
         this.shadowRoot.appendChild(template.content.cloneNode(true));
         this.initDOMElements();
 
-        upgradeProperty(this, "seriesTitles");
-        upgradeProperty(this, "seriesSections");
-        upgradeProperty(this, "seriesValues");
+        this._broker = null;
+        this._seriesTitles = [];
+        this._seriesSegments = [];
+        this._seriesValues = [];
+
         upgradeProperty(this, "brokerId");
-    }
-
-    get seriesTitles() {
-        return this.getAttribute("series-titles");
-    }
-    set seriesTitles(_) {
-        this.setAttribute("series-titles", _);
-    }
-
-    get seriesSections() {
-        return this.getAttribute("series-sections");
-    }
-    set seriesSections(_) {
-        this.setAttribute("series-sections", _);
-    }
-
-    get seriesValues() {
-        return this.getAttribute("series-values");
-    }
-    set seriesValues(_) {
-        this.setAttribute("series-values", _);
     }
 
     get brokerId() {
@@ -57,6 +38,11 @@ class MultiSeriesChartComponent extends HTMLElement {
     }
     set brokerId(_) {
         this.setAttribute("broker-id", _);
+    }
+
+    // Static getter for observed attributes
+    static get observedAttributes() {
+        return ["broker-id"];
     }
 
     initDOMElements() {
