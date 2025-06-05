@@ -48,27 +48,17 @@ class MultiSeriesChartComponent extends HTMLElement {
     initDOMElements() {
         this.multiSeriesContainer = this.shadowRoot.querySelector("#multi-series-container");
 
-        // Initialize the chart no data yet
-        this.multiSeriesD3Chart = new MultiSeriesChart(this.multiSeriesContainer, this.seriesTitles);
-        this.setupResizeObserver();
+        // Initialize the chart no data yet, ensure the container is ready
+        // before creating the chart
+        requestAnimationFrame(() => {
+            this.multiSeriesD3Chart = new MultiSeriesChart(this.multiSeriesContainer, this.seriesTitles);
+            this.setupResizeObserver();
+        });
     }
 
-    async connectedCallback() {
-        // Get the data broker assigned to this element
-        // Setting the brokerId attribute will automatically set the broker
-        this._broker = getDataBroker(this);
-
-        if (this._broker) {
-            this._broker.addEventListener("new-series-data", (event) => {
-                // The broker is smart in this case the chart is not
-                // the data validation is done in the broker
-                const { sections, seriesValues, index } = event.detail;
-
-                this.seriesSections[index] = sections;
-                this.seriesValues[index] = seriesValues;
-
-                this.multiSeriesD3Chart.addSeries(this.seriesValues[index], this.seriesSections[index], this.seriesTitles[index]);
-            });
+    attributeChangedCallback(name, oldVal, newVal) {
+        if (name === "broker-id" && newVal) {
+            this._setupBroker();
         }
     }
 
@@ -76,7 +66,7 @@ class MultiSeriesChartComponent extends HTMLElement {
         let resizeTimeout;
 
         const resizeHandler = () => {
-            this.multiSeriesD3Chart.rescale(); // TODO: Implement a rescale method in the chart
+            this.multiSeriesD3Chart.rescale(this.multiSeriesContainer);
         };
 
         // Setting up the resize observer
@@ -84,13 +74,13 @@ class MultiSeriesChartComponent extends HTMLElement {
             if (resizeTimeout) clearTimeout(resizeTimeout);
             resizeTimeout = setTimeout(() => {
                 entries.forEach((entry) => {
-                    if (entry.target === this.multiSeriesChart) {
+                    if (entry.target === this.multiSeriesContainer) {
                         resizeHandler();
                     }
                 });
             }, 100);
         });
-        this.resizeObserver.observe(this.multiSeriesChart);
+        this.resizeObserver.observe(this.multiSeriesContainer);
     }
 
     disconnectedCallback() {
