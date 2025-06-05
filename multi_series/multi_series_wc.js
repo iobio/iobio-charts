@@ -88,6 +88,25 @@ class MultiSeriesChartComponent extends HTMLElement {
             this.resizeObserver.disconnect();
         }
     }
+
+    _setupBroker() {
+        // Get the data broker assigned to this element
+        // Setting the brokerId attribute will automatically set the broker
+        this._broker = getDataBroker(this);
+
+        if (this._broker) {
+            this._broker.addEventListener("new-series-data", (event) => {
+                // The broker is smart in this case the chart is not
+                // the data validation is done in the broker
+                const { segments, seriesValues, index } = event.detail;
+
+                this._seriesSegments[index] = segments;
+                this._seriesValues[index] = seriesValues;
+
+                this.multiSeriesD3Chart.addSeries(this._seriesValues[index], this._seriesSegments[index], this._seriesTitles);
+            });
+        }
+    }
 }
 
 window.customElements.define("iobio-multi-series", MultiSeriesChartComponent);
