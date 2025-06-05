@@ -31,6 +31,7 @@ class MultiSeriesChartComponent extends HTMLElement {
         this._seriesValues = [];
 
         upgradeProperty(this, "brokerId");
+        upgradeProperty(this, "region");
     }
 
     get brokerId() {
@@ -38,6 +39,17 @@ class MultiSeriesChartComponent extends HTMLElement {
     }
     set brokerId(_) {
         this.setAttribute("broker-id", _);
+    }
+
+    get region() {
+        return this.getAttribute("region");
+    }
+    set region(_) {
+        this.setAttribute("region", _);
+
+        if (this.multiSeriesD3Chart) {
+            this.multiSeriesD3Chart.updateRange(_);
+        }
     }
 
     // Static getter for observed attributes

@@ -15,6 +15,7 @@ class MultiSeriesChart {
 
         this.xScale = null;
         this.yScale = null;
+        this.region = null;
 
         this.seriesTitles = [];
         this.seriesSegments = [];
@@ -64,6 +65,9 @@ class MultiSeriesChart {
         //Accumulate based just on the order provided
         const totalLength = d3.sum(this.seriesSegments[0], (d) => d.length);
 
+        // The range is an object with the start and end; to start at 0 and end at the total length
+        this.region = { start: 0, end: totalLength };
+
         this.xScale = d3
             .scaleLinear()
             .domain([0, totalLength])
@@ -97,13 +101,19 @@ class MultiSeriesChart {
     }
 
     _redrawSeries(seriesValues) {
+        // Clear existing paths
+        this.svg.selectAll("path").remove();
+
+        // Redraw each series
         seriesValues.forEach((series, index) => {
-            d3.select(`#series-${index}`).remove();
-
             const allBins = series.bins;
-
             const dotPath = allBins
                 .map((d) => {
+                    //If the d.start is outside of our region, skip it
+                    if (d.start < this.region.start || d.start > this.region.end) {
+                        return "";
+                    }
+                    // Otherwise, create the path for the dot
                     const x = this.xScale(d.start);
                     const y = this.yScale(d.avgCoverage);
                     return `M${x},${y}h0`;
@@ -210,6 +220,22 @@ class MultiSeriesChart {
             // Redraw the series with the new scales
             this._redrawSeries(this.series);
         }
+    }
+
+    updateRange(newRegion) {
+        try {
+            this.region = JSON.parse(newRegion); // This comes in as a JSON string
+        } catch (e) {
+            console.error("Invalid region format:", e);
+            return;
+        }
+
+        // Update the xScale based on the new region
+        this.xScale.domain([this.region.start, this.region.end]);
+        this.xScale.range([this.margin.left, this.width - this.margin.right]);
+
+        // Redraw the series with the new xScale
+        this._redrawSeries(this.series);
     }
 
     /**
