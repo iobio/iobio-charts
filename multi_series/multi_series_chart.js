@@ -156,6 +156,44 @@ class MultiSeriesChart {
                 .attr("fill", "none")
                 .attr("stroke-linejoin", "round")
                 .attr("stroke-linecap", "round");
+
+            this._drawMovingAverage(seriesValues); // Draw moving average with a window size of 5
+        });
+    }
+
+    _drawMovingAverage(seriesValues, windowSize = 10) {
+        // Remove existing moving average paths
+        this.svg.selectAll("path[id^='moving-average-']").remove();
+        // Calculate moving averages for each series
+        seriesValues.forEach((series, index) => {
+            const bins = series.bins;
+            const movingAverages = [];
+
+            for (let i = 0; i < bins.length; i++) {
+                const start = Math.max(0, i - windowSize + 1);
+                const end = i + 1;
+                const windowBins = bins.slice(start, end);
+                const avgCoverage = d3.mean(windowBins, (d) => d.avgCoverage);
+                movingAverages.push({ start: bins[i].start, avgCoverage: avgCoverage });
+            }
+
+            // Draw the moving average as a line
+            const line = d3
+                .line()
+                .x((d) => this.xScale(d.start))
+                .y((d) => this.yScale(d.avgCoverage))
+                .curve(d3.curveMonotoneX);
+
+            this.svg
+                .append("path")
+                .attr("id", `moving-average-${index}`)
+                .attr("d", line(movingAverages))
+                .attr("stroke", series.color)
+                .attr("stroke-opacity", 0.5)
+                .attr("stroke-width", 1.5)
+                .attr("fill", "none")
+                .attr("stroke-linejoin", "round")
+                .attr("stroke-linecap", "round");
         });
     }
 
@@ -227,6 +265,7 @@ class MultiSeriesChart {
             .attr("fill", "none")
             .attr("stroke-linejoin", "round")
             .attr("stroke-linecap", "round");
+        this._drawMovingAverage(this.series); // Draw moving average with a window size of 5
     }
 
     rescale(parent) {
