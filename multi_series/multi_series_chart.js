@@ -83,14 +83,21 @@ class MultiSeriesChart {
             .range([this.height - this.margin.bottom, this.margin.top]);
     }
 
-    _recheckYScale(bins) {
+    _updateYOnNew(bins) {
         const newYMin = d3.min(bins, (d) => d.avgCoverage);
-        const newYMax = d3.max(bins, (d) => d.avgCoverage);
+        const newYMax = d3.max(bins, (d) => {
+            //If this bin is outside of the region, skip it
+            if (d.start < this.region.start || d.start > this.region.end) {
+                return this.yMax; // Return current max to avoid skewing the scale
+            }
+            // Otherwise, return the avgCoverage
+            return d.avgCoverage;
+        });
 
         if (newYMin < this.yMin || newYMax > this.yMax) {
             this.yMin = newYMin;
             this.yMean = d3.mean(bins, (d) => d.avgCoverage);
-            this.yMax = this.yMean * 5; //Five times the mean, arbitrary but reasonable
+            this.yMax = this.yMax = Math.min(newYMax, this.yMean * 4);
             this.yScale.domain([this.yMin, this.yMax]); // Update the yScale domain
 
             this.svg.selectAll("path").remove(); // Remove old paths
@@ -98,6 +105,25 @@ class MultiSeriesChart {
             return true;
         }
         return false;
+    }
+
+    _updateYOnRegion() {
+        // So for series in this.series we will pull their bins
+        const allBins = this.series.flatMap((series) => series.bins);
+        // Filter bins based on the current region
+        const filteredBins = allBins.filter((d) => d.start >= this.region.start && d.start <= this.region.end);
+        this.yMin = d3.min(filteredBins, (d) => d.avgCoverage);
+        this.yMean = d3.mean(filteredBins, (d) => d.avgCoverage);
+        // If we get some very weird values, we can set just a maximum we should not exceed
+        this.yMax = Math.min(
+            d3.max(filteredBins, (d) => d.avgCoverage),
+            this.yMean * 4,
+        );
+
+        this.yScale = d3
+            .scaleLinear()
+            .domain([this.yMin, this.yMax])
+            .range([this.height - this.margin.bottom, this.margin.top]);
     }
 
     _redrawSeries(seriesValues) {
@@ -156,7 +182,7 @@ class MultiSeriesChart {
         if (!this.xScale || !this.yScale) {
             this._initScale(allBins);
         } else {
-            this._recheckYScale(allBins);
+            this._updateYOnNew(allBins);
         }
 
         this.seriesTitles.push(title);
@@ -218,6 +244,7 @@ class MultiSeriesChart {
             this.yScale.range([this.height - this.margin.bottom, this.margin.top]);
 
             // Redraw the series with the new scales
+            this._updateYOnRegion();
             this._redrawSeries(this.series);
         }
     }
@@ -234,7 +261,7 @@ class MultiSeriesChart {
         this.xScale.domain([this.region.start, this.region.end]);
         this.xScale.range([this.margin.left, this.width - this.margin.right]);
 
-        // Redraw the series with the new xScale
+        // Redraw the series
         this._redrawSeries(this.series);
     }
 
