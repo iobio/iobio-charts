@@ -32,6 +32,7 @@ class MultiSeriesChartComponent extends HTMLElement {
 
         upgradeProperty(this, "brokerId");
         upgradeProperty(this, "region");
+        upgradeProperty(this, "totalSize");
     }
 
     get brokerId() {
@@ -48,7 +49,18 @@ class MultiSeriesChartComponent extends HTMLElement {
         this.setAttribute("region", _);
 
         if (this.multiSeriesD3Chart) {
-            this.multiSeriesD3Chart.updateRange(_);
+            this.multiSeriesD3Chart.updateRegion(_);
+        }
+    }
+
+    get totalSize() {
+        return this.getAttribute("total-size");
+    }
+    set totalSize(_) {
+        this.setAttribute("total-size", _);
+
+        if (this.multiSeriesD3Chart) {
+            this.multiSeriesD3Chart.updateTotalSize(_);
         }
     }
 
@@ -63,7 +75,7 @@ class MultiSeriesChartComponent extends HTMLElement {
         // Initialize the chart no data yet, ensure the container is ready
         // before creating the chart
         requestAnimationFrame(() => {
-            this.multiSeriesD3Chart = new MultiSeriesChart(this.multiSeriesContainer, this.seriesTitles);
+            this.multiSeriesD3Chart = new MultiSeriesChart(this.multiSeriesContainer);
             this.setupResizeObserver();
         });
     }
@@ -114,7 +126,9 @@ class MultiSeriesChartComponent extends HTMLElement {
 
                 this._seriesSegments[index] = segments;
                 this._seriesValues[index] = seriesValues;
-
+                if (this.region) {
+                    this.multiSeriesD3Chart.updateRegion(this.region);
+                }
                 this.multiSeriesD3Chart.addSeries(this._seriesValues[index], this._seriesSegments[index], this._seriesTitles);
             });
         }

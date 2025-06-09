@@ -16,6 +16,7 @@ class MultiSeriesChart {
         this.xScale = null;
         this.yScale = null;
         this.region = null;
+        this.totalSize = null; // Total size of the genome or region
 
         this.seriesTitles = [];
         this.seriesSegments = [];
@@ -62,19 +63,31 @@ class MultiSeriesChart {
     }
 
     _initScale(bins) {
-        //Accumulate based just on the order provided
-        const totalLength = d3.sum(this.seriesSegments[0], (d) => d.length);
+        this.totalSize = d3.sum(this.seriesSegments[0], (d) => d.length);
 
         // The range is an object with the start and end; to start at 0 and end at the total length
-        this.region = { start: 0, end: totalLength };
+        if (!this.region) {
+            // If no region is set, we set it to the full range
+            this.region = { start: 0, end: this.totalSize };
+        }
 
         this.xScale = d3
             .scaleLinear()
-            .domain([0, totalLength])
+            .domain([this.region.start, this.region.end])
             .range([this.margin.left, this.width - this.margin.right]);
 
-        this.yMin = d3.min(bins, (d) => d.avgCoverage);
-        this.yMean = d3.mean(bins, (d) => d.avgCoverage);
+        this.yMin = d3.min(bins, (d) => {
+            if (d.start < this.region.start || d.start > this.region.end) {
+                return;
+            }
+            return d.avgCoverage;
+        });
+        this.yMean = d3.mean(bins, (d) => {
+            if (d.start < this.region.start || d.start > this.region.end) {
+                return;
+            }
+            return d.avgCoverage;
+        });
         this.yMax = this.yMean * 5; //Five times the mean, arbitrary but reasonable
 
         this.yScale = d3
@@ -88,7 +101,7 @@ class MultiSeriesChart {
         const newYMax = d3.max(bins, (d) => {
             //If this bin is outside of the region, skip it
             if (d.start < this.region.start || d.start > this.region.end) {
-                return this.yMax; // Return current max to avoid skewing the scale
+                return;
             }
             // Otherwise, return the avgCoverage
             return d.avgCoverage;
@@ -156,9 +169,8 @@ class MultiSeriesChart {
                 .attr("fill", "none")
                 .attr("stroke-linejoin", "round")
                 .attr("stroke-linecap", "round");
-
-            this._drawMovingAverage(seriesValues); // Draw moving average with a window size of 5
         });
+        this._drawMovingAverage(seriesValues); // Draw moving average
     }
 
     _drawMovingAverage(seriesValues, windowSize = 10) {
@@ -166,7 +178,9 @@ class MultiSeriesChart {
         this.svg.selectAll("path[id^='moving-average-']").remove();
         // Calculate moving averages for each series
         seriesValues.forEach((series, index) => {
-            const bins = series.bins;
+            // Only include bins within the region
+            const bins = series.bins.filter((d) => d.start >= this.region.start && d.start <= this.region.end);
+
             const movingAverages = [];
 
             for (let i = 0; i < bins.length; i++) {
@@ -244,6 +258,10 @@ class MultiSeriesChart {
 
         const dotPath = allBins
             .map((d) => {
+                //If the d.start is outside of our region, skip it
+                if (d.start < this.region.start || d.start > this.region.end) {
+                    return "";
+                }
                 const x = this.xScale(d.start);
                 const y = this.yScale(d.avgCoverage);
                 return `M${x},${y}h0`;
@@ -288,11 +306,15 @@ class MultiSeriesChart {
         }
     }
 
-    updateRange(newRegion) {
+    updateRegion(newRegion) {
         try {
             this.region = JSON.parse(newRegion); // This comes in as a JSON string
         } catch (e) {
             console.error("Invalid region format:", e);
+            return;
+        }
+
+        if (!this.xScale || !this.yScale) {
             return;
         }
 
