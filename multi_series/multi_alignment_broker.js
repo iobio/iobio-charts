@@ -169,13 +169,65 @@ class MultiAlignmentBroker extends EventTarget {
 
     // We will clean the headers here so that they are valid and the chart can be more generic
     _getValidRefs(header, readDepthData) {
-        const refsWithCoverage = Object.keys(readDepthData).filter((key) => {
-            return readDepthData[key].length > 1000;
-        });
+        const allowedChromosomes = [
+            "chr1",
+            "chr2",
+            "chr3",
+            "chr4",
+            "chr5",
+            "chr6",
+            "chr7",
+            "chr8",
+            "chr9",
+            "chr10",
+            "chr11",
+            "chr12",
+            "chr13",
+            "chr14",
+            "chr15",
+            "chr16",
+            "chr17",
+            "chr18",
+            "chr19",
+            "chr20",
+            "chr21",
+            "chr22",
+            "chrX",
+            "chrY",
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "10",
+            "11",
+            "12",
+            "13",
+            "14",
+            "15",
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21",
+            "22",
+            "X",
+            "Y",
+        ];
 
-        const validRefs = [];
-        for (let i = 0; i < refsWithCoverage.length; i++) {
-            validRefs.push(header[i]);
+        //Accumulate and keep track of the original i as well
+        let validRefs = [];
+        for (let i = 0; i < header.length; i++) {
+            let ref = header[i];
+            ref.originalIndex = i; // Store the original index for reference
+            if (allowedChromosomes.includes(ref.sn)) {
+                validRefs.push(ref);
+            }
         }
 
         return validRefs;
@@ -184,7 +236,8 @@ class MultiAlignmentBroker extends EventTarget {
     _getBamReadDepthByValidRefs(bamHeader, bamReadDepth) {
         let validBamReadDepth = {};
         for (let i = 0; i < bamHeader.length; i++) {
-            validBamReadDepth[i] = bamReadDepth[i];
+            const ref = bamHeader[i];
+            validBamReadDepth[i] = bamReadDepth[ref.originalIndex];
         }
         return validBamReadDepth;
     }
