@@ -79,6 +79,14 @@ class DataBrokerElement extends HTMLElement {
     }
 
     this._broker = new DataBroker(this.alignmentUrl, options);
+
+    if (this.indexUrl) {
+      this._broker.indexUrl = this.indexUrl;
+    }
+
+    if (this.bedUrl) {
+      this._broker.bedUrl = this.bedUrl;
+    }
   }
 }
 
