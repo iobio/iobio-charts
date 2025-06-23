@@ -157,14 +157,21 @@ class MultiSeriesChartComponent extends HTMLElement {
             this._broker.addEventListener("new-series-data", (event) => {
                 // The broker is smart in this case the chart is not
                 // the data validation is done in the broker
-                const { segments, seriesValues, index } = event.detail;
+                const { segments, seriesValues, seriesTitle, index } = event.detail;
 
                 this._seriesSegments[index] = segments;
                 this._seriesValues[index] = seriesValues;
+                this._seriesTitles[index] = seriesTitle;
+
                 if (this.region) {
                     this.multiSeriesD3Chart.updateRegion(this.region);
                 }
-                this.multiSeriesD3Chart.addSeries(this._seriesValues[index], this._seriesSegments[index], this._seriesTitles);
+
+                this.multiSeriesD3Chart.addSeries(
+                    this._seriesValues[index],
+                    this._seriesSegments[index],
+                    this._seriesTitles[index],
+                );
             });
         }
     }

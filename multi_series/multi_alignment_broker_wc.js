@@ -6,12 +6,21 @@ class MultiAlignmentBrokerElement extends HTMLElement {
         super();
 
         upgradeProperty(this, "alignmentUrls");
+        upgradeProperty(this, "alignmentTitles");
         upgradeProperty(this, "indexUrls");
         upgradeProperty(this, "server");
     }
 
     get broker() {
         return this._broker;
+    }
+
+    get alignmentTitles() {
+        return this.getAttribute("alignment-titles");
+    }
+    set alignmentTitles(_) {
+        this.broker.alignmentTitles = _;
+        this.setAttribute("alignment-titles", _);
     }
 
     get apiUrl() {
@@ -50,6 +59,7 @@ class MultiAlignmentBrokerElement extends HTMLElement {
 
         if (this.server) {
             options.server = this.server;
+            options.titles = this.alignmentTitles ? this.alignmentTitles : [];
         }
 
         this._broker = new MultiAlignmentBroker(this.alignmentUrls, options);

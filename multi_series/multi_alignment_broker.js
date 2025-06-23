@@ -5,10 +5,14 @@ class MultiAlignmentBroker extends EventTarget {
         super();
 
         this._server = "https://backend.iobio.io";
+        this._alignmentTitles = [];
 
         if (options) {
             if (options.server) {
                 this._server = options.server;
+            }
+            if (options.alignmentTitles) {
+                this._alignmentTitles = options.alignmentTitles;
             }
         }
 
@@ -32,6 +36,14 @@ class MultiAlignmentBroker extends EventTarget {
     }
     set alignmentUrls(_) {
         this._alignmentUrls = _;
+        this._tryUpdate(this._doUpdate.bind(this));
+    }
+
+    get alignmentTitles() {
+        return this._alignmentTitles;
+    }
+    set alignmentTitles(_) {
+        this._alignmentTitles = _;
         this._tryUpdate(this._doUpdate.bind(this));
     }
 
@@ -163,6 +175,7 @@ class MultiAlignmentBroker extends EventTarget {
                 this.emitEvent("new-series-data", {
                     segments: this._header,
                     seriesValues: this._readDepthData,
+                    seriesTitle: this.alignmentTitles[i] || `Sample ${i + 1}`,
                     index: i, // The index of the series URL we have just processed
                 });
             }

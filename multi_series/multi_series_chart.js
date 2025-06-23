@@ -171,6 +171,7 @@ class MultiSeriesChart {
                 .attr("stroke-linecap", "round");
         });
         this._drawMovingAverage(seriesValues); // Draw moving average
+        this._updateLegend(); // Update the legend
     }
 
     _drawMovingAverage(seriesValues, windowSize = 10) {
@@ -209,6 +210,51 @@ class MultiSeriesChart {
                 .attr("stroke-linejoin", "round")
                 .attr("stroke-linecap", "round");
         });
+    }
+
+    _addLegend() {
+        // If the legend already exists, remove it
+        this.svg.select(".legend").remove();
+
+        // Create a legend for the series
+        const legend = this.svg.append("g").attr("class", "legend").attr("transform", `translate(${0}, ${this.margin.top})`);
+
+        //Add a background rectangle for the legend depending on the number of series and length of the longest title
+        const longestTitle = this.series.reduce((max, series) => Math.max(max, series.title.length), 0);
+        const numTitles = this.series.length;
+
+        legend
+            .append("rect")
+            .attr("x", -2)
+            .attr("y", -2)
+            .attr("width", longestTitle * 7 + 19) // 7px per character, plus padding
+            .attr("height", numTitles * 15 + 4)
+            .attr("fill", "white")
+            .attr("fill-opacity", 0.5)
+            .attr("rx", 5);
+        this.series.forEach((series, index) => {
+            legend
+                .append("rect")
+                .attr("x", -1)
+                .attr("y", index * 15)
+                .attr("width", 10)
+                .attr("height", 10)
+                .attr("fill", series.color);
+            legend
+                .append("text")
+                .attr("x", 19)
+                .attr("y", index * 15 + 9)
+                .text(series.title)
+                .attr("font-size", "12px")
+                .attr("fill", "black");
+        });
+    }
+
+    _updateLegend() {
+        // If the legend already exists, remove it
+        this.svg.select(".legend").remove();
+        // Create a legend for the series
+        this._addLegend();
     }
 
     /**
@@ -284,6 +330,7 @@ class MultiSeriesChart {
             .attr("stroke-linejoin", "round")
             .attr("stroke-linecap", "round");
         this._drawMovingAverage(this.series); // Draw moving average with a window size of 5
+        this._updateLegend();
     }
 
     rescale(parent) {
