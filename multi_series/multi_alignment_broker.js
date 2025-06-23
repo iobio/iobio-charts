@@ -134,6 +134,8 @@ class MultiAlignmentBroker extends EventTarget {
 
             const indexUrls = this._getIndexUrls();
             // Parse the alignment URLs
+            this.emitEvent("start-fetching-series", null);
+
             for (let i = 0; i < this.alignmentUrls.length; i++) {
                 const parsedUrl = new URL(this.alignmentUrls[i]);
                 const indexUrl = indexUrls[i];
@@ -164,6 +166,8 @@ class MultiAlignmentBroker extends EventTarget {
                     index: i, // The index of the series URL we have just processed
                 });
             }
+
+            this.emitEvent("end-fetching-series", null);
         }
     }
 

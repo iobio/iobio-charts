@@ -10,12 +10,28 @@ template.innerHTML = `
         height: 100%;
         box-sizing: border-box;
     }
+    #loading-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        visibility: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: rgba(255, 255, 255, 0.6);
+    }
     #multi-series-container {
         width: 100%;
         height: 100%;
     }
 </style>
-    <div id="multi-series-container"></div>
+    <div id="multi-series-container">
+        <div id="loading-container">
+            <iobio-loading-indicator label="Gathering data"></iobio-loading-indicator>
+        </div>
+    </div>
 `;
 
 class MultiSeriesChartComponent extends HTMLElement {
@@ -113,12 +129,31 @@ class MultiSeriesChartComponent extends HTMLElement {
         }
     }
 
+    toggleLoadingIndicator(showSVG) {
+        const indicatorContainer = this.shadowRoot.querySelector("#loading-container");
+        if (showSVG) {
+            indicatorContainer.style.visibility = "visible";
+        } else {
+            indicatorContainer.style.visibility = "hidden";
+        }
+    }
+
     _setupBroker() {
         // Get the data broker assigned to this element
         // Setting the brokerId attribute will automatically set the broker
         this._broker = getDataBroker(this);
 
         if (this._broker) {
+            this._broker.addEventListener("start-fetching-series", () => {
+                // This is just our loading indicator showing
+                this.toggleLoadingIndicator(true);
+            });
+
+            this._broker.addEventListener("end-fetching-series", () => {
+                // This is just our loading indicator hiding
+                this.toggleLoadingIndicator(false);
+            });
+
             this._broker.addEventListener("new-series-data", (event) => {
                 // The broker is smart in this case the chart is not
                 // the data validation is done in the broker
