@@ -5,22 +5,29 @@ class MultiAlignmentBroker extends EventTarget {
         super();
 
         this._server = "https://backend.iobio.io";
+        this._preciseServer = "https://mosaic.chpc.utah.edu/gru-dev-9002";
         this._alignmentTitles = [];
 
         if (options) {
             if (options.server) {
                 this._server = options.server;
             }
-            if (options.alignmentTitles) {
-                this._alignmentTitles = options.alignmentTitles;
+            if (options.titles) {
+                this._alignmentTitles = options.titles;
+            }
+            if (options.region) {
+                this._region = options.region;
             }
         }
 
         this._callbacks = {};
         this._latestUpdates = {};
         this._lastAlignmentUrl = null;
+        this._lastRegion = null;
+        this._region = null;
 
         this.alignmentUrls = alignmentUrls;
+        this._component = null;
     }
 
     get apiUrl() {
@@ -28,6 +35,29 @@ class MultiAlignmentBroker extends EventTarget {
     }
     set apiUrl(_) {
         this._server = _;
+        this._tryUpdate(this._doUpdate.bind(this));
+    }
+
+    get component() {
+        return this._component;
+    }
+    set component(_) {
+        this._component = _;
+    }
+
+    get preciseApiUrl() {
+        return this._preciseServer;
+    }
+    set preciseApiUrl(_) {
+        this._preciseServer = _;
+        this._tryUpdate(this._doUpdate.bind(this));
+    }
+
+    get region() {
+        return this._region;
+    }
+    set region(_) {
+        this._region = _;
         this._tryUpdate(this._doUpdate.bind(this));
     }
 
@@ -101,6 +131,20 @@ class MultiAlignmentBroker extends EventTarget {
         return { response, abortController };
     }
 
+    async _preciseRequest(endpoint, params) {
+        const abortController = new AbortController();
+        const response = await fetch(`${this.preciseApiUrl}${endpoint}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "text/plain",
+            },
+            body: JSON.stringify(params),
+            signal: abortController.signal,
+        });
+
+        return { response, abortController };
+    }
+
     // Using 0 timeout here to handle the case where the caller sets url and
     // indexUrl one right after the other. The goal is to prevent firing off two
     // updates.
@@ -111,7 +155,7 @@ class MultiAlignmentBroker extends EventTarget {
         }
 
         this._updateTimeout = setTimeout(() => {
-            //this._doUpdate();
+            //this._doUpdate() is what is being called after the timeout
             func();
         }, 0);
     }
@@ -134,58 +178,140 @@ class MultiAlignmentBroker extends EventTarget {
         return indexUrls;
     }
 
+    _getChartWidth() {
+        if (this._component && this._component.multiSeriesContainer) {
+            return this._component.multiSeriesContainer.clientWidth;
+        }
+        return 1000; // fallback
+    }
+
     async _doUpdate() {
         if (!this.alignmentUrls) {
             return;
         }
 
         const alignmentUrlsChanged = JSON.stringify(this.alignmentUrls) !== JSON.stringify(this._lastAlignmentUrls);
+        const regionChanged = !this._lastRegion || JSON.stringify(this.region) !== JSON.stringify(this._lastRegion);
 
-        if (alignmentUrlsChanged) {
-            this._lastAlignmentUrls = this.alignmentUrls;
-
-            const indexUrls = this._getIndexUrls();
-            // Parse the alignment URLs
-            this.emitEvent("start-fetching-series", null);
-
-            for (let i = 0; i < this.alignmentUrls.length; i++) {
-                const parsedUrl = new URL(this.alignmentUrls[i]);
-                const indexUrl = indexUrls[i];
-                const isCram = parsedUrl.pathname.endsWith(".cram");
-                const coverageEndpoint = isCram ? "/craiReadDepth" : "/baiReadDepth";
-
-                // Coverage promise
-                const coverageTextPromise = this._iobioRequest(coverageEndpoint, {
-                    url: indexUrl,
-                }).then((res) => res.response.text());
-                // Header promise
-                const headerTextPromise = this._iobioRequest("/alignmentHeader", {
-                    url: parsedUrl,
-                }).then((res) => res.response.text());
-
-                // Collect all promises
-                const [coverageText, headerText, bedText] = await Promise.all([coverageTextPromise, headerTextPromise]);
-
-                // Parse the coverage and header data
-                this._readDepthData = parseReadDepthData(coverageText);
-                this._header = parseBamHeaderData(headerText);
-                this._header = this._getValidRefs(this._header, this._readDepthData);
-                this._readDepthData = this._getBamReadDepthByValidRefs(this._header, this._readDepthData);
-
-                this.emitEvent("new-series-data", {
-                    segments: this._header,
-                    seriesValues: this._readDepthData,
-                    seriesTitle: this.alignmentTitles[i] || `Sample ${i + 1}`,
-                    index: i, // The index of the series URL we have just processed
-                });
+        if (alignmentUrlsChanged || regionChanged) {
+            await this._pullAllBins();
+            return;
+        } else if (this.region.start && this.region.end && this.region.startChr) {
+            const chartWidth = this._getChartWidth();
+            let bins = chartWidth;
+            if (this.region.end - this.region.start < chartWidth) {
+                bins = this.region.end - this.region.start;
             }
-
-            this.emitEvent("end-fetching-series", null);
+            await this._pullPreciseBins(bins);
+            return;
         }
     }
 
+    async _pullAllBins() {
+        const chartWidth = this._getChartWidth();
+        this._lastAlignmentUrls = this.alignmentUrls;
+
+        const indexUrls = this._getIndexUrls();
+
+        //If we have a region and it is not empty (meaning it was small enough to be set), we will want to pull the precise bins
+        const regionSize = this.region ? this.region.end - this.region.start : null;
+        if (regionSize && regionSize < 1000000) {
+            let bins = chartWidth;
+            if (regionSize < chartWidth) {
+                bins = regionSize;
+            }
+            await this._pullPreciseBins(bins);
+            return;
+        }
+
+        // Parse the alignment URLs
+        this.emitEvent("start-fetching-series", null);
+
+        for (let i = 0; i < this.alignmentUrls.length; i++) {
+            const parsedUrl = new URL(this.alignmentUrls[i]);
+            const indexUrl = indexUrls[i];
+            const isCram = parsedUrl.pathname.endsWith(".cram");
+            const coverageEndpoint = isCram ? "/craiReadDepth" : "/baiReadDepth";
+
+            // Coverage promise
+            const coverageTextPromise = this._iobioRequest(coverageEndpoint, {
+                url: indexUrl,
+            }).then((res) => res.response.text());
+            // Header promise
+            const headerTextPromise = this._iobioRequest("/alignmentHeader", {
+                url: parsedUrl,
+            }).then((res) => res.response.text());
+
+            // Collect all promises
+            const [coverageText, headerText, bedText] = await Promise.all([coverageTextPromise, headerTextPromise]);
+
+            // Parse the coverage and header data
+            this._readDepthData = parseReadDepthData(coverageText);
+            this._header = parseBamHeaderData(headerText);
+            this._header = this._getValidRefs(this._header, this._readDepthData);
+            this._readDepthData = this._getBamReadDepthByValidRefs(this._header, this._readDepthData);
+
+            this.emitEvent("new-series-data", {
+                segments: this._header,
+                seriesValues: this._readDepthData,
+                seriesTitle: this.alignmentTitles[i] || `Sample ${i + 1}`,
+                index: i, // The index of the series URL we have just processed
+            });
+        }
+
+        this.emitEvent("end-fetching-series", null);
+    }
+
+    async _pullPreciseBins(bins) {
+        const indexUrls = this._getIndexUrls();
+        // Parse the alignment URLs
+        this.emitEvent("start-fetching-series", null);
+
+        for (let i = 0; i < this.alignmentUrls.length; i++) {
+            const parsedUrl = new URL(this.alignmentUrls[i]);
+            const coverageEndpoint = "/preciseReadDepth";
+
+            // Header promise: First so that we can know the format of the refs
+            const headerText = await this._preciseRequest("/alignmentHeader", {
+                url: parsedUrl,
+            }).then((res) => res.response.text());
+
+            // Parse and process header first
+            this._header = parseBamHeaderData(headerText);
+            this._header = this._getValidRefs(this._header);
+
+            const hasChrInRef = this._header.some((ref) => ref.sn.includes("chr"));
+
+            // Coverage promise: Now that we have the header, we can process coverage
+            const coverageText = await this._preciseRequest(coverageEndpoint, {
+                url: parsedUrl,
+                indexUrl: indexUrls[i],
+                region: {
+                    start: this.region.start,
+                    end: this.region.end,
+                    refName: hasChrInRef ? "chr" + this.region.startChr : this.region.startChr,
+                },
+                numBins: bins,
+            }).then((res) => res.response.text());
+
+            // Parse the coverage data now that header is available
+            const binSize = Math.floor((this.region.end - this.region.start) / bins);
+            this._readDepthData = this._parsePreciseReadDepth(coverageText, this.region, this._header, hasChrInRef, binSize);
+            this._readDepthData = this._getBamReadDepthByValidRefs(this._header, this._readDepthData);
+
+            this.emitEvent("new-series-data", {
+                segments: this._header,
+                seriesValues: this._readDepthData,
+                seriesTitle: this.alignmentTitles[i] || `Sample ${i + 1}`,
+                index: i, // The index of the series URL we have just processed
+            });
+        }
+
+        this.emitEvent("end-fetching-series", null);
+    }
+
     // We will clean the headers here so that they are valid and the chart can be more generic
-    _getValidRefs(header, readDepthData) {
+    _getValidRefs(header) {
         const allowedChromosomes = [
             "chr1",
             "chr2",
@@ -257,6 +383,40 @@ class MultiAlignmentBroker extends EventTarget {
             validBamReadDepth[i] = bamReadDepth[ref.originalIndex];
         }
         return validBamReadDepth;
+    }
+
+    _parsePreciseReadDepth(rawReadDepth, region, headers, hasChrInRef, binSize) {
+        const regionStart = region.start;
+        let regionChr = region.startChr;
+        let readDepth = {};
+        regionChr = hasChrInRef ? "chr" + regionChr : regionChr;
+
+        for (let i = 0; i < headers.length; i++) {
+            const header = headers[i];
+            const headerChr = header.sn;
+
+            readDepth[i] = [];
+
+            if (headerChr === regionChr) {
+                const lines = rawReadDepth.split("\n");
+                let currOffset = 0;
+                for (let j = 0; j < lines.length; j++) {
+                    let bin = {};
+                    const line = lines[j];
+                    const avgCoverage = line[0];
+
+                    const offset = regionStart + currOffset;
+
+                    bin.offset = offset;
+                    bin.avgCoverage = avgCoverage;
+                    readDepth[i].push(bin);
+
+                    currOffset += binSize;
+                }
+            }
+        }
+
+        return readDepth;
     }
 }
 

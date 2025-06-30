@@ -76,19 +76,15 @@ class MultiSeriesChart {
             .domain([this.region.start, this.region.end])
             .range([this.margin.left, this.width - this.margin.right]);
 
-        this.yMin = d3.min(bins, (d) => {
-            if (d.start < this.region.start || d.start > this.region.end) {
-                return;
-            }
-            return d.avgCoverage;
-        });
+        this.yMin = 0; //We will set this to 0
+
         this.yMean = d3.mean(bins, (d) => {
             if (d.start < this.region.start || d.start > this.region.end) {
                 return;
             }
             return d.avgCoverage;
         });
-        this.yMax = this.yMean * 5; //Five times the mean, arbitrary but reasonable
+        this.yMax = this.yMean * 3; //Three times the mean, arbitrary but reasonable
 
         this.yScale = d3
             .scaleLinear()
@@ -97,7 +93,6 @@ class MultiSeriesChart {
     }
 
     _updateYOnNew(bins) {
-        const newYMin = d3.min(bins, (d) => d.avgCoverage);
         const newYMax = d3.max(bins, (d) => {
             //If this bin is outside of the region, skip it
             if (d.start < this.region.start || d.start > this.region.end) {
@@ -107,10 +102,9 @@ class MultiSeriesChart {
             return d.avgCoverage;
         });
 
-        if (newYMin < this.yMin || newYMax > this.yMax) {
-            this.yMin = newYMin;
+        if (newYMax > this.yMax) {
             this.yMean = d3.mean(bins, (d) => d.avgCoverage);
-            this.yMax = this.yMax = Math.min(newYMax, this.yMean * 4);
+            this.yMax = Math.min(newYMax, this.yMean * 3);
             this.yScale.domain([this.yMin, this.yMax]); // Update the yScale domain
 
             this.svg.selectAll("path").remove(); // Remove old paths
@@ -125,18 +119,15 @@ class MultiSeriesChart {
         const allBins = this.series.flatMap((series) => series.bins);
         // Filter bins based on the current region
         const filteredBins = allBins.filter((d) => d.start >= this.region.start && d.start <= this.region.end);
-        this.yMin = d3.min(filteredBins, (d) => d.avgCoverage);
+
         this.yMean = d3.mean(filteredBins, (d) => d.avgCoverage);
         // If we get some very weird values, we can set just a maximum we should not exceed
         this.yMax = Math.min(
             d3.max(filteredBins, (d) => d.avgCoverage),
-            this.yMean * 4,
+            this.yMean * 3,
         );
 
-        this.yScale = d3
-            .scaleLinear()
-            .domain([this.yMin, this.yMax])
-            .range([this.height - this.margin.bottom, this.margin.top]);
+        this.yScale.domain([this.yMin, this.yMax]);
     }
 
     _redrawSeries(seriesValues) {
@@ -262,75 +253,100 @@ class MultiSeriesChart {
      */
 
     addSeries(values, segments, title = "") {
-        if (!this.accumulatedSegments || this.accumulatedSegments.length === 0) {
-            this.accumulatedSegments = this._createAccumulatedMap(segments);
-            this.seriesSegments.push(segments);
-        }
+        try {
+            if (!this.accumulatedSegments || this.accumulatedSegments.length === 0) {
+                this.accumulatedSegments = this._createAccumulatedMap(segments);
+                this.seriesSegments.push(segments);
+            }
 
-        let allBins = [];
-        Object.entries(values).forEach(([i, bins]) => {
-            let chr = this.accumulatedSegments[segments[i].sn];
-            let newBins = bins.map((bin) => {
-                bin.start = chr.start + bin.offset;
-                return bin;
+            let allBins = [];
+            Object.entries(values).forEach(([i, bins]) => {
+                let chr = this.accumulatedSegments[segments[i].sn];
+                let newBins = bins.map((bin) => {
+                    bin.start = chr.start + bin.offset;
+                    return bin;
+                });
+                allBins = allBins.concat(newBins);
             });
-            allBins = allBins.concat(newBins);
-        });
 
-        if (!this.xScale || !this.yScale) {
-            this._initScale(allBins);
-        } else {
-            this._updateYOnNew(allBins);
+            if (!this.xScale || !this.yScale) {
+                this._initScale(allBins);
+            } else {
+                this._updateYOnNew(allBins);
+            }
+
+            const titleExists = this.seriesTitles.includes(title);
+            let index;
+            if (!titleExists) {
+                this.seriesTitles.push(title);
+                index = this.series.length;
+            } else {
+                index = this.series.findIndex((series) => series.title === title);
+            }
+
+            // Probably need 10 colors for the series
+            const colors = ["#C70000", "black", "#2D4B87", "orange", "teal", "pink", "green", "purple", "brown", "yellow"];
+            const color = colors[index] || "gray";
+
+            let newSeries;
+            if (titleExists) {
+                // Then we need to update the series with the new bins
+                this.series[index].bins = allBins;
+                this.series[index].color = color;
+                this.series[index].mean = d3.mean(allBins, (d) => d.avgCoverage);
+                this.series[index].sd = d3.deviation(allBins, (d) => d.avgCoverage);
+                this.series[index].min = d3.min(allBins, (d) => d.avgCoverage);
+                this.series[index].max = d3.max(allBins, (d) => d.avgCoverage);
+                newSeries = this.series[index];
+                this._redrawSeries(this.series);
+            } else {
+                newSeries = {
+                    title: title,
+                    bins: allBins,
+                    mean: d3.mean(allBins, (d) => d.avgCoverage),
+                    sd: d3.deviation(allBins, (d) => d.avgCoverage),
+                    min: d3.min(allBins, (d) => d.avgCoverage),
+                    max: d3.max(allBins, (d) => d.avgCoverage),
+                    color: color,
+                };
+
+                this.series.push(newSeries);
+
+                const dotPath = allBins
+                    .map((d) => {
+                        //If the d.start is outside of our region, skip it
+                        if (d.start < this.region.start || d.start > this.region.end) {
+                            return "";
+                        }
+                        const x = this.xScale(d.start);
+                        const y = this.yScale(d.avgCoverage);
+                        return `M${x},${y}h0`;
+                    })
+                    .join(" ");
+
+                this.svg
+                    .append("path")
+                    .attr("id", `series-${index}`)
+                    .attr("d", dotPath)
+                    .attr("stroke", newSeries.color)
+                    .attr("stroke-opacity", () => {
+                        if (newSeries.color === "#C70000") {
+                            return 1;
+                        }
+                        return 0.7;
+                    })
+                    .attr("stroke-width", 1.5)
+                    .attr("fill", "none")
+                    .attr("stroke-linejoin", "round")
+                    .attr("stroke-linecap", "round");
+
+                this._drawMovingAverage(this.series);
+                this._updateLegend();
+            }
+        } catch (error) {
+            console.error("Error in addSeries:", error);
+            throw error;
         }
-
-        this.seriesTitles.push(title);
-        const index = this.series.length;
-
-        // Probably need 10 colors for the series
-        const colors = ["#C70000", "black", "#2D4B87", "orange", "teal", "pink", "green", "purple", "brown", "yellow"];
-        const color = colors[index] || "gray";
-
-        let newSeries = {
-            title: title,
-            bins: allBins,
-            mean: d3.mean(allBins, (d) => d.avgCoverage),
-            sd: d3.deviation(allBins, (d) => d.avgCoverage),
-            min: d3.min(allBins, (d) => d.avgCoverage),
-            max: d3.max(allBins, (d) => d.avgCoverage),
-            color: color,
-        };
-
-        this.series.push(newSeries);
-
-        const dotPath = allBins
-            .map((d) => {
-                //If the d.start is outside of our region, skip it
-                if (d.start < this.region.start || d.start > this.region.end) {
-                    return "";
-                }
-                const x = this.xScale(d.start);
-                const y = this.yScale(d.avgCoverage);
-                return `M${x},${y}h0`;
-            })
-            .join(" ");
-
-        this.svg
-            .append("path")
-            .attr("id", `series-${index}`)
-            .attr("d", dotPath)
-            .attr("stroke", newSeries.color)
-            .attr("stroke-opacity", () => {
-                if (newSeries.color === "#C70000") {
-                    return 1;
-                }
-                return 0.7;
-            })
-            .attr("stroke-width", 1.5)
-            .attr("fill", "none")
-            .attr("stroke-linejoin", "round")
-            .attr("stroke-linecap", "round");
-        this._drawMovingAverage(this.series); // Draw moving average with a window size of 5
-        this._updateLegend();
     }
 
     rescale(parent) {
@@ -355,22 +371,24 @@ class MultiSeriesChart {
 
     updateRegion(newRegion) {
         try {
-            this.region = JSON.parse(newRegion); // This comes in as a JSON string
-        } catch (e) {
-            console.error("Invalid region format:", e);
-            return;
+            this.region = newRegion;
+
+            if (!this.xScale || !this.yScale) {
+                return;
+            }
+
+            // Update the xScale based on the new region
+            this.xScale.domain([this.region.start, this.region.end]);
+            this.xScale.range([this.margin.left, this.width - this.margin.right]);
+
+            // Update the yScale based on the new region
+            this._updateYOnRegion();
+            // Redraw the series
+            this._redrawSeries(this.series);
+        } catch (error) {
+            console.error("Error in updateRegion:", error);
+            throw error;
         }
-
-        if (!this.xScale || !this.yScale) {
-            return;
-        }
-
-        // Update the xScale based on the new region
-        this.xScale.domain([this.region.start, this.region.end]);
-        this.xScale.range([this.margin.left, this.width - this.margin.right]);
-
-        // Redraw the series
-        this._redrawSeries(this.series);
     }
 
     /**

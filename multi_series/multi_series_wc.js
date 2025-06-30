@@ -48,6 +48,7 @@ class MultiSeriesChartComponent extends HTMLElement {
 
         upgradeProperty(this, "brokerId");
         upgradeProperty(this, "region");
+        upgradeProperty(this, "regionMap");
         upgradeProperty(this, "totalSize");
     }
 
@@ -59,14 +60,23 @@ class MultiSeriesChartComponent extends HTMLElement {
     }
 
     get region() {
-        return this.getAttribute("region");
+        let attr = this.getAttribute("region");
+        return attr ? JSON.parse(attr) : {};
     }
     set region(_) {
         this.setAttribute("region", _);
-
         if (this.multiSeriesD3Chart) {
-            this.multiSeriesD3Chart.updateRegion(_);
+            let parsedRegion = JSON.parse(_);
+            this.multiSeriesD3Chart.updateRegion(parsedRegion);
         }
+    }
+
+    get regionMap() {
+        let attr = this.getAttribute("region-map");
+        return attr ? JSON.parse(attr) : {};
+    }
+    set regionMap(_) {
+        this.setAttribute("region-map", _);
     }
 
     get totalSize() {
@@ -82,7 +92,7 @@ class MultiSeriesChartComponent extends HTMLElement {
 
     // Static getter for observed attributes
     static get observedAttributes() {
-        return ["broker-id"];
+        return ["broker-id", "region"];
     }
 
     initDOMElements() {
@@ -99,6 +109,26 @@ class MultiSeriesChartComponent extends HTMLElement {
     attributeChangedCallback(name, oldVal, newVal) {
         if (name === "broker-id" && newVal) {
             this._setupBroker();
+        }
+
+        if (name === "region" && newVal && newVal !== oldVal) {
+            let oldValSize;
+            let newValSize;
+            if (oldVal) {
+                oldVal = JSON.parse(oldVal);
+                oldValSize = oldVal ? oldVal.end - oldVal.start : 0;
+            }
+            if (newVal) {
+                newVal = JSON.parse(newVal);
+                newValSize = newVal.end - newVal.start;
+            }
+
+            if (newValSize && newValSize < 1000000) {
+                this._broker.region = this._formatRegion(newVal);
+            } else if (oldValSize && oldValSize <= 1000000 && newValSize && newValSize > 1000000) {
+                // We will want to pull all bins from index
+                this._broker.region = {};
+            }
         }
     }
 
@@ -138,9 +168,57 @@ class MultiSeriesChartComponent extends HTMLElement {
         }
     }
 
+    _formatRegion(region) {
+        /**
+         * This function should only be called on a small one chromosome region
+         */
+        let formattedRegion = {
+            // Return the whole genome if the region is not a small one chromosome region
+            start: 1,
+            end: this.totalSize,
+            startChr: "1",
+            endChr: "",
+        };
+
+        if (this.regionMap && Object.keys(this.regionMap).length > 0) {
+            let startChr;
+            let endChr;
+            let relativeStart;
+            let relativeEnd;
+
+            for (const [key, value] of Object.entries(this.regionMap)) {
+                if (region.start >= value.start && region.start <= value.end) {
+                    startChr = key;
+                    relativeStart = region.start - value.start;
+
+                    if (relativeStart <= 0) {
+                        relativeStart = 1;
+                    }
+                }
+
+                if (region.end >= value.start && region.end <= value.end) {
+                    endChr = key;
+                    relativeEnd = region.end - value.start;
+
+                    if (relativeEnd <= 0) {
+                        relativeEnd = 1;
+                    }
+                }
+            }
+
+            formattedRegion = {
+                start: relativeStart,
+                end: relativeEnd,
+                startChr: startChr,
+                endChr: endChr,
+            };
+        }
+        return formattedRegion;
+    }
+
     _setupBroker() {
         // Get the data broker assigned to this element
-        // Setting the brokerId attribute will automatically set the broker
+        // Setting the broker-id allows us to use this method to find the broker and return it
         this._broker = getDataBroker(this);
 
         if (this._broker) {
