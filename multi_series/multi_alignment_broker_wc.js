@@ -9,6 +9,7 @@ class MultiAlignmentBrokerElement extends HTMLElement {
         upgradeProperty(this, "alignmentTitles");
         upgradeProperty(this, "indexUrls");
         upgradeProperty(this, "server");
+        upgradeProperty(this, "region");
     }
 
     get broker() {
@@ -21,6 +22,13 @@ class MultiAlignmentBrokerElement extends HTMLElement {
     set alignmentTitles(_) {
         this.broker.alignmentTitles = _;
         this.setAttribute("alignment-titles", _);
+    }
+
+    get region() {
+        return this.getAttribute("region");
+    }
+    set region(_) {
+        this.setAttribute("region", _);
     }
 
     get apiUrl() {
@@ -54,6 +62,10 @@ class MultiAlignmentBrokerElement extends HTMLElement {
         this.setAttribute("server", _);
     }
 
+    static get observedAttributes() {
+        return ["region"];
+    }
+
     connectedCallback() {
         const options = {};
 
@@ -63,6 +75,13 @@ class MultiAlignmentBrokerElement extends HTMLElement {
         }
 
         this._broker = new MultiAlignmentBroker(this.alignmentUrls, options);
+        this._broker.component = this;
+    }
+
+    attributeChangedCallback(name, oldVal, newVal) {
+        if (name === "region" && newVal && newVal !== oldVal) {
+            this.broker.region = JSON.parse(newVal);
+        }
     }
 }
 
