@@ -257,7 +257,6 @@ class MultiAlignmentBroker extends EventTarget {
                 seriesValues: this._readDepthData,
                 seriesTitle: this.alignmentTitles[i] || `Sample ${i + 1}`,
                 index: i, // The index of the series URL we have just processed
-                isPreciseData: false, // This is genome-wide data
             });
         }
 
@@ -305,7 +304,6 @@ class MultiAlignmentBroker extends EventTarget {
                 seriesValues: this._readDepthData,
                 seriesTitle: this.alignmentTitles[i] || `Sample ${i + 1}`,
                 index: i, // The index of the series URL we have just processed
-                isPreciseData: true, // This is precise region data
             });
         }
 

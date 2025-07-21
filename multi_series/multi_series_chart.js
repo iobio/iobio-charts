@@ -212,7 +212,7 @@ class MultiSeriesChart {
                     }
                     return 0.7;
                 })
-                .attr("stroke-width", 1.5)
+                .attr("stroke-width", 1)
                 .attr("fill", "none")
                 .attr("stroke-linejoin", "round")
                 .attr("stroke-linecap", "round");
@@ -268,7 +268,7 @@ class MultiSeriesChart {
      *     METHODS: PUBLIC
      */
 
-    addSeries(values, segments, title = "", isPreciseData = false) {
+    addSeries(values, segments, title = "") {
         try {
             if (!this.accumulatedSegments || this.accumulatedSegments.length === 0) {
                 this.accumulatedSegments = this._createAccumulatedMap(segments);
@@ -367,6 +367,11 @@ class MultiSeriesChart {
     }
 
     rescale(parent) {
+        if (!parent) {
+            // If no parent is provided, we cannot rescale at this time it will likely fire again
+            return;
+        }
+        // Rescale the chart to fit the parent element
         let newWidth = parent.clientWidth;
         let newHeight = parent.clientHeight;
 
