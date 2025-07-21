@@ -133,6 +133,15 @@ class MultiSeriesChartComponent extends HTMLElement {
     }
 
     setupResizeObserver() {
+        if (this.resizeObserver) {
+            this.resizeObserver.disconnect();
+        }
+
+        if (!this.multiSeriesContainer) {
+            console.warn("MultiSeriesContainer is not defined yet, cannot set up resize observer.");
+            return;
+        }
+
         let resizeTimeout;
 
         const resizeHandler = () => {
@@ -235,7 +244,7 @@ class MultiSeriesChartComponent extends HTMLElement {
             this._broker.addEventListener("new-series-data", (event) => {
                 // The broker is smart in this case the chart is not
                 // the data validation is done in the broker
-                const { segments, seriesValues, seriesTitle, index } = event.detail;
+                const { segments, seriesValues, seriesTitle, index, isPreciseData } = event.detail;
 
                 this._seriesSegments[index] = segments;
                 this._seriesValues[index] = seriesValues;
@@ -249,6 +258,7 @@ class MultiSeriesChartComponent extends HTMLElement {
                     this._seriesValues[index],
                     this._seriesSegments[index],
                     this._seriesTitles[index],
+                    isPreciseData,
                 );
             });
         }

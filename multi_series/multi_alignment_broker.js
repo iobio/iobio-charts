@@ -194,6 +194,7 @@ class MultiAlignmentBroker extends EventTarget {
         const regionChanged = !this._lastRegion || JSON.stringify(this.region) !== JSON.stringify(this._lastRegion);
 
         if (alignmentUrlsChanged || regionChanged) {
+            this._lastRegion = this.region;
             await this._pullAllBins();
             return;
         } else if (this.region.start && this.region.end && this.region.startChr) {
@@ -256,6 +257,7 @@ class MultiAlignmentBroker extends EventTarget {
                 seriesValues: this._readDepthData,
                 seriesTitle: this.alignmentTitles[i] || `Sample ${i + 1}`,
                 index: i, // The index of the series URL we have just processed
+                isPreciseData: false, // This is genome-wide data
             });
         }
 
@@ -279,7 +281,6 @@ class MultiAlignmentBroker extends EventTarget {
             // Parse and process header first
             this._header = parseBamHeaderData(headerText);
             this._header = this._getValidRefs(this._header);
-
             const hasChrInRef = this._header.some((ref) => ref.sn.includes("chr"));
 
             // Coverage promise: Now that we have the header, we can process coverage
@@ -297,13 +298,14 @@ class MultiAlignmentBroker extends EventTarget {
             // Parse the coverage data now that header is available
             const binSize = Math.floor((this.region.end - this.region.start) / bins);
             this._readDepthData = this._parsePreciseReadDepth(coverageText, this.region, this._header, hasChrInRef, binSize);
-            this._readDepthData = this._getBamReadDepthByValidRefs(this._header, this._readDepthData);
+            // Because this is precise we dont need to filter the read depth data against the header we already looked at the header
 
             this.emitEvent("new-series-data", {
                 segments: this._header,
                 seriesValues: this._readDepthData,
                 seriesTitle: this.alignmentTitles[i] || `Sample ${i + 1}`,
                 index: i, // The index of the series URL we have just processed
+                isPreciseData: true, // This is precise region data
             });
         }
 
@@ -402,8 +404,13 @@ class MultiAlignmentBroker extends EventTarget {
                 let currOffset = 0;
                 for (let j = 0; j < lines.length; j++) {
                     let bin = {};
-                    const line = lines[j];
-                    const avgCoverage = line[0];
+                    const line = lines[j].trim();
+
+                    // Skip empty lines
+                    if (!line) continue;
+
+                    // Parse the coverage value from the line
+                    const avgCoverage = parseFloat(line.split(/\s+/)[0]) || 0;
 
                     const offset = regionStart + currOffset;
 

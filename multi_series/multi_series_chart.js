@@ -93,17 +93,18 @@ class MultiSeriesChart {
     }
 
     _updateYOnNew(bins) {
-        const newYMax = d3.max(bins, (d) => {
-            //If this bin is outside of the region, skip it
-            if (d.start < this.region.start || d.start > this.region.end) {
-                return;
-            }
-            // Otherwise, return the avgCoverage
-            return d.avgCoverage;
-        });
+        const validBins = bins.filter(
+            (d) => d.start >= this.region.start && d.start <= this.region.end && !isNaN(d.avgCoverage) && isFinite(d.avgCoverage),
+        );
+
+        if (validBins.length === 0) {
+            return false;
+        }
+
+        const newYMax = d3.max(validBins, (d) => d.avgCoverage);
 
         if (newYMax > this.yMax) {
-            this.yMean = d3.mean(bins, (d) => d.avgCoverage);
+            this.yMean = d3.mean(validBins, (d) => d.avgCoverage);
             this.yMax = Math.min(newYMax, this.yMean * 3);
             this.yScale.domain([this.yMin, this.yMax]); // Update the yScale domain
 
@@ -117,8 +118,14 @@ class MultiSeriesChart {
     _updateYOnRegion() {
         // So for series in this.series we will pull their bins
         const allBins = this.series.flatMap((series) => series.bins);
-        // Filter bins based on the current region
-        const filteredBins = allBins.filter((d) => d.start >= this.region.start && d.start <= this.region.end);
+        // Filter bins based on the current region and validate data
+        const filteredBins = allBins.filter(
+            (d) => d.start >= this.region.start && d.start <= this.region.end && !isNaN(d.avgCoverage) && isFinite(d.avgCoverage),
+        );
+
+        if (filteredBins.length === 0) {
+            return;
+        }
 
         this.yMean = d3.mean(filteredBins, (d) => d.avgCoverage);
         // If we get some very weird values, we can set just a maximum we should not exceed
@@ -131,6 +138,10 @@ class MultiSeriesChart {
     }
 
     _redrawSeries(seriesValues) {
+        //Lets just make sure that we rescale x to match the current region
+        this.xScale.domain([this.region.start, this.region.end]);
+        this.xScale.range([this.margin.left, this.width - this.margin.right]);
+
         // Clear existing paths
         this.svg.selectAll("path").remove();
 
@@ -195,7 +206,12 @@ class MultiSeriesChart {
                 .attr("id", `moving-average-${index}`)
                 .attr("d", line(movingAverages))
                 .attr("stroke", series.color)
-                .attr("stroke-opacity", 0.5)
+                .attr("stroke-opacity", function () {
+                    if (series && series.color === "black") {
+                        return 1;
+                    }
+                    return 0.7;
+                })
                 .attr("stroke-width", 1.5)
                 .attr("fill", "none")
                 .attr("stroke-linejoin", "round")
@@ -252,7 +268,7 @@ class MultiSeriesChart {
      *     METHODS: PUBLIC
      */
 
-    addSeries(values, segments, title = "") {
+    addSeries(values, segments, title = "", isPreciseData = false) {
         try {
             if (!this.accumulatedSegments || this.accumulatedSegments.length === 0) {
                 this.accumulatedSegments = this._createAccumulatedMap(segments);
@@ -285,7 +301,7 @@ class MultiSeriesChart {
             }
 
             // Probably need 10 colors for the series
-            const colors = ["#C70000", "black", "#2D4B87", "orange", "teal", "pink", "green", "purple", "brown", "yellow"];
+            const colors = ["black", "#F08C29", "#1D4FB1", "#0DD01D", "#6D11D6", "#C70000", "pink", "teal", "brown", "yellow"];
             const color = colors[index] || "gray";
 
             let newSeries;
@@ -297,6 +313,7 @@ class MultiSeriesChart {
                 this.series[index].sd = d3.deviation(allBins, (d) => d.avgCoverage);
                 this.series[index].min = d3.min(allBins, (d) => d.avgCoverage);
                 this.series[index].max = d3.max(allBins, (d) => d.avgCoverage);
+
                 newSeries = this.series[index];
                 this._redrawSeries(this.series);
             } else {
@@ -330,10 +347,10 @@ class MultiSeriesChart {
                     .attr("d", dotPath)
                     .attr("stroke", newSeries.color)
                     .attr("stroke-opacity", () => {
-                        if (newSeries.color === "#C70000") {
+                        if (newSeries.color === "black") {
                             return 1;
                         }
-                        return 0.7;
+                        return 0.8;
                     })
                     .attr("stroke-width", 1.5)
                     .attr("fill", "none")
@@ -383,7 +400,8 @@ class MultiSeriesChart {
 
             // Update the yScale based on the new region
             this._updateYOnRegion();
-            // Redraw the series
+
+            // Redraw the series (this already removes old paths)
             this._redrawSeries(this.series);
         } catch (error) {
             console.error("Error in updateRegion:", error);
@@ -406,7 +424,7 @@ class MultiSeriesChart {
         accumulatedMap = segments.reduce((acc, s) => {
             acc[s.sn] = s;
             acc[s.sn].start = total;
-            acc[s.sn].end = total + length;
+            acc[s.sn].end = total + s.length;
             acc[s.sn].position = i;
 
             total += s.length;
