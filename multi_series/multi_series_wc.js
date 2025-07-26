@@ -110,26 +110,6 @@ class MultiSeriesChartComponent extends HTMLElement {
         if (name === "broker-id" && newVal) {
             this._setupBroker();
         }
-
-        if (name === "region" && newVal && newVal !== oldVal) {
-            let oldValSize;
-            let newValSize;
-            if (oldVal) {
-                oldVal = JSON.parse(oldVal);
-                oldValSize = oldVal ? oldVal.end - oldVal.start : 0;
-            }
-            if (newVal) {
-                newVal = JSON.parse(newVal);
-                newValSize = newVal.end - newVal.start;
-            }
-
-            if (newValSize && newValSize < 1000000) {
-                this._broker.region = this._formatRegion(newVal);
-            } else if (oldValSize && oldValSize <= 1000000 && newValSize && newValSize > 1000000) {
-                // We will want to pull all bins from index
-                this._broker.region = {};
-            }
-        }
     }
 
     setupResizeObserver() {
@@ -174,6 +154,45 @@ class MultiSeriesChartComponent extends HTMLElement {
             indicatorContainer.style.visibility = "visible";
         } else {
             indicatorContainer.style.visibility = "hidden";
+        }
+    }
+
+    _setupBroker() {
+        // Get the data broker assigned to this element
+        // Setting the broker-id allows us to use this method to find the broker and return it
+        // Listening for broker events is the only interaction that should happen here
+        this._broker = getDataBroker(this);
+
+        if (this._broker) {
+            this._broker.addEventListener("start-fetching-series", () => {
+                // This is just our loading indicator showing
+                this.toggleLoadingIndicator(true);
+            });
+
+            this._broker.addEventListener("end-fetching-series", () => {
+                // This is just our loading indicator hiding
+                this.toggleLoadingIndicator(false);
+            });
+
+            this._broker.addEventListener("new-series-data", (event) => {
+                // The broker is smart in this case the chart is not
+                // the data validation is done in the broker
+                const { segments, seriesValues, seriesTitle, index } = event.detail;
+
+                this._seriesSegments[index] = segments;
+                this._seriesValues[index] = seriesValues;
+                this._seriesTitles[index] = seriesTitle;
+
+                if (this.region) {
+                    this.multiSeriesD3Chart.updateRegion(this.region);
+                }
+
+                this.multiSeriesD3Chart.addSeries(
+                    this._seriesValues[index],
+                    this._seriesSegments[index],
+                    this._seriesTitles[index],
+                );
+            });
         }
     }
 
@@ -223,44 +242,6 @@ class MultiSeriesChartComponent extends HTMLElement {
             };
         }
         return formattedRegion;
-    }
-
-    _setupBroker() {
-        // Get the data broker assigned to this element
-        // Setting the broker-id allows us to use this method to find the broker and return it
-        this._broker = getDataBroker(this);
-
-        if (this._broker) {
-            this._broker.addEventListener("start-fetching-series", () => {
-                // This is just our loading indicator showing
-                this.toggleLoadingIndicator(true);
-            });
-
-            this._broker.addEventListener("end-fetching-series", () => {
-                // This is just our loading indicator hiding
-                this.toggleLoadingIndicator(false);
-            });
-
-            this._broker.addEventListener("new-series-data", (event) => {
-                // The broker is smart in this case the chart is not
-                // the data validation is done in the broker
-                const { segments, seriesValues, seriesTitle, index } = event.detail;
-
-                this._seriesSegments[index] = segments;
-                this._seriesValues[index] = seriesValues;
-                this._seriesTitles[index] = seriesTitle;
-
-                if (this.region) {
-                    this.multiSeriesD3Chart.updateRegion(this.region);
-                }
-
-                this.multiSeriesD3Chart.addSeries(
-                    this._seriesValues[index],
-                    this._seriesSegments[index],
-                    this._seriesTitles[index],
-                );
-            });
-        }
     }
 }
 
