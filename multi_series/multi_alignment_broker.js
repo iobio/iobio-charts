@@ -179,8 +179,13 @@ class MultiAlignmentBroker extends EventTarget {
     }
 
     _getChartWidth() {
-        if (this._component && this._component.multiSeriesContainer) {
-            return this._component.multiSeriesContainer.clientWidth;
+        if (this._component && this._component.id) {
+            const brokerId = this._component.id;
+            const chartComponent = document.querySelector(`iobio-multi-series[broker-id="${brokerId}"]`);
+
+            if (chartComponent && chartComponent.multiSeriesContainer) {
+                return chartComponent.multiSeriesContainer.clientWidth;
+            }
         }
         return 1000; // fallback
     }
@@ -190,38 +195,25 @@ class MultiAlignmentBroker extends EventTarget {
             return;
         }
 
-        const alignmentUrlsChanged = JSON.stringify(this.alignmentUrls) !== JSON.stringify(this._lastAlignmentUrls);
-        const regionChanged = !this._lastRegion || JSON.stringify(this.region) !== JSON.stringify(this._lastRegion);
+        this._lastRegion = this.region;
+        this._lastAlignmentUrls = this.alignmentUrls;
 
-        if (alignmentUrlsChanged || regionChanged) {
-            this._lastRegion = this.region;
-            await this._pullAllBins();
-            return;
-        } else if (this.region.start && this.region.end && this.region.startChr) {
-            const chartWidth = this._getChartWidth();
-            let bins = chartWidth;
-            if (this.region.end - this.region.start < chartWidth) {
-                bins = this.region.end - this.region.start;
-            }
-            await this._pullPreciseBins(bins);
-            return;
-        }
+        await this._pullAllBins();
+        return;
     }
 
     async _pullAllBins() {
         const chartWidth = this._getChartWidth();
-        this._lastAlignmentUrls = this.alignmentUrls;
-
         const indexUrls = this._getIndexUrls();
 
         //If we have a region and it is not empty (meaning it was small enough to be set), we will want to pull the precise bins
         const regionSize = this.region ? this.region.end - this.region.start : null;
         if (regionSize && regionSize < 1000000) {
-            let bins = chartWidth;
-            if (regionSize < chartWidth) {
-                bins = regionSize;
-            }
-            await this._pullPreciseBins(bins);
+            let numBins = chartWidth;
+            // if (regionSize < chartWidth) {
+            //     numBins = regionSize;
+            // }
+            await this._pullPreciseBins(numBins);
             return;
         }
 
@@ -252,18 +244,19 @@ class MultiAlignmentBroker extends EventTarget {
             this._header = this._getValidRefs(this._header, this._readDepthData);
             this._readDepthData = this._getBamReadDepthByValidRefs(this._header, this._readDepthData);
 
-            this.emitEvent("new-series-data", {
+            const emittedData = {
                 segments: this._header,
                 seriesValues: this._readDepthData,
                 seriesTitle: this.alignmentTitles[i] || `Sample ${i + 1}`,
                 index: i, // The index of the series URL we have just processed
-            });
+            };
+            this.emitEvent("new-series-data", emittedData);
         }
 
         this.emitEvent("end-fetching-series", null);
     }
 
-    async _pullPreciseBins(bins) {
+    async _pullPreciseBins(numBins) {
         const indexUrls = this._getIndexUrls();
         // Parse the alignment URLs
         this.emitEvent("start-fetching-series", null);
@@ -291,20 +284,18 @@ class MultiAlignmentBroker extends EventTarget {
                     end: this.region.end,
                     refName: hasChrInRef ? "chr" + this.region.startChr : this.region.startChr,
                 },
-                numBins: bins,
+                numBins: numBins,
             }).then((res) => res.response.text());
 
-            // Parse the coverage data now that header is available
-            const binSize = Math.floor((this.region.end - this.region.start) / bins);
-            this._readDepthData = this._parsePreciseReadDepth(coverageText, this.region, this._header, hasChrInRef, binSize);
-            // Because this is precise we dont need to filter the read depth data against the header we already looked at the header
+            this._readDepthData = this._parsePreciseReadDepth(coverageText, this.region, this._header, hasChrInRef);
 
-            this.emitEvent("new-series-data", {
+            const emittedData = {
                 segments: this._header,
                 seriesValues: this._readDepthData,
                 seriesTitle: this.alignmentTitles[i] || `Sample ${i + 1}`,
                 index: i, // The index of the series URL we have just processed
-            });
+            };
+            this.emitEvent("new-series-data", emittedData);
         }
 
         this.emitEvent("end-fetching-series", null);
@@ -385,7 +376,7 @@ class MultiAlignmentBroker extends EventTarget {
         return validBamReadDepth;
     }
 
-    _parsePreciseReadDepth(rawReadDepth, region, headers, hasChrInRef, binSize) {
+    _parsePreciseReadDepth(rawReadDepth, region, headers, hasChrInRef) {
         const regionStart = region.start;
         let regionChr = region.startChr;
         let readDepth = {};
@@ -398,29 +389,23 @@ class MultiAlignmentBroker extends EventTarget {
             readDepth[i] = [];
 
             if (headerChr === regionChr) {
-                const lines = rawReadDepth.split("\n");
-                let currOffset = 0;
+                const lines = rawReadDepth.split("\n").filter((line) => line.trim() !== "");
+                const numBins = lines.length;
+                const binSize = (this.region.end - this.region.start) / numBins;
+
                 for (let j = 0; j < lines.length; j++) {
                     let bin = {};
                     const line = lines[j].trim();
 
-                    // Skip empty lines
-                    if (!line) continue;
-
                     // Parse the coverage value from the line
                     const avgCoverage = parseFloat(line.split(/\s+/)[0]) || 0;
 
-                    const offset = regionStart + currOffset;
-
-                    bin.offset = offset;
+                    bin.offset = j * binSize + (regionStart - 1); // The bin is offset from the region
                     bin.avgCoverage = avgCoverage;
                     readDepth[i].push(bin);
-
-                    currOffset += binSize;
                 }
             }
         }
-
         return readDepth;
     }
 }
