@@ -138,10 +138,6 @@ class MultiSeriesChart {
     }
 
     _redrawSeries(seriesValues) {
-        //Lets just make sure that we rescale x to match the current region
-        this.xScale.domain([this.region.start, this.region.end]);
-        this.xScale.range([this.margin.left, this.width - this.margin.right]);
-
         // Clear existing paths
         this.svg.selectAll("path").remove();
 
@@ -149,12 +145,8 @@ class MultiSeriesChart {
         seriesValues.forEach((series, index) => {
             const allBins = series.bins;
             const dotPath = allBins
+                .filter((d) => d.start >= this.region.start && d.start <= this.region.end) // Filter first
                 .map((d) => {
-                    //If the d.start is outside of our region, skip it
-                    if (d.start < this.region.start || d.start > this.region.end) {
-                        return "";
-                    }
-                    // Otherwise, create the path for the dot
                     const x = this.xScale(d.start);
                     const y = this.yScale(d.avgCoverage);
                     return `M${x},${y}h0`;
@@ -212,7 +204,7 @@ class MultiSeriesChart {
                     }
                     return 0.7;
                 })
-                .attr("stroke-width", 1)
+                .attr("stroke-width", 1.5)
                 .attr("fill", "none")
                 .attr("stroke-linejoin", "round")
                 .attr("stroke-linecap", "round");
@@ -279,8 +271,10 @@ class MultiSeriesChart {
             Object.entries(values).forEach(([i, bins]) => {
                 let chr = this.accumulatedSegments[segments[i].sn];
                 let newBins = bins.map((bin) => {
-                    bin.start = chr.start + bin.offset;
-                    return bin;
+                    return {
+                        ...bin, // Spread the original bin properties
+                        start: chr.start + bin.offset, // Add the computed start property
+                    };
                 });
                 allBins = allBins.concat(newBins);
             });
@@ -315,7 +309,7 @@ class MultiSeriesChart {
                 this.series[index].max = d3.max(allBins, (d) => d.avgCoverage);
 
                 newSeries = this.series[index];
-                this._redrawSeries(this.series);
+                this._redrawSeries(this.series); // Redraw the series with the new bins
             } else {
                 newSeries = {
                     title: title,
@@ -330,11 +324,8 @@ class MultiSeriesChart {
                 this.series.push(newSeries);
 
                 const dotPath = allBins
+                    .filter((d) => d.start >= this.region.start && d.start <= this.region.end) // Filter first
                     .map((d) => {
-                        //If the d.start is outside of our region, skip it
-                        if (d.start < this.region.start || d.start > this.region.end) {
-                            return "";
-                        }
                         const x = this.xScale(d.start);
                         const y = this.yScale(d.avgCoverage);
                         return `M${x},${y}h0`;
@@ -401,13 +392,9 @@ class MultiSeriesChart {
 
             // Update the xScale based on the new region
             this.xScale.domain([this.region.start, this.region.end]);
-            this.xScale.range([this.margin.left, this.width - this.margin.right]);
 
             // Update the yScale based on the new region
             this._updateYOnRegion();
-
-            // Redraw the series (this already removes old paths)
-            this._redrawSeries(this.series);
         } catch (error) {
             console.error("Error in updateRegion:", error);
             throw error;
