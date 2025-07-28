@@ -110,6 +110,28 @@ class MultiSeriesChartComponent extends HTMLElement {
         if (name === "broker-id" && newVal) {
             this._setupBroker();
         }
+        if (name === "region" && newVal && newVal !== oldVal) {
+            //If the region changes and the chart area is not small enough to be from the precise request we need to update the region in the chart here
+            let oldValSize;
+            let newValSize;
+            if (oldVal) {
+                oldValSize = JSON.parse(oldVal).end - JSON.parse(oldVal).start;
+            }
+            if (newVal) {
+                newValSize = JSON.parse(newVal).end - JSON.parse(newVal).start;
+            }
+
+            if (this.multiSeriesD3Chart && newValSize > 1000000 && oldValSize > 1000000) {
+                // If the region is large, we need to update the chart with the new region
+                let parsedRegion = JSON.parse(newVal);
+                this.multiSeriesD3Chart.updateRegion(parsedRegion);
+
+                for (let i = 0; i < this._seriesValues.length; i++) {
+                    this.multiSeriesD3Chart.addSeries(this._seriesValues[i], this._seriesSegments[i], this._seriesTitles[i]);
+                }
+            }
+            // Otherwise, the chart will handle the region update when it receives new data
+        }
     }
 
     setupResizeObserver() {
