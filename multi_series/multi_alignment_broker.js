@@ -210,9 +210,9 @@ class MultiAlignmentBroker extends EventTarget {
         const regionSize = this.region ? this.region.end - this.region.start : null;
         if (regionSize && regionSize < 1000000) {
             let numBins = chartWidth;
-            // if (regionSize < chartWidth) {
-            //     numBins = regionSize;
-            // }
+            if (regionSize < chartWidth) {
+                numBins = regionSize;
+            }
             await this._pullPreciseBins(numBins);
             return;
         }
