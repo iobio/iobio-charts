@@ -40,6 +40,14 @@ class DataBrokerElement extends HTMLElement {
     this.setAttribute('index-url', _);
   }
 
+  get fileFormat() {
+    return this.getAttribute('file-format');
+  }
+  set fileFormat(_) {
+    this.broker.fileFormat = _;
+    this.setAttribute('file-format', _);
+  }
+
   get bedUrl() {
     return this.getAttribute('bed-url');
   }

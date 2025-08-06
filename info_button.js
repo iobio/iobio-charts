@@ -1,3 +1,4 @@
+import { upgradeProperty } from './common.js';
 import { TooltipModal } from './modal.js';
 const infoButtonTemplate = document.createElement('template');
 infoButtonTemplate.innerHTML = `
@@ -33,6 +34,10 @@ class InfoButton extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
+
+        upgradeProperty(this, 'label');
+        upgradeProperty(this, 'iconPosition');
+
         this.shadowRoot.appendChild(infoButtonTemplate.content.cloneNode(true));
         this.initDOMElements();
        
@@ -41,8 +46,6 @@ class InfoButton extends HTMLElement {
     initDOMElements() {
         this.tooltipButton = this.shadowRoot.querySelector('.tooltip-button');
         this.modal = this.shadowRoot.querySelector('#modal');
-        this.label = this.getAttribute('label');
-        this.labelPosition = this.getAttribute('icon-position')
         this.headerSlot = this.shadowRoot.querySelector('slot[name="header"]');
     }
 
@@ -56,13 +59,29 @@ class InfoButton extends HTMLElement {
         }
     }
 
+    get label() {
+        return this.getAttribute('label');
+    }
+
+    set label(_) {
+        this.setAttribute('label', _);
+    }
+
+    get iconPosition() {
+        return this.getAttribute('icon-position');
+    }
+
+    set iconPosition(_) {
+        this.setAttribute('icon-position', _);
+    }
+
     addLabel() {
         const labelDiv = document.createElement('div');
         labelDiv.textContent = this.label;
         labelDiv.classList.add('label-container');
         const container = this.shadowRoot.querySelector('.iobio-label-info-button');
 
-        if (this.labelPosition === 'left') {
+        if (this.iconPosition === 'left') {
             container.appendChild(labelDiv);
         } else {
             container.insertBefore(labelDiv, this.tooltipButton);

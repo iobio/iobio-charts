@@ -8,6 +8,9 @@ import { sample } from './sampling.js';
  * @property {number} end End index
  */
 
+const FILE_FORMAT_BAM = 'BAM';
+const FILE_FORMAT_CRAM = 'CRAM';
+
 
 class DataBroker extends EventTarget {
   constructor(alignmentUrl, options) {
@@ -50,6 +53,14 @@ class DataBroker extends EventTarget {
   }
   set indexUrl(_) {
     this._indexUrl = _;
+    this._tryUpdate(this._doUpdate.bind(this));
+  }
+
+  get fileFormat() {
+    return this._fileFormat;
+  }
+  set fileFormat(_) {
+    this._fileFormat = _;
     this._tryUpdate(this._doUpdate.bind(this));
   }
 
@@ -143,7 +154,7 @@ class DataBroker extends EventTarget {
 
   _getIndexUrl() {
     const parsedUrl = new URL(this.alignmentUrl);
-    const isCram = parsedUrl.pathname.endsWith(".cram"); 
+    const isCram = this._isCram(parsedUrl.pathname); 
 
     let indexUrl;
 
@@ -173,7 +184,7 @@ class DataBroker extends EventTarget {
 
       const parsedUrl = new URL(this.alignmentUrl);
 
-      const isCram = parsedUrl.pathname.endsWith(".cram"); 
+      const isCram = this._isCram(parsedUrl.pathname); 
 
       const indexUrl = this._getIndexUrl();
 
@@ -344,6 +355,14 @@ class DataBroker extends EventTarget {
 
     this.emitEvent('stats-stream-end', null);
   }
+
+  _isCram(filePath) {
+    if (this.fileFormat === FILE_FORMAT_CRAM) {
+      return true;
+    }
+
+    return filePath.endsWith('.cram');
+  }
 }
 
 /**
@@ -384,4 +403,6 @@ function filterRegions(allRegions, filterRegs) {
 
 export {
   DataBroker,
+  FILE_FORMAT_BAM,
+  FILE_FORMAT_CRAM,
 };
