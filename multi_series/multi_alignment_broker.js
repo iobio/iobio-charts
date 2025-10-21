@@ -4,8 +4,8 @@ class MultiAlignmentBroker extends EventTarget {
     constructor(alignmentUrls, options) {
         super();
 
-        this._server = "https://backend.iobio.io";
-        this._preciseServer = "https://mosaic.chpc.utah.edu/gru-dev-9002";
+        this._server = "https://mosaic.chpc.utah.edu";
+        this._preciseServer = "https://mosaic.chpc.utah.edu";
         this._alignmentTitles = [];
 
         if (options) {
